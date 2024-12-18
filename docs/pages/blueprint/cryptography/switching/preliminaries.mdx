@@ -1,0 +1,68 @@
+# Preliminaries
+
+## Quick Reminder About Rings
+
+A Ring is a set, but with some specific properties.
+Much like a Field (a special type of Ring that you've read a lot about already on this site),
+Rings are equipped with operations of addition and multiplication, such that adding/multiplying
+two elements in a ring gives us a result in the Ring. A subring (as the name suggests)
+is a proper subset of a ring, which itself is also a ring.
+
+
+## A First look at the Tensor Algebra
+The Tensor Algebra is a ring, each of whose elements is a $2^k$ by $2^k$ array of elements of our small field.
+
+Addition of two of these arrays is defined as their cell-wise sum. Multiplication is actually more complicated,
+and beyond the scope of these docs. However, the page on the tensor algebra describes the $output$ of this operation
+in all of the special cases we care about. We denote this ring throughout by $A$.
+
+Let's call our small field $K$ and our big field $L$, which is an extension over $K$ of degree $2^k$.
+
+For some $x \in L$ where $L$ is our big field, we create some notation for 
+the element of $A$ whose first column is $x$ expressed as a vector of elements of $K$, and whose
+other columns are all zeros.
+In particular, we call this thing $\varphi_0(x)$. You can think of $\varphi_0: L \rightarrow A$ as the function that 
+"embeds" it's input $x$ into the first row of the output it returns, and leaves everything else zeroed out.
+
+Let's call $B = \{B_0, B_1, B_2, B_3\}$ the basis of $F_{2^{128}}$ as an $F_{2^{32}}$ vector space for example.
+Note that this means $L = F_{2^{128}}$, $K = F_{2^{32}}$ and $k = 2$
+
+If $x = a_0B_0+a_1B_1+a_2B_2+a_3B_3$, $\varphi_0(x)$ looks like this:
+
+
+| $a_0$ | 0 | 0 | 0 |
+|---|---|---|---|
+| $a_1$ | 0 | 0 | 0 |
+| $a_2$ | 0 | 0 | 0 |
+| $a_3$ | 0 | 0 | 0 |
+
+
+Similarly, we the row-embedding of "x" as $\varphi_1(x)$
+
+| $a_0$ | $a_1$ | $a_2$ | $a_3$ |
+|---|---|---|---|
+| 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 0 |
+
+As you'll see in the Tensor Algebra sub-page, it turns out that 
+for $x,y \in L$, multiplying $\varphi_0(x)$ and $\varphi_0(y)$ gives us 
+$\varphi_0(xy)$ and multiplying $\varphi_1(x)$ and $\varphi_1(y)$ gives us 
+$\varphi_1(xy)$.
+
+## Key property of the Tensor Algebra
+
+By now you might be left wondering how we can use this in a way that's actually algebraic.
+For now, let's state some facts proven in (this paper). 
+
+Each nonzero polynomial $p(X)$ with coefficients in $A$ of degree d has at most d zeros 
+in the subring $\varphi_1(L)$. 
+
+What does this mean for us? It means that if a prover makes a claim of the form $p(X) = q(X)$,
+the verifier can pick some random $r \in \varphi_1(L)$ and then ask the prover to show that $p(r) = q(r)$.
+If $p \neq q$, there are only $d$ values in $\varphi_1(L)$ such that $p(r) = q(r)$ holds.
+
+The chance of the verifier picking one of these values at random is $d/|\varphi_1(L)|$. Note that $|\varphi_1(L)| = |L|$, which is huge. 
+
+This is precisely the interaction that takes place during a round of the sumcheck protocol,
+so you can take this as a hint of what's to come.
