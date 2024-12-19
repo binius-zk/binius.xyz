@@ -1,9 +1,23 @@
+# The Procedure [Expressing small-field claims using tensors and sums]
+
 ## Some Intuitions and Remarks
 
-In a rigorous treatment, there are a few things we are going to have to establish to even show that this thing is complete, let alone secure. And for the _sum claim_ we just output at the end just now to make sense, $A(X_0, \ldots , X_{\ell - 1})$ should of course be transparent—a fact which we're again going to punt on.
+- By embedding the original (packed) multilinear $t(X_0, \ldots , X_{\ell - 1})$ componentwise _horizontally_ into $A$, we can express it as an $\ell$-variate multilinear over $A$—$\varphi_1(t)$, let's say. The prover computes and sends to the verifier
 
-For now, though, we address a key fact: why the sum claim $s_0 \stackrel{?}= \sum_{v \in \mathcal{B}_\ell} t(v) \cdot A(v)$ _is even true_ (i.e., assuming the prover is honest)?
+  $$
+  \begin{equation*}\hat{s} \coloneqq \varphi_1(t)(\varphi_0(r_\kappa), \ldots, \varphi_0(r_{\ell + \kappa - 1})).\end{equation*}
+  $$
+  - The element $\hat{s}$ is an _algebra element_, since the entire evaluation above takes place in the algebra. Thus, concretely, $\hat{s}$ looks like a $2^\kappa \times 2^\kappa$ array of $\mathcal{T}_\iota$-elements.
+  - It is a bit tricky, but a very important and doable exercise, to study concretely what $\hat{s}$ looks like. In fact, its _columns_ $\left( \hat{s}_v \right)_{v \in \mathcal{B}_\kappa}$ will be exactly the _partial evaluations_ $\hat{s}_v = t'(v_0, \ldots, v_{\kappa - 1}, r_\kappa, \ldots , r_{\ell + \kappa - 1})$. Roughly, this is because the vertically embedded elements $\varphi_0(r_\kappa), \ldots, \varphi_0(r_{\ell + \kappa - 1})$ will act "slice-wise" on the cells of the coefficients $\varphi_1(t)(w)$, for $w \in \mathcal{B}_\ell$ (recall that these coefficients are _horizontally_ embedded). We prove this fact rigorously in our paper (see [[DP24](https://eprint.iacr.org/2024/504), Thm. 4.2]).
 
+- Note that once we've figured out the value of $\hat{s}$, since the columns of $\hat{s}$
+  are a _partial evaluation_ of $t'$ on all but the lowest $\kappa$ of its variables,
+  we can evaluate the full query $t'(X_0, \ldots , X_{\ell +\kappa- 1})$ by taking a simple inner product:
+    
+    
+   $$
+   t'(r_0, \ldots , r_{\ell +\kappa- 1}) = ((\hat{s}_v)_{v\in B_{\kappa}}) \cdot \bigotimes_{i = 0}^{\kappa - 1} (1 - r_i, r_i)
+   $$
 ### An algebra-valued sumcheck
 
 Here is the rough idea. Back in its very first message, the prover was supposed to compute $\hat{s} \coloneqq \varphi_1(t)(\varphi_0(r_\kappa), \ldots, \varphi_0(r_{\ell + \kappa - 1}))$. By multilinearly expanding this thing's right-hand side, we get an identity of $A$-elements, which _should_ hold if the prover is honest:
@@ -36,7 +50,9 @@ Even in this non-batched version, our [next step](/blueprint/cryptography/evalua
 
 With this said, in practice we want to carry out a further sort of batching at the ring-switching level, whereby fewer tensor-algebra elements have to get sent. We have a batching scheme which works in the following rough way. We fix a huge amount $n$ (say, thousands) of claims. Each looks like an $\ell_i$-variate polynomial $t_i(X_0, \ldots , X_{\ell_i - 1})$ over $\mathcal{T}_\tau$, a refinement factor $\kappa_i$, and an evaluation claim $t'_i(r_{i, 0}, \ldots , r_{i, \ell_i + \kappa_i - 1}) \stackrel{?}= s_i$. We first coalesce these claims into "groups", by collecting into a single group all of those claims which share a common refinement factor $\kappa_i$ _and_ a common prefix $(r_{i, 0}, \ldots , r_{i, \kappa_i - 1})$. That is, we group together evaluation claims for which the refinement factor $\kappa$ is the same _and_ the first $\kappa$ components of the evaluation point are the same. We write $m$ for the resulting number of _groups_ (i.e., the number of distinct refinement-factor–prefix pairs exhibited by the claims list). Our batching scheme lets us send to the verifier just $m$ tensor-algebra elements, though it entails sending $n$ _field elements_. This ends up being efficient enough for our purposes.
 
-# The Procedure [Expressing small-field claims using tensors and sums]
+# The Actual Interaction [The way we implement it]
+
+As you read through this section, note that it describes the exact same interaction we've outlined above.
 
 Here, without further ado, we describe the steps of ring-switching. Here, we have an $\ell$-variate polynomial $t(X_0, \ldots, X_{\ell - 1})$ fixed and [committed to](/blueprint/cryptography/commitment); we are going to give a protocol to evaluate its $\kappa$-fold _[refinement](/blueprint/cryptography/switching/refinement)_ $t'(X_0, \ldots, X_{\ell + \kappa - 1})$—specifically, to process an _evaluation claim_ of the form $s \stackrel{?}= t'(r_0, \ldots, r_{\ell + \kappa - 1})$.
 
@@ -46,13 +62,6 @@ Our goal will be to reduce that initial evaluation claim to a sum claim on $t(X_
 
 Here is the algorithm.
 
-- By embedding the original (packed) multilinear $t(X_0, \ldots , X_{\ell - 1})$ componentwise _horizontally_ into $A$, we can express it as an $\ell$-variate multilinear over $A$—$\varphi_1(t)$, let's say. The prover computes and sends to the verifier
-
-  $$
-  \begin{equation*}\hat{s} \coloneqq \varphi_1(t)(\varphi_0(r_\kappa), \ldots, \varphi_0(r_{\ell + \kappa - 1})).\end{equation*}
-  $$
-  - The element $\hat{s}$ is an _algebra element_, since the entire evaluation above takes place in the algebra. Thus, concretely, $\hat{s}$ looks like a $2^\kappa \times 2^\kappa$ array of $\mathcal{T}_\iota$-elements.
-  - It is a bit tricky, but a very important and doable exercise, to study concretely what $\hat{s}$ looks like. In fact, its _columns_ $\left( \hat{s}_v \right)_{v \in \mathcal{B}_\kappa}$ will be exactly the _partial evaluations_ $\hat{s}_v = t'(v_0, \ldots, v_{\kappa - 1}, r_\kappa, \ldots , r_{\ell + \kappa - 1})$. Roughly, this is because the vertically embedded elements $\varphi_0(r_\kappa), \ldots, \varphi_0(r_{\ell + \kappa - 1})$ will act "slice-wise" on the cells of the coefficients $\varphi_1(t)(w)$, for $w \in \mathcal{B}_\ell$ (recall that these coefficients are _horizontally_ embedded). We prove this fact rigorously in our paper (see [[DP24](https://eprint.iacr.org/2024/504), Thm. 4.2]).
 - Writing $\left( \hat{s}_v \right)_{v \in \mathcal{B}_\kappa}$ for $\hat{s}$'s columns, the verifier checks:
 
   $$
