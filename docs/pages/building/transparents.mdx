@@ -36,7 +36,7 @@ let mle = MultilinearExtensionTransparent::<_, PackedType<U, F>, _>::from_values
 )?;
 ```
 
-But notice we're passing in `packed_values`, whereas we're only given `value`. We must take the `FS` values vector given and create a vector of packed `FS` values. For context on packing, see our page on _[**packed fields**](/building/packed)_.
+But notice we're passing in `packed_values`, whereas we're only given `value`. We must take the `FS` values vector given and create a vector of packed `FS` values.
 
 Before we create the packed values, we must calculate how large our packed value vector will be due to packing.
 The packing width is `PackedType::<U, FS>::WIDTH`, so if `values.len()` was divisible by this packing width we'd simply divide.
