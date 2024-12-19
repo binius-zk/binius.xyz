@@ -14,16 +14,16 @@ Addition of two of these arrays is defined as their cell-wise sum. Multiplicatio
 and beyond the scope of these docs. However, the page on the tensor algebra describes the $output$ of this operation
 in all of the special cases we care about. We denote this ring throughout by $A$.
 
-Let's call our small field $K$ and our big field $L$, which is an extension over $K$ of degree $2^k$.
+Let's call our small field $\mathcal{T}_{\iota}$ and our big field $\mathcal{T}_{\tau}$, which is an extension over $\mathcal{T}_{\iota}$ of degree $2^k$.
 
-For some $x \in L$ where $L$ is our big field, we create some notation for 
-the element of $A$ whose first column is $x$ expressed as a vector of elements of $K$, and whose
+For some $x \in \mathcal{T}_{\tau}$ where $\mathcal{T}_{\tau}$ is our big field, we create some notation for 
+the element of $A$ whose first column is $x$ expressed as a vector of elements of $\mathcal{T}_{\iota}$, and whose
 other columns are all zeros.
 In particular, we call this thing $\varphi_0(x)$. You can think of $\varphi_0: L \rightarrow A$ as the function that 
 "embeds" it's input $x$ into the first row of the output it returns, and leaves everything else zeroed out.
 
-For example, let's call $B = \{B_0, B_1, B_2, B_3\}$ the basis of $F_{2^{128}}$ as an $F_{2^{32}}$ vector space.
-Note that this means $L = F_{2^{128}}$, $K = F_{2^{32}}$ and $k = 2$
+For example, let's call $B = \{B_0, B_1, B_2, B_3\}$ the basis of $\mathcal{T}_7$ as a $\mathcal{T}_5$ vector space.
+Note that this means $\mathcal{T}_{\tau} = \mathcal{T}_7$, $\mathcal{T}_{\iota} = \mathcal{T}_5$ and $k = 2$
 
 If $x = a_0B_0+a_1B_1+a_2B_2+a_3B_3$, $\varphi_0(x)$ looks like this:
 
@@ -35,7 +35,7 @@ If $x = a_0B_0+a_1B_1+a_2B_2+a_3B_3$, $\varphi_0(x)$ looks like this:
 | $a_3$ | 0 | 0 | 0 |
 
 
-Similarly, we the row-embedding of "x" as $\varphi_1(x)$
+Similarly, we denote the "first-row-embedding" of $x$ as $\varphi_1(x)$
 
 | $a_0$ | $a_1$ | $a_2$ | $a_3$ |
 |---|---|---|---|
@@ -44,18 +44,18 @@ Similarly, we the row-embedding of "x" as $\varphi_1(x)$
 | 0 | 0 | 0 | 0 |
 
 It actually turns out that 
-for $x,y \in L$, multiplying $\varphi_0(x)$ and $\varphi_0(y)$ gives us 
+for $x,y \in \mathcal{T}_{\tau}$, multiplying $\varphi_0(x)$ and $\varphi_0(y)$ gives us 
 $\varphi_0(xy)$ and multiplying $\varphi_1(x)$ and $\varphi_1(y)$ gives us 
 $\varphi_1(xy)$.
 
 ## Some More Information about Multiplication
 
 Let's discuss the special case of this operation that we'll need to use here.
-If we multiply some element $a$ (we let $a_i$ be the $L$ element that takes up row $i$) of our tensor algebra by another element $b = \varphi_0(x)$,
+If we multiply some element $a$ (we let $a_i$ be the $T_tau$ element that takes up row $i$) of our tensor algebra by another element $b = \varphi_0(x)$,
 our result is the tensor algebra $c$ element whose rows (let's call them the $c_i$'s) satisfy $c_i = a_i * x$.
 
 Note that the diagram below $still$ represents our 2D array objects (even though they look 1-dimensional), the only difference is that 
-we're now viewing each column as one $L$-element instead of the $2^k$ $K$-elements of it's $K$-basis decomposition.
+we're now viewing each column as one $\mathcal{T}_{\tau}$-element instead of the $2^k$ $\mathcal{T}_{\iota}$-elements of it's $\mathcal{T}_{\iota}$-basis decomposition.
 The Tensor Algebra elements depicted here have $k=2$ (so $2^k = 4$), just like the ones in the diagram from the previous explanation.
 
 | $a_0$ | $a_1$ | $a_2$ | $a_3$ |
@@ -71,9 +71,9 @@ The Tensor Algebra elements depicted here have $k=2$ (so $2^k = 4$), just like t
 | $a_0x$ | $a_1x$ | $a_2x$ | $a_3x$ |
 |---|---|---|---|
 
-All this is to say that we're just multiplying each of our columns (which we can think of as either $2^k$ elements of $K$ or one element of $L$) by $x$ (the single $L$ element occupying the first row of $b$, remember that $b$'s other rows are all zeros).
+All this is to say that we're just multiplying each of our columns (which we can think of as either $2^k$ elements of $\mathcal{T}_{\iota}$ or one element of $\mathcal{T}_{\tau}$) by $x$ (the single $\mathcal{T}_{\tau}$ element occupying the first row of $b$, remember that $b$'s other rows are all zeros).
 
-Similarly, it turns out that multiplying $a$ by some $b = \varphi_1(x)$ (so all but one of $b$'s columns is zero) multiplies the $L$-elements spanning each column of $a$ by $x$.
+Similarly, it turns out that multiplying $a$ by some $b = \varphi_1(x)$ (so all but one of $b$'s columns is zero) multiplies the $\mathcal{T}_{\tau}$-elements spanning each column of $a$ by $x$.
 
 ## Key property of the Tensor Algebra
 
