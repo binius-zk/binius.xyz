@@ -3,7 +3,7 @@
 A Ring is a set, but with some specific properties.
 Much like a Field (a special type of Ring that you've read a lot about already on this site),
 Rings are equipped with operations of addition and multiplication, such that adding/multiplying
-two elements in a ring gives us a result in the Ring. A subring (as the name suggests)
+two elements in a ring gives us a result in the ring. A subring (as the name suggests)
 is a subset of a ring, which itself is also a ring.
 
 
@@ -22,7 +22,7 @@ other columns are all zeros.
 In particular, we call this thing $\varphi_0(x)$. You can think of $\varphi_0: L \rightarrow A$ as the function that 
 "embeds" it's input $x$ into the first row of the output it returns, and leaves everything else zeroed out.
 
-Let's call $B = \{B_0, B_1, B_2, B_3\}$ the basis of $F_{2^{128}}$ as an $F_{2^{32}}$ vector space for example.
+For example, let's call $B = \{B_0, B_1, B_2, B_3\}$ the basis of $F_{2^{128}}$ as an $F_{2^{32}}$ vector space.
 Note that this means $L = F_{2^{128}}$, $K = F_{2^{32}}$ and $k = 2$
 
 If $x = a_0B_0+a_1B_1+a_2B_2+a_3B_3$, $\varphi_0(x)$ looks like this:
@@ -54,8 +54,9 @@ Let's discuss the special case of this operation that we'll need to use here.
 If we multiply some element $a$ (we let $a_i$ be the $L$ element that takes up row $i$) of our tensor algebra by another element $b = \varphi_0(x)$,
 our result is the tensor algebra $c$ element whose rows (let's call them the $c_i$'s) satisfy $c_i = a_i * x$.
 
-Note that the diagram below $still$ represents our 2D array objects, the only difference is that 
+Note that the diagram below $still$ represents our 2D array objects (even though they look 1-dimensional), the only difference is that 
 we're now viewing each column as one $L$-element instead of the $2^k$ $K$-elements of it's $K$-basis decomposition.
+The Tensor Algebra elements depicted here have $k=2$ (so $2^k = 4$), just like the ones in the diagram from the previous explanation.
 
 | $a_0$ | $a_1$ | $a_2$ | $a_3$ |
 |---|---|---|---|
@@ -79,7 +80,7 @@ Similarly, it turns out that multiplying $a$ by some $b = \varphi_1(x)$ (so all 
 By now you might be left wondering how we can use this in a way that's actually algebraic.
 For now, let's state some facts proven in (this paper). 
 
-Each nonzero polynomial $p(X)$ with coefficients in $A$ of degree d has at most d zeros 
+Each nonzero polynomial $p(X)$ with coefficients in $A$ of degree $d$ has at most $d$ zeros 
 in the subring $\varphi_1(L)$. 
 
 What does this mean for us? It means that if a prover makes a claim of the form $p(X) = q(X)$,
