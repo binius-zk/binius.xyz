@@ -165,20 +165,20 @@ export default defineConfig({
       },
       {
         text: "The Basic Pattern",
-        link: "/building/patterns",
+        link: "/building/pattern",
         collapsed: false,
         items: [
           {
             text: "Declaring Columns",
-            link: "/building/patterns/declaring",
+            link: "/building/pattern/declaring",
           },
           {
             text: "Populating Columns",
-            link: "/building/patterns/populating",
+            link: "/building/pattern/populating",
           },
           {
             text: "Constraining Columns",
-            link: "/building/patterns/constraining",
+            link: "/building/pattern/constraining",
           },
         ],
       },
