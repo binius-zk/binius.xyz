@@ -1,0 +1,23 @@
+# Proof parameters
+
+In order to call Binius [prove](https://docs.binius.xyz/binius_core/constraint_system/fn.prove.html) and [verify](https://docs.binius.xyz/binius_core/constraint_system/fn.verify.html) functions, we must specify arguments and type parameters.
+Obtaining the constraint system and the witness are described in [Constraint Systems](/building/constraints).
+The boundary values are created without dependence on the constraint system API.
+The proof argument for the `verify` function is obtained as output from the `prove` function.
+The arguments that remain are
+
+- `log_inv_rate: usize`:
+- `security_bits: usize`:
+- `domain_factory: DomainFactory`:
+- `backend: Backend`
+
+as well as all the type parameters.
+
+log_inv_rate.
+this specifies the "blowup" factor of the FRI commitment scheme.
+
+security bits
+
+domain factory
+
+{/*  */}

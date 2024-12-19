@@ -1,14 +1,19 @@
-import { defineConfig } from 'vocs'
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
+import { defineConfig } from "vocs";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 export default defineConfig({
-  title: 'binius.xyz',
+  title: "binius.xyz",
   head() {
     return (
       <>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></link>
-        <script dangerouslySetInnerHTML={{ __html: `
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+        ></link>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           if (location.pathname !== '/') {
             document.documentElement.style.opacity = '0';
             document.addEventListener('DOMContentLoaded', () => {
@@ -16,44 +21,50 @@ export default defineConfig({
               document.documentElement.style.transition = 'opacity 0.1s';
             });
           }
-        `}} />
-        <link href="/favicon-light.png" rel="icon" media="(prefers-color-scheme: light)" />
-        <link href="/favicon-dark.png" rel="icon" media="(prefers-color-scheme: dark)" />
+        `,
+          }}
+        />
+        <link
+          href="/favicon-light.png"
+          rel="icon"
+          media="(prefers-color-scheme: light)"
+        />
+        <link
+          href="/favicon-dark.png"
+          rel="icon"
+          media="(prefers-color-scheme: dark)"
+        />
       </>
-    )
+    );
   },
   logoUrl: {
-    light: '/logo-light.svg',
-    dark: '/logo-dark.svg',
+    light: "/logo-light.svg",
+    dark: "/logo-dark.svg",
   },
   markdown: {
-    remarkPlugins: [
-      remarkMath,
-    ],
-    rehypePlugins: [
-      rehypeKatex,
-    ]
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
   },
   topNav: [
     {
-      text: 'Basics',
-      link: '/basics',
-      match: '/basics'
+      text: "Basics",
+      link: "/basics",
+      match: "/basics",
     },
     {
-      text: 'Building',
-      link: '/building',
-      match: '/building'
+      text: "Building",
+      link: "/building",
+      match: "/building",
     },
     {
-      text: 'Blueprint',
-      link: '/blueprint',
-      match: '/blueprint'
+      text: "Blueprint",
+      link: "/blueprint",
+      match: "/blueprint",
     },
     {
-      text: 'Benchmarks',
-      link: '/benchmarks',
-      match: '/benchmarks'
+      text: "Benchmarks",
+      link: "/benchmarks",
+      match: "/benchmarks",
     },
   ],
   sidebar: {
@@ -67,17 +78,17 @@ export default defineConfig({
         link: "/basics/overview",
       },
       {
-        text: 'Binius\'s Arithmetization',
+        text: "Binius's Arithmetization",
         collapsed: false,
-        link: '/basics/arithmetization/',
+        link: "/basics/arithmetization/",
         items: [
           {
             text: "Background",
-            link: "/basics/arithmetization/background"
+            link: "/basics/arithmetization/background",
           },
           {
             text: "Data Types",
-            link: "/basics/arithmetization/types"
+            link: "/basics/arithmetization/types",
           },
           {
             text: "Multi-Multiset Matching",
@@ -86,18 +97,17 @@ export default defineConfig({
             items: [
               {
                 text: "A Toy Example",
-                link: "/basics/arithmetization/matching/example"
+                link: "/basics/arithmetization/matching/example",
               },
               {
                 text: "Definition of M3",
-                link: "/basics/arithmetization/matching/definition"
+                link: "/basics/arithmetization/matching/definition",
               },
               {
                 text: "Proving Collatz Orbits",
-                link: "/basics/arithmetization/matching/collatz"
+                link: "/basics/arithmetization/matching/collatz",
               },
-
-            ]
+            ],
           },
           {
             text: "M3 Examples",
@@ -106,17 +116,17 @@ export default defineConfig({
             items: [
               {
                 text: "Lasso Lookup",
-                link: "/basics/arithmetization/examples/lasso"
+                link: "/basics/arithmetization/examples/lasso",
               },
               {
                 text: "RAM",
-                link: "/basics/arithmetization/examples/ram"
+                link: "/basics/arithmetization/examples/ram",
               },
               {
                 text: "Merkle–Patricia Inclusion",
-                link: "/basics/arithmetization/examples/mpt"
+                link: "/basics/arithmetization/examples/mpt",
               },
-            ]
+            ],
           },
         ],
       },
@@ -136,9 +146,9 @@ export default defineConfig({
           {
             text: "External Resources",
             link: "/basics/resources/external",
-          },    
-        ]
-      }
+          },
+        ],
+      },
     ],
     "/building": [
       {
@@ -154,7 +164,7 @@ export default defineConfig({
         link: "/building/bitwise",
       },
       {
-        text: "The Basic Patterns",
+        text: "The Basic Pattern",
         link: "/building/patterns",
         collapsed: false,
         items: [
@@ -170,20 +180,20 @@ export default defineConfig({
             text: "Constraining Columns",
             link: "/building/patterns/constraining",
           },
-        ]
+        ],
       },
       {
         text: "Making Transparents",
         link: "/building/transparents",
       },
       {
-        text: "Packed Fields",
-        link: "/building/packed",
-      },
-      {
         text: "Collatz in Practice",
         link: "/building/collatz",
-      }
+      },
+      {
+        text: "Proof parameters",
+        link: "/building/parameters",
+      },
     ],
     "/blueprint": [
       {
@@ -205,11 +215,11 @@ export default defineConfig({
         items: [
           {
             text: "Multilinear Polynomials",
-            link: "/blueprint/background/multilinears"
+            link: "/blueprint/background/multilinears",
           },
           {
             text: "The PIOP and IOP Models",
-            link: "/blueprint/background/models"
+            link: "/blueprint/background/models",
           },
           {
             text: "Binary Towers",
@@ -238,8 +248,8 @@ export default defineConfig({
               {
                 text: "Shifting",
                 link: "/blueprint/reductions/virtual/shift",
-              }
-            ]
+              },
+            ],
           },
           {
             text: "Zerocheck",
@@ -248,17 +258,17 @@ export default defineConfig({
             items: [
               {
                 text: "Review",
-                link: "/blueprint/reductions/zerocheck/review"
+                link: "/blueprint/reductions/zerocheck/review",
               },
               {
                 text: "Univariate Skip",
-                link: "/blueprint/reductions/zerocheck/univariate"
+                link: "/blueprint/reductions/zerocheck/univariate",
               },
               {
                 text: "The Rest",
-                link: "/blueprint/reductions/zerocheck/rest"
-              }
-            ]
+                link: "/blueprint/reductions/zerocheck/rest",
+              },
+            ],
           },
           {
             text: "Multiset Check",
@@ -271,13 +281,13 @@ export default defineConfig({
           {
             text: "Evalcheck",
             link: "/blueprint/reductions/evalcheck",
-          }
+          },
         ],
       },
       {
-        text: 'The Cryptographic Layer',
+        text: "The Cryptographic Layer",
         collapsed: false,
-        link: '/blueprint/cryptography/',
+        link: "/blueprint/cryptography/",
         items: [
           {
             text: "Commitment",
@@ -286,21 +296,21 @@ export default defineConfig({
             items: [
               {
                 text: "Error-Correcting Codes",
-                link: "/blueprint/cryptography/commitment/codes"
+                link: "/blueprint/cryptography/commitment/codes",
               },
               {
                 text: "The Additive NTT",
-                link: "/blueprint/cryptography/commitment/additive"
+                link: "/blueprint/cryptography/commitment/additive",
               },
               {
                 text: "The Procedure",
-                link: "/blueprint/cryptography/commitment/procedure"
+                link: "/blueprint/cryptography/commitment/procedure",
               },
               {
                 text: "Batched Commitment",
-                link: "/blueprint/cryptography/commitment/batched"
+                link: "/blueprint/cryptography/commitment/batched",
               },
-            ]
+            ],
           },
           {
             text: "Ring-Switching",
@@ -309,21 +319,21 @@ export default defineConfig({
             items: [
               {
                 text: "The Refinement Polynomial",
-                link: "/blueprint/cryptography/switching/refinement"
+                link: "/blueprint/cryptography/switching/refinement",
               },
               {
                 text: "The Tensor Algebra",
-                link: "/blueprint/cryptography/switching/tensor"
+                link: "/blueprint/cryptography/switching/tensor",
               },
               {
                 text: "Motivational Remarks",
-                link: "/blueprint/cryptography/switching/motivation"
+                link: "/blueprint/cryptography/switching/motivation",
               },
               {
                 text: "The Procedure",
-                link: "/blueprint/cryptography/switching/procedure"
+                link: "/blueprint/cryptography/switching/procedure",
               },
-            ]
+            ],
           },
           {
             text: "Batch Evaluation",
@@ -332,22 +342,22 @@ export default defineConfig({
             items: [
               {
                 text: "Review of FRI",
-                link: "/blueprint/cryptography/evaluation/fri"
+                link: "/blueprint/cryptography/evaluation/fri",
               },
               {
                 text: "The Procedure",
-                link: "/blueprint/cryptography/evaluation/procedure"
+                link: "/blueprint/cryptography/evaluation/procedure",
               },
-            ]
+            ],
           },
-        ]
+        ],
       },
     ],
     "/benchmarks": [
       {
         text: "Benchmarks",
         link: "/benchmarks",
-      }
-    ]
+      },
+    ],
   },
-})
+});

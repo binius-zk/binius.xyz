@@ -2,7 +2,18 @@
 
 At the center of our circuit programming API is the `ConstraintSystem`, which is shared between prover and verifier, and describes how the prover's witness data is constrained.
 
-As a circuit programmer you won't need to access any of its fields directly, but there are still some things that are useful to know about it. It looks like this:
+After a brief look at the `ConstraintSystem`, we turn to how constraint systems and witnesses are created and used by the prover and verifier.
+
+The prover and verifier invoke `prove` and `verify` functions which take the following inputs.
+
+- **Prove:** a constraint system and a witness.
+- **Verify:** a constraint system and boundary values.
+
+The [boundary values](https://docs.binius.xyz/binius_core/constraint_system/channel/struct.Boundary.html) are integral to our arithmetization techniques and are [introduced here](http://localhost:5173/basics/arithmetization/matching/definition#boundary-constraints).
+They are what allow the verifier to connect the proof received to the statement proven.
+While the prover doesn't need the boundary values, the prover must often help construct the boundary values and give them to the verifier as advice.
+
+As a circuit programmer you won't need to access any fields of the `ConstraintSystem` directly, but there are still some things that are useful to know about it. It looks like this:
 
 ```rs
 pub struct ConstraintSystem<F: TowerField> {
@@ -14,44 +25,98 @@ pub struct ConstraintSystem<F: TowerField> {
 }
 ```
 
-The `ConstraintSystem` currently constrains witness data in 4 ways:
+The `ConstraintSystem` currently constrains witness data in four ways:
 
 - **Virtual oracles**: These define relationships between columns that the verifier also knows about. An example of this is `Shifted`, which describes one column as a shift of another one.
-- **Polynomial constraints**: These are also known as zerocheck constraints, and asserts that certain polynomial compositions of witness columns are equal to zero everywhere _(on the hypercube)_.
-- **Nonzero oracles**: A list of columns that are not allowed to contain any zeros.
-- **Channel flushes**: Requires that all pushes/pulls to a channel must balance each other out. If the tuple (4, 5) is pushed to a channel, the tuple (4, 5) must also be pulled for the channel to be balanced.
+- **Zero-check constraints**: These assert that certain the rows across certain columns satisfy certain equations. We call them "zero-checks" because we express these equations as arithmetic expression on which the rows must vanish.
+- **Non-zero oracles**: These assert that certain columns are not allowed to contain any zeros.
+- **Channel flushes**: These require that all pushes/pulls to a channel must balance each other out. If the tuple (4, 5) is pushed to a channel, the tuple (4, 5) must also be pulled for the channel to be balanced.
 
----
+Next we outline how to obtain a constrain system, a witness, and how to feed them to the prover and verifier.
 
-There are 3 relevant functions you need to know about once you have a `ConstraintSystem`. `prove`, `verify` and `validate_witness`. The signatures look something like this after all the generic type arguments are hidden (for readability):
+## Building the constraint system
+
+To build both the constraint system and the witness, we use a [`ConstraintSystemBuilder`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html).
+The prover and verifier use a `ConstraintSystemBuilder` as follows. Let us suppose there is a black box function `build` which accepts the builder, and is responsible for building the entire constraint system as well as the witness. We will describe subsequently...
+We suppress type parameters for readability.
+
+- **Verifier:** the verifier calls [`ConstraintSystemBuilder::new`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.new) to create a `builder`. Upon passing the builder to our blackbox `build` function, we can extract out the constraint system by calling `builder.build`.
+
+  ```rust
+  let mut builder = ConstraintSystemBuilder::new();
+
+  build(&mut builder)?;
+
+  let constraint_system = builder.build()?;
+  ```
+
+  Provided boundary values, a proof from the prover, and `log_inv_rate` and `security_bits` parameters, the verifier can call
+
+  ```rs
+  fn verify(
+  	constraint_system: &ConstraintSystem,
+  	log_inv_rate: usize,
+  	security_bits: usize,
+  	boundaries: Vec<Boundary>,
+  	proof: Proof,
+  ) -> Result<(), Error>;
+  ```
+
+- **Prover:** the prover calls [`ConstraintSystemBuilder::new_with_witness`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.new_with_witness) to create a `builder`, but must pass in an allocator. Currently we use the simple bump allocator [bumpalo](https://github.com/fitzgen/bumpalo).
+  The prover then calls our blackbox `build` function just as the verifier did, and afterwards extracts both the constraint system and the witness.
+
+  ```rs
+  let allocator = bumpalo::Bump::new();
+  let mut builder = ConstraintSystemBuilder::new_with_witness(&allocator);
+
+  build(&mut builder)?;
+
+  let constraint_system = builder.build()?;
+  let witness = builder.take_witness()?;
+  ```
+
+  Provided the same parameters as the verifier, as well as a domain factory and a backend, the prover can then obtain a proof by calling
+
+  ```rs
+  fn prove(
+  	constraint_system: &ConstraintSystem,
+  	log_inv_rate: usize,
+  	security_bits: usize,
+  	witness: MultilinearExtensionIndex,
+  	domain_factory: DomainFactory,
+  	backend: &Backend,
+  ) -> Result<Proof, Error>;
+  ```
+
+  There is also a helper function [`validate_witness`](https://docs.binius.xyz/binius_core/constraint_system/channel/fn.validate_witness.html) the prover can call to ensure the witness is valid with respect to the constraint system.
+
+  ```rs
+  pub fn validate_witness(
+  	constraint_system: &ConstraintSystem,
+  	boundaries: &[Boundary],
+  	witness: &MultilinearExtensionIndex,
+  ) -> Result<(), Error>;
+  ```
+
+  This is a developer tool that can be helpful when building a constraint system to avoid the cost of generating and verifying a proof.
+
+## The `build` function
+
+Within our blackbox `build` function, we must build both the constraint system and the witness.
+Since both the prover and verifier are calling `build`, yet only the prover is to build the witness, we must detect whether it is the prover or the verifier calling `build`.
+Recall that the prover and verifier instantiated the `builder` differently.
+The prover instantiated with an allocator for the witness and the verifier didn't.
+Calling [`builder.witness()`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.witness) we receive an `Option` that returns the witness (or rather the witness builder) if and only if the builder was instantiated by the prover.
+
+Throughout our `build` function we can build up the witness in prover-only code blocks of the form
 
 ```rs
-pub fn validate_witness(
-	constraint_system: &ConstraintSystem,
-	boundaries: &[Boundary],
-	witness: &MultilinearExtensionIndex,
-) -> Result<(), Error>;
+if let Some(witness) = builder.witness() {
+	// add columns to the witness
+}
 ```
 
-- This is a developer tool to ensure that your witness generation logic agrees with your constraints.
+Outside of these prover-only code blocks all logic is devoted to building the constraint system shared by the prover and verifier.
+Care must be taken to ensure the additional code executed by the prover doesn't cause the constraint systems to differ between the prover and verifier, otherwise proof verification will fail.
 
-```rs
-pub fn prove(
-	constraint_system: &ConstraintSystem,
-	log_inv_rate: usize,
-	security_bits: usize,
-	witness: MultilinearExtensionIndex,
-	domain_factory: DomainFactory,
-	backend: &Backend,
-) -> Result<Proof, Error>;
-```
-
-```rs
-pub fn verify(
-	constraint_system: &ConstraintSystem,
-	log_inv_rate: usize,
-	security_bits: usize,
-	boundaries: Vec<Boundary>,
-	proof: Proof,
-) -> Result<(), Error>;
-```
+For details on how to create columns, constrain them, and let the prover populate them for the witness, see [the basic pattern](/building/patterns).

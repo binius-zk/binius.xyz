@@ -1,13 +1,19 @@
 # Constraining Columns
 
-There are currently three types of constraints that can be applied to columns.
+There are several types of constraints that can be applied to columns.
+When we create virtual columns, we are imposing a constraint on what values they must contain in terms of other columns.
+We can also constrain relationships between columns by enforcing the rows of the columns satisfy an equation.
+Checking column values to be non-zero, and flushing column values into a channel, are two more ways to impose constraints on columns.
+
+Having discussed [virtual oracles](/building/basic_pattern/declare_columns/#virtual-columns) previously, we focus this page on the other three types of constraints.
+To clarify, those three constraint types are:
 
 - Asserting a constraint on every row of a list of columns.
-- Asserting every value in a column is nonzero.
+- Asserting every value in a column is non-zero.
 - Flushing rows of a list of columns into a channel.
 
 Columns may participate in more than one constraint and more than one kind of constraint.
-It could be possible, for example, to check a column vanishes on some expression, has all nonzero values, and also flush those values into a channel.
+It could be possible, for example, to check a column vanishes on some expression, has all non-zero values, and also flush those values into a channel.
 
 ## Asserting Zero
 
