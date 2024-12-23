@@ -1,0 +1,84 @@
+
+stages:
+  - build
+  - test
+  - bench
+
+
+nightly_benchmarks_binius:
+  stage: bench
+  tags:
+    - binius-nightly-bench  # runs on specific machine
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'  # Run on schedule
+      when: always
+      allow_failure: false
+  before_script:
+    - source ~/.profile
+    - source ~/.bashrc
+    - export CARGO_HOME="${HOME}/.cargo"
+    - export RUSTUP_HOME="${HOME}/.rustup"
+    - env
+
+    - if ! grep -q avx512 /proc/cpuinfo; then echo "Error, AVX-512 instruction is not available" >&2; exit 1; fi
+
+    # TODO: remove if not needed
+    # # ensure private Gitlab repos can be cloned by CI
+    # # https://oliverjumpertz.com/blog/how-to-handle-private-gitlab-dependencies-with-cargo/
+    # - rm -f ~/.gitconfig
+    # - rm -f ~/.git-credentials
+    # - git config --global credential.helper store
+    # - echo "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com" > ~/.git-credentials
+    # - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com".insteadOf ssh://git@gitlab.com
+
+    - lscpu
+    - rustc --version
+    - rustup update
+    - rustup install nightly
+    - rustup default nightly
+    - rustc --version
+    - cargo --version
+
+  script:
+    - echo "Run Nightly Benchmark for Binius"
+    - ls -lah
+    - git clone --branch anexj/add_examples_for_benchmarking https://gitlab.com/IrreducibleOSS/binius.git
+    - cd binius
+    - ls -lah
+    - git status
+    - python3 --version
+    # TODO: do we need to add any arguments to this command?
+    - python3 scripts/nightly_benchmarks.py
+    # TODO: copy generated reports to: docs/pages/benchmarks/index.mdx - in the binius.xyz
+    # TODO: create branch on binius.xyz, and commit changes as MR
+    # Note: REPO_ACCESS_TOKEN is already created and set up in ulvetanna/biniux.xyz repo for CI/CD to use
+    # - cd ..
+    # - BENCH_TIMESTAMP=$(date '+%Y%m%d-%H%M%S')
+    # - BENCH_HUMAN_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+    # - BRANCH_NAME="new-bench-${BENCH_TIMESTAMP}"
+    # - MR_ASSIGN="AnexJ"
+    # - git checkout -b "${BRANCH_NAME}"
+
+    # # Commit the change
+    # - git config user.email "infra@irreducible.com"
+    # - git config user.name "Infra CD"
+    # - git add .
+    # - git commit -m "Add new bench results run on ${BENCH_HUMAN_TIMESTAMP}"
+
+    # - git status
+
+    # # Push the new branch with MR creation options
+    # - git remote add gitlab_origin https://oauth2:${REPO_ACCESS_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git
+    # # https://docs.gitlab.com/ee/topics/git/commit.html#push-options-for-merge-requests
+    # - |
+    #   git push gitlab_origin "${BRANCH_NAME}" \
+    #     -o merge_request.create \
+    #     -o merge_request.title="New bench results (${BENCH_HUMAN_TIMESTAMP})" \
+    #     -o merge_request.description="New bench results run on ${BENCH_HUMAN_TIMESTAMP}" \
+    #     -o merge_request.assign="${MR_ASSIGN}" \
+    #     -o merge_request.draft
+
+  # TODO: remove if not needed
+  # after_script:
+  #   - rm -f ~/.gitconfig
+  #   - rm -f ~/.git-credentials
