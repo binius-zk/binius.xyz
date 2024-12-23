@@ -56,7 +56,6 @@ nightly_benchmarks_binius:
     - cat results/index-2.mdx
     # TODO: copy generated reports to: docs/pages/benchmarks/index.mdx - in the binius.xyz
     - cp results/index-1.mdx docs/pages/benchmarks/index.mdx
-    - rm -rf results
     - git status
     # TODO: create branch on binius.xyz, and commit changes as MR
     # Note: REPO_ACCESS_TOKEN is already created and set up in ulvetanna/biniux.xyz repo for CI/CD to use
@@ -70,7 +69,7 @@ nightly_benchmarks_binius:
     # Commit the change
     - git config user.email "infra@irreducible.com"
     - git config user.name "Infra CD"
-    - git add .
+    - git add docs/pages/benchmarks/index.mdx
     - git status
     # - git commit -m "Add new bench results run on ${BENCH_HUMAN_TIMESTAMP}"
 
