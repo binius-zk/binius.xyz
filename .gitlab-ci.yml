@@ -22,15 +22,6 @@ nightly_benchmarks_binius:
 
     - if ! grep -q avx512 /proc/cpuinfo; then echo "Error, AVX-512 instruction is not available" >&2; exit 1; fi
 
-    # TODO: remove if not needed
-    # # ensure private Gitlab repos can be cloned by CI
-    # # https://oliverjumpertz.com/blog/how-to-handle-private-gitlab-dependencies-with-cargo/
-    # - rm -f ~/.gitconfig
-    # - rm -f ~/.git-credentials
-    # - git config --global credential.helper store
-    # - echo "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com" > ~/.git-credentials
-    # - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com".insteadOf ssh://git@gitlab.com
-
     - lscpu
     - rustc --version
     - rustup update
@@ -48,7 +39,7 @@ nightly_benchmarks_binius:
     - ls -lah
     - git status
     - python3 --version
-    # TODO: do we need to add any arguments to this command?
+    # TODO: do we need to update arguments?
     - python3 scripts/nightly_benchmarks.py --export-hashers ../results/index-1.mdx --export-binary-ops ../results/index-2.mdx
     # Go back to root directory
     - cd ..
@@ -57,9 +48,7 @@ nightly_benchmarks_binius:
     # TODO: copy generated reports to: docs/pages/benchmarks/index.mdx - in the binius.xyz
     - cp results/index-1.mdx docs/pages/benchmarks/index.mdx
     - git status
-    # TODO: create branch on binius.xyz, and commit changes as MR
-    # Note: REPO_ACCESS_TOKEN is already created and set up in ulvetanna/biniux.xyz repo for CI/CD to use
-    # 
+    # Create branch on binius.xyz with updated benchmark results and create an MR
     - BENCH_TIMESTAMP=$(date '+%Y%m%d-%H%M%S')
     - BENCH_HUMAN_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
     - BRANCH_NAME="new-bench-${BENCH_TIMESTAMP}"
@@ -71,6 +60,10 @@ nightly_benchmarks_binius:
     - git config user.name "Infra CD"
     - git add docs/pages/benchmarks/index.mdx
     - git status
+    - gi diff docs/pages/benchmarks/index.mdx
+
+    # TODO: uncomment rest
+    # Note: REPO_ACCESS_TOKEN is already created and set up in ulvetanna/biniux.xyz repo for CI/CD to use
     # - git commit -m "Add new bench results run on ${BENCH_HUMAN_TIMESTAMP}"
 
     # - git status
@@ -85,8 +78,3 @@ nightly_benchmarks_binius:
     #     -o merge_request.description="New bench results run on ${BENCH_HUMAN_TIMESTAMP}" \
     #     -o merge_request.assign="${MR_ASSIGN}" \
     #     -o merge_request.draft
-
-  # TODO: remove if not needed
-  # after_script:
-  #   - rm -f ~/.gitconfig
-  #   - rm -f ~/.git-credentials
