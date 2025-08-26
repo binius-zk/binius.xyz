@@ -3,46 +3,62 @@ import Collapsible from '../../components/Collapsible';
 import { Callout } from 'vocs/components';
 
 
-# Blueprint [A detailed blueprint of Binius]
+# Blueprint [Cryptographic details about our backend]
 
-In our _[basics](/basics)_ site section, we recorded a high-level overview of Binius, generally taking the end-user's perspective. We described Binius's frontend [arithmetization](/basics/arithmetization) scheme, M3, and how that scheme captures real-life problems.
-
-In this site section, we explain the cryptographic inner-workings of Binius—that is, its _backend_.
-
-## Getting Started
-
-For a first, high-level look, please start with our [overview page](/blueprint/overview).
+In this site section, we explain the cryptographic backend of Binius64.
 
 ## Site Directory
 
-Below, we sketch this site area's sections in slightly more detail. We begin with introductory content.
+We've split this site area into a few subsections.
 
 <Callout type="note">
 <Collapsible>
-[**Mathematical Background.**](background) Here, we record preliminary mathematical material, necessary to understand this blueprint.
+[**Math Background.**](background) This section contains a crash course on the mathematical objects we use.
 
-This section serves mainly as a reference, and should not necessarily be read cover-to-cover. We will frequently refer to this section throughout our main treatment.
-</Collapsible>
-</Callout>
-
-Binius's _backend_ spans roughly two layers, which we outline now.
-
-<Callout type="note">
-<Collapsible>
-[**The Reductions.**](reductions) This layer contains a plurality of reduction techniques, aimed largely at progressively _simplifying_ and _unifying_ claims output by the arithmetization layer.
-
-Indeed, our arithmetization layer computational problems into [mathematical claims](/blueprint/mathematizing), themselves either _multiset equality_ claims or _vanishing_ claims (these sorts of claims respectively correspond to the balancing of channels and to the satisfaction of gate constraints).
-
-Our _reduction layer_ serves to progressively unroll, simplify, and unify these sorts of cryptographic claims. More specifically, the layer's goal is to reduce these cryptographic claims—which amount to complex predicates on _committed_ and _virtual_ polynomials—to simple _evaluation claims_. An _evaluation claim_, by definition, entails that a particular committed multilinear, at a particular point, evaluates to a particular value. These are the sorts of claims that are amenable to direct evaluation by our PCS.
-
-Our cryptographic reduction layer is described in detail [here](/blueprint/reductions).
+Start here if you're new. We can't promise to cover everything, but it'll be a useful starting point.
 </Collapsible>
 </Callout>
 
 <Callout type="note">
 <Collapsible>
-[**The Cryptographic Layer.**](cryptography) Here reside the cryptographic protocols and algorithms which make it possible to securely commit to—and later, to evaluate—multilinear polynomials over tiny fields.
+[**Constraint Systems.**](constraints) _Constraint systems_ are how we specify the computations we set about proving and verifying. Think somewhere in between "circuits" and "R1CS".
 
-In this site section, we sketch in plain language Binius's approach to these complex cryptographic tasks—which itself implements and extends the academic work [[DP24](https://eprint.iacr.org/2023/1784)]. Indeed, we summarize that work at a more-informal level of detail, and moreover discuss the various practice-oriented extensions and generalizations of that work implemented in Binius.
+Binius64 introduces a new constraint system. Our constraint system basically takes R1CS, makes it operate fundamentally on 64-bit unsigned integers, and moreover enriches it by natively supporting constraints that act upon (logical, arithmetic, etc.) _bitshifts_ of this witness data. We also bake in support for unsigned, 64-bit integer multiplication.
+
+The constraint system we get out is predictable and simple, but much more useful and efficient than plain, vanilla R1CS in characteristic 2.
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**Oblong Multilinears.**](oblong) Our first cryptographic step is sumcheck-like. Exploiting our 64-bit word structure, we can use Gruen's [[Gru24](https://eprint.iacr.org/2024/108)]'s _univariate skip_ idea in a really elegant way.
+
+To explain how our technique works, we first need to review _oblong-multilinearization_, a technique that comes from Gruen. We also explain a few implementation-oriented considerations. The goal of this step is to reduce the overall satisfaction of AND constraints to _evaluation claims_ on the oblong-multilinearizations of certain polynomials.
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**The Shift Reduction.**](shifts) This is arguably the most technically involved step in our backend. Here, we reduce evaluation claims on our oblong interpolants directly to an evaluation claim on the witness.
+
+Internally, this step involves a multi-stage sumcheck—very roughly like Spartan [[Set20](https://eprint.iacr.org/2019/550.pdf)]'s, but much more complicated. First off, we need to deal with shifting; to do this, we adapt a bunch of ideas from [[DP25](https://eprint.iacr.org/2023/1784)].
+
+We also sketch how we implement our sumchecks efficiently.
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**Integer Multiplication.**](multiplication) Beyond bitwise AND constraints, our constraint system separately lets us carry out unsigned, 64-bit integer multiplication.
+
+To handle these, we use a trick based on GKR, and on working "in the exponent".
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**Polynomial Commitment.**](commitment) The "lowermost" layer of our cryptographic stack deals with the assessment of evaluation claims about multilinear polynomials.
+
+We don't say a ton here. Mostly, we refer out to [[DP24](https://eprint.iacr.org/2024/504)], which describes in detail the polynomial commitment scheme that we use.
 </Collapsible>
 </Callout>

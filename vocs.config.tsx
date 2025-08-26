@@ -222,15 +222,7 @@ export default defineConfig({
         link: "/blueprint",
       },
       {
-        text: "Overview",
-        link: "/blueprint/overview",
-      },
-      {
-        text: "Mathematizing M3 Instances",
-        link: "/blueprint/mathematizing",
-      },
-      {
-        text: "Mathematical Background",
+        text: "Math Background",
         link: "/blueprint/background",
         collapsed: false,
         items: [
@@ -253,137 +245,53 @@ export default defineConfig({
         ],
       },
       {
-        text: "The Reductions",
-        link: "/blueprint/reductions/",
+        text: "Constraint Systems",
+        link: "/blueprint/constraints",
+      },
+      {
+        text: "Oblong Multilinears",
+        link: "/blueprint/oblong",
         collapsed: false,
         items: [
           {
-            text: "Background",
-            link: "/blueprint/reductions/background",
+            text: "Univariate Skip",
+            link: "/blueprint/oblong/univariate"
           },
+        ]
+      },
+      {
+        text: "The Shift Reduction",
+        link: "/blueprint/shifts",
+        collapsed: false,
+        items: [
           {
-            text: "Virtual Polynomials",
-            link: "/blueprint/reductions/virtual",
+            text: "The Shift Indicators",
+            link: "/blueprint/shifts/indicators",
             collapsed: true,
             items: [
               {
-                text: "Merging",
-                link: "/blueprint/reductions/virtual/merge",
+                text: "Logical Shifts",
+                link: "/blueprint/shifts/indicators/logical"
               },
               {
-                text: "Shifting",
-                link: "/blueprint/reductions/virtual/shift",
-              }
+                text: "Arithmetic Shifts",
+                link: "/blueprint/shifts/indicators/arithmetic"
+              },
             ]
           },
           {
-            text: "Zerocheck",
-            link: "/blueprint/reductions/zerocheck",
-            collapsed: true,
-            items: [
-              {
-                text: "Review",
-                link: "/blueprint/reductions/zerocheck/review"
-              },
-              {
-                text: "Univariate Skip",
-                link: "/blueprint/reductions/zerocheck/univariate"
-              },
-              {
-                text: "The Rest",
-                link: "/blueprint/reductions/zerocheck/rest"
-              }
-            ]
-          },
-          {
-            text: "Multiset Check",
-            link: "/blueprint/reductions/multiset",
-          },
-          {
-            text: "Grand Product Argument",
-            link: "/blueprint/reductions/gpa",
-          },
-          {
-            text: "Evalcheck",
-            link: "/blueprint/reductions/evalcheck",
+            text: "Implementation Considerations",
+            link: "/blueprint/shifts/implementation",
           }
         ],
       },
       {
-        text: 'The Cryptographic Layer',
-        collapsed: false,
-        link: '/blueprint/cryptography/',
-        items: [
-          {
-            text: "Commitment",
-            link: "/blueprint/cryptography/commitment",
-            collapsed: true,
-            items: [
-              {
-                text: "Error-Correcting Codes",
-                link: "/blueprint/cryptography/commitment/codes"
-              },
-              {
-                text: "The Additive NTT",
-                link: "/blueprint/cryptography/commitment/additive"
-              },
-              {
-                text: "The Procedure",
-                link: "/blueprint/cryptography/commitment/procedure"
-              },
-              {
-                text: "Batched Commitment",
-                link: "/blueprint/cryptography/commitment/batched"
-              },
-            ]
-          },
-          {
-            text: "Ring-Switching",
-            link: "/blueprint/cryptography/switching",
-            collapsed: true,
-            items: [
-              {
-                text: "The Refinement Polynomial",
-                link: "/blueprint/cryptography/switching/refinement"
-              },
-              {
-                text: "The Tensor Algebra",
-                link: "/blueprint/cryptography/switching/tensor"
-              },
-              {
-                text: "Motivational Remarks",
-                link: "/blueprint/cryptography/switching/motivation"
-              },
-              {
-                text: "The Procedure",
-                link: "/blueprint/cryptography/switching/procedure"
-              },
-            ]
-          },
-          {
-            text: "Batch Evaluation",
-            link: "/blueprint/cryptography/evaluation",
-            collapsed: true,
-            items: [
-              {
-                text: "Review of FRI",
-                link: "/blueprint/cryptography/evaluation/fri"
-              },
-              {
-                text: "Front-Loaded Sumcheck",
-                link: "/blueprint/cryptography/evaluation/frontloaded",
-              },
-              {
-                text: "Evaluating Piecewise Multilinears",
-                link: "/blueprint/cryptography/evaluation/piecewise",
-              },
-              {
-                text: "The Procedure",
-                link: "/blueprint/cryptography/evaluation/procedure"
-              },
-            ]
-          },
-        ]
+        text: 'Integer Multiplication',
+        link: '/blueprint/multiplication/',
+      },
+      {
+        text: 'Polynomial Commitment',
+        link: '/blueprint/commitment/',
       },
     ],
     "/benchmarks": [
