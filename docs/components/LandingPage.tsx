@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 
 import ArrowIcon from "./ArrowIcon";
-import BlueprintIcon from "../public/blueprint-icon.svg";
-import BooksIcon from "../public/books-icon.svg";
-import ChartIcon from "../public/chart-icon.svg";
-import PowerButtonIcon from "../public/power-button-icon.svg";
 import SVG from "react-inlinesvg";
 
 const footerShapes = [
@@ -84,9 +80,10 @@ const LandingPage = () => {
         <a href="/basics">
           <div className="bg-green hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate ">
             <img
-              src={BooksIcon}
+              src="books-icon.svg"
               alt="Books Icon"
-              className="w-10 h-10 mb-6"
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Basics</h2>
@@ -101,9 +98,10 @@ const LandingPage = () => {
         <a href="/building">
           <div className="bg-orange hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
-              src={PowerButtonIcon}
+              src="power-button-icon.svg"
               alt="Building Icon"
-              className="w-10 h-10 mb-6"
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Building</h2>
@@ -116,9 +114,10 @@ const LandingPage = () => {
         <a href="/blueprint">
           <div className="bg-blue hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
-              src={BlueprintIcon}
+              src="blueprint-icon.svg"
               alt="Blueprint Icon"
-              className="w-10 h-10 mb-6"
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Blueprint</h2>
@@ -133,9 +132,10 @@ const LandingPage = () => {
         <a href="/benchmarks">
           <div className="bg-red hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
-              src={ChartIcon}
+              src="chart-icon.svg"
               alt="Chart Icon"
-              className="w-10 h-10 mb-6"
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Benchmarks</h2>
@@ -183,10 +183,10 @@ const LandingPage = () => {
           </p>
           <div className="flex pr-6 md:justify-end justify-center mt-6 md:mt-0">
             <a href="https://x.com/IrreducibleHW" target="_blank">
-              <SVG src="x-icon.svg" className="w-5 h-5 mr-6" />
+              <SVG src="x-icon.svg" className="mr-6" style={{ width: '20px', height: '20px' }} />
             </a>
             <a href="https://github.com/IrreducibleOSS" target="_blank">
-              <SVG src="github-icon.svg" className="w-5 h-5" />
+              <SVG src="github-icon.svg" style={{ width: '20px', height: '20px' }} />
             </a>
           </div>
         </div>

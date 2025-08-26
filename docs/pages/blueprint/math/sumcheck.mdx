@@ -1,0 +1,76 @@
+# The Sumcheck [A review of an essential protocol]
+
+The _sumcheck protocol_, due originally to Lund, Fortnow, Karloff, and Nisan [[LFKN92](https://dl.acm.org/doi/10.1145/146585.146605)], is a classic building block.
+
+To explain the sumcheck, we fix a multivariate polynomial, say $C(X_0, \ldots , X_{\ell - 1}) \in \mathbb{F}_{2^{128}}[X_0, \ldots , X_{\ell - 1}]$ (generally _not_ multilinear). The goal of the sumcheck is to reduce a _sum claim_, i.e. a claim of the form
+
+$$
+\begin{equation*}s_0 \stackrel{?}= \sum_{v \in \mathcal{B}_\ell} C(v),\end{equation*}
+$$
+
+to an _evaluation claim_, instead of the form:
+
+$$
+\begin{equation*}s_\ell \stackrel{?}= C(r).\end{equation*}
+$$
+
+Here, $r$ will be a point sampled randomly during the course of the sumcheck.
+
+This reduction represents progress, since while the first claim above had to do with $C$'s values at _many_ points (the entire cube), the second has to do just with $C$'s value at a single point (namely $r$). As we will see below, evaluation claims of this latter sort will be treatable directly at the hands of our PCS.
+
+## The Protocol
+
+Here's the protocol. As above, we have a fixed multivariate polynomial $C(X_0, \ldots , X_{\ell - 1})$, and a claimed sum $s_0$. The protocol is interactive, and proceeds over $\ell$ rounds.
+
+- For each round index $i \in \{0, \ldots , \ell - 1\}$,
+  - The prover computes the _round polynomial_
+    $$
+    \begin{equation*}g_i(X) \coloneqq \sum_{v \in \mathcal{B}_{\ell - i - 1}} C(r_0, \ldots , r_{i - 1}, X, v_0, \ldots , v_{\ell - i - 2}).\end{equation*}
+    $$
+    and sends $g_i(X)$ to the verifier (say, by sending its evaluations on sufficiently many points).
+  - The verifier checks whether $s_i \stackrel{?}= g_i(0) + g_i(1)$.
+  - The verifier samples a random challenge $r_i \gets \mathbb{F}_{2^{128}}$ and sends it to the prover. Moreover, the verifier updates its running sum claim:
+    $$
+    \begin{equation*}s_{i + 1} \coloneqq g_i(r_i).\end{equation*}
+    $$
+- At the very end, the verifier outputs the evaluation claim $s_\ell \stackrel{?}= C(r_0, \ldots , r_{\ell - 1})$.
+
+## Security Proof
+
+Let's write $d$ for the maximum _individual_ degree attained by any of the indeterminates $X_0, \ldots , X_{\ell - 1}$ in $C$.
+
+As of the beginning of each given round $i \in \{0, \ldots , \ell - 1\}$, the running sum claim
+
+$$
+\begin{equation*}s_i \stackrel{?}= \sum_{v \in \mathcal{B}_{\ell - i}} C(r_0, \ldots , r_{i - 1}, v_0, \ldots , v_{\ell - i - 1})\end{equation*}
+$$
+
+either will be true or won't. Let's assume that it _isn't_ true.
+
+Now the prover's round polynomial $g_i(X)$ either will or won't equal the "prescribed" univariate polynomial 
+
+$$
+\begin{equation*}\overline{g}_i(X) \coloneqq \sum_{v \in \mathcal{B}_{\ell - i - 1}} C(r_0, \ldots , r_{i - 1}, X, v_0, \ldots , v_{\ell - i - 2}).\end{equation*}
+$$
+
+If the prover sends the _right_ $g_i(X) = \overline{g}_i(X)$, then the verifier will reject outright: indeed, in this case, under our hypothesis that the $i$<sup>th</sup> round claim is false,
+
+$$
+\begin{equation*}s_i \neq \sum_{v \in \mathcal{B}_{\ell - i}} C(r_0, \ldots , r_{i - 1}, v_0, \ldots , v_{\ell - i - 1}) = \overline{g}_i(0) + \overline{g}_i(1) = g_i(0) + g_i(1)\end{equation*}
+$$
+
+will hold, so the verifier will reject its check $s_i \stackrel{?}= g_i(0) + g_i(1)$ and abort. The first inequality above is our hypothesis whereby the running sum claim is false. The second equality comes from the definition of $\overline{g}_i(X)$. The third equality comes from our hypothesis $g_i(X) = \overline{g}_i(X)$.
+
+On the other hand, if $g_i(X) \neq \overline{g}_i(X)$, then by basic univariate Schwartz–Zippel, $g_i(r_i) = \overline{g}_i(r_i)$ will hold with probability at most $\frac{d}{2^{128}}$ over the verifier's choice of $r_i \gets \mathbb{F}_{2^{128}}$. As long as this unlucky equality _doesn't_ happen, we obtain:
+
+$$
+\begin{equation*}s_{i + 1} \coloneqq g_i(r_i) \neq \overline{g}_i(r_i) = \sum_{v \in \mathcal{B}_{\ell - i - 1}} C(r_0, \ldots , r_i, v_0, \ldots , v_{\ell - i - 2}).\end{equation*}
+$$
+
+In other words, the "wrongness" of the prover's round-$i$ sum claim will be propagated to the next round $i + 1$.
+
+If the prover's initial round claim $s_0 \stackrel{?}= \sum_{v \in \mathcal{B}_\ell} C(v)$ is wrong, then, carrying this argument through all $\ell$ rounds, we conclude that that wrongness will propagate with high probability into the final inequality $s_\ell \neq C(r_0, \ldots , r_{\ell - 1})$, which is what we need to show. The soundness error is at most $\frac{d \cdot \ell}{2^{128}}$.
+
+## Implementation Considerations
+
+In practice, the efficient prover algorithms for the sumcheck demand that $C(X_0, \ldots , X_{\ell - 1})$ be not just arbitrary, but rather a composition of multilinear polynomials. The content here is too complicated to survey directly, but we can refer to Thaler [[Tha23](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.pdf), § 4.1] for a starting point, as well as to Chiesa, Fedele, Fenzi and Zitek-Estrada [[CFFZE24](https://eprint.iacr.org/2024/524.pdf)] for some more recent ideas.

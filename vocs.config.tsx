@@ -223,24 +223,20 @@ export default defineConfig({
       },
       {
         text: "Math Background",
-        link: "/blueprint/background",
+        link: "/blueprint/math",
         collapsed: false,
         items: [
           {
-            text: "Binary Towers",
-            link: "/blueprint/background/towers",
+            text: "Binary Fields",
+            link: "/blueprint/math/fields",
           },
           {
             text: "Multilinear Polynomials",
-            link: "/blueprint/background/multilinears"
-          },
-          {
-            text: "The PIOP and IOP Models",
-            link: "/blueprint/background/models"
+            link: "/blueprint/math/multilinears"
           },
           {
             text: "The Sumcheck",
-            link: "/blueprint/background/sumcheck",
+            link: "/blueprint/math/sumcheck",
           }
         ],
       },

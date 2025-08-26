@@ -1,0 +1,47 @@
+# Multilinear Polynomials [The existence and uniqueness of multilinear extensions]
+
+We recall the [field](/blueprint/background/towers) $\mathbb{F}_{2^{128}}$. We can now moreover write $\mathbb{F}_{2^{128}}[X_0, \ldots , X_{\ell - 1}]$ for the ring of multivariate polynomials over $\mathbb{F}_{2^{128}}$ in $\ell$ indeterminates. A polynomial $t(X_0, \ldots , X_{\ell - 1}) \in \mathbb{F}_{2^{128}}[X_0, \ldots, X_{\ell - 1}]$ is _multilinear_ if each indeterminate appears in it with _individual_ degree at most 1. We write $\mathbb{F}_{2^{128}}[X_0, \ldots, X_{\ell - 1}]^{\preceq 1}$ for the set of multilinears. This thing is $2^\ell$-dimensional over $\mathbb{F}_{2^{128}}$ (a basis is given by the _multilinear monomials_ $1, X_0, X_1, X_0 \cdot X_1, X_2, \ldots , X_0 \cdot \cdots \cdot X_{\ell - 1}$).
+
+Multilinear polynomials and _lists_ of field elements are basically the same thing, as we argue now. We will write $\mathcal{B}_\ell \coloneqq \{0, 1\}^\ell$ for the $\ell$-dimensional discrete unit cube.
+
+## The Equality Indicator Polynomial
+
+For each fixed $\ell \geq 0$, the $2 \cdot \ell$-variate _equality indicator polynomial_ $\widetilde{\texttt{eq}}(X_0, \ldots , X_{\ell - 1}, Y_0, \ldots , Y_{\ell - 1})$ is defined to be:
+
+$$
+\begin{equation*}\widetilde{\texttt{eq}}(X_0, \ldots , X_{\ell - 1}, Y_0, \ldots , Y_{\ell - 1}) \coloneqq \prod_{i = 0}^{\ell - 1} \left( (1 - X_i) \cdot (1 - Y_i) + X_i \cdot Y_i \right).\end{equation*}
+$$
+
+This polynomial is multilinear. Moreover, its restriction to the cube $\mathcal{B}_\ell \times \mathcal{B}_\ell$ yields the _equality indicator function_, the function that, on each pair of bitstrings $u$ and $u^*$, equals 1 if $u = u^*$ and 0 otherwise.
+
+## Multilinear Extensions
+
+Given some multilinear $t(X_0, \ldots , X_{\ell - 1}) \in \mathbb{F}_{2^{128}}[X_0, \ldots, X_{\ell - 1}]^{\preceq 1}$, the _evaluation map_ sends $t(X_0, \ldots , X_{\ell - 1})$ to its evaluations on the cube; that is,
+
+$$
+\begin{equation*}\text{eval} : t(X_0, \ldots , X_{\ell - 1}) \mapsto \left( t(u) \right)_{u \in \mathcal{B}_\ell}.\end{equation*}
+$$
+
+We argue that $\text{eval}$ is a bijection. Actually, for dimension-count reasons, it suffices to argue that it's surjective. Indeed, it's linear, and both the domain and the codomain are $2^\ell$-dimensional. We fix an list $\left( t_u \right)_{u \in \mathcal{B}_\ell}$ of prescribed values. We need to construct a multilinear that evaluates to these values on the cube.
+
+This problem is just multilinear Lagrange interpolation; we can solve it using the equality indicator function. Indeed, the polynomial
+
+$$
+\begin{equation*}t(X_0, \ldots , X_{\ell - 1}) \coloneqq \sum_{u \in \mathcal{B}_\ell} t_u \cdot \widetilde{\texttt{eq}}(u_0, \ldots , u_{\ell - 1}, X_0, \ldots , X_{\ell - 1})\end{equation*}
+$$
+
+gives us what we want. Why? First off, $t(X_0, \ldots , X_{\ell - 1})$ is definitely multilinear, since each of the partial specializations $\widetilde{\texttt{eq}}(u_0, \ldots , u_{\ell - 1}, X_0, \ldots , X_{\ell - 1})$ is. Moreover, let's pick an arbitrary $u^* \in \mathcal{B}_\ell$. Since $\widetilde{\texttt{eq}}(u_0, \ldots , u_{\ell - 1}, u^*_0, \ldots , u^*_{\ell - 1})$ equals 1 if and only if $u = u^*$, the sum $t(X_0, \ldots , X_{\ell - 1})$ winds up with just one nonzero summand, $t_{u^*}$. In other words, $t(u^*) = t_{u^*}$ holds for each $u^* \in \mathcal{B}_\ell$, which is what we wanted to show.
+
+It's worth pointing out that you can show _directly_ that $\text{eval}$ is injective, without relying on dimension-counting or Lagrange interpolation. This proof is fairly interesting too; it's carried out in Thaler [[Tha23](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.pdf), Fact 3.5.].
+
+## Succinctness
+
+There is one final fact that makes things work. The equality indicator polynomial $\widetilde{\texttt{eq}}(X_0, \ldots , X_{\ell - 1}, Y_0, \ldots , Y_{\ell - 1})$ is _succinct_, meaning that for points $r$ and $r'$ in $\mathbb{F}_{2^{128}}^\ell$ given arbitrarily, the evaluation $\widetilde{\texttt{eq}}(r, r')$ can be obtained in $O(\ell)$ time.
+
+To see why this is true, just look at the defining equation of $\widetilde{\texttt{eq}}$. It's a product, with $\ell$ terms; moreover, each term in the product can be computed using just a few operations. Actually, in characteristic 2, things get even nicer: we get the simplification
+
+$$
+\begin{equation*}\widetilde{\texttt{eq}}(X_0, \ldots , X_{\ell - 1}, Y_0, \ldots , Y_{\ell - 1}) \coloneqq \prod_{i = 0}^{\ell - 1} \left( 1 + X_i + Y_i \right),\end{equation*}
+$$
+
+since $X_i \cdot Y_i + X_i \cdot Y_i = 0$ cancels from each term in the product. Thus, we can get away with just $\ell - 1$ total multiplications.
