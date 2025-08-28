@@ -1,0 +1,99 @@
+# Logical Shifts [Efficiently arithmetizing rightshifts]
+
+Recall that our goal is to come up with efficient evaluation procedures for the multilinear extensions $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$, for each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. Those polynomials were defined in the [introduction](/blueprint/ands/indicators/introduction) of this site subsection.
+
+Our task in this page is going to handle $\text{op} \coloneqq \mathsf{srl}$. Actually, we claim that if we can handle $\widetilde{\textsf{shift-ind}}_\textsf{srl}$, we will get $\widetilde{\textsf{shift-ind}}_\textsf{sll}$ thrown in for free. Indeed, for each $(i, j, s) \in \mathcal{B}_6 \times \mathcal{B}_6 \times \mathcal{B}_6$,
+
+$$
+\begin{equation*}\textsf{shift-ind}_\textsf{sll}(i, j, s) = \textsf{shift-ind}_\textsf{srl}(j, i, s);\end{equation*}
+$$
+
+that is, on the cube, these functions just differ by a transposition of their first two arguments. Moreover, this fact carries over to their multilinear extensions.
+
+## The Auxiliary Functions
+
+For each $k \in \{0, \ldots , 6\}$, we will define _two_ auxiliary functions, both defined on $\mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$.
+
+$$
+\begin{equation*}\textsf{s}_k(i, j, s) \coloneqq \begin{cases}
+1 & \text{ if $\{j \} \stackrel{?}= \{i\} + \{s\}$} \\
+0 & \text{ otherwise}
+\end{cases};\end{equation*}
+$$
+
+$$
+\begin{equation*}\textsf{s}'_k(i, j, s) \coloneqq \begin{cases}
+1 & \text{ if $\{j \} \stackrel{?}= \{i\} + \{s\} - 2^k$} \\
+0 & \text{ otherwise}
+\end{cases}.\end{equation*}
+$$
+
+In each case, we write $\{u\} \coloneqq \sum_{i = 0}^{k - 1} 2^i \cdot u_i$ for the little-endian bitstring-to-integer function. So $\mathsf{s}_k(i, j, s)$ tracks whether $i$, $j$, $s$, interpreted as integers, are such that $\{j \} \stackrel{?}= \{i\} + \{s\}$; $\mathsf{s}'_k$ does the same thing, but modulo an overflow into the $k$<sup>th</sup> bit position.
+
+Note first that $\textsf{shift-ind}_\mathsf{srl} = \mathsf{s}_6$, so $\widetilde{\textsf{shift-ind}}_\mathsf{srl} = \widetilde{\mathsf{s}}_6$. Thus if we produce an efficient circuit for $\widetilde{\mathsf{s}}_6$, then that will be enough to achieve $\widetilde{\textsf{shift-ind}}_\mathsf{srl}$ (and hence also $\widetilde{\textsf{shift-ind}_\mathsf{sll}}$, as we argued above).
+
+### Recursive Construction
+
+We first note that $\mathsf{s}_k$ and $\mathsf{s}'_k$ (without the tildes) have a recursive substructure.
+
+- **Base Case.**
+  - $\mathsf{s}_k = 1$.
+  - $\mathsf{s}'_k = 0$.
+
+- **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each input triple $(i, j, s) \in \mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
+  - $$
+    \begin{equation*}\textsf{s}_k(i, j, s) = \begin{cases}
+    \mathsf{s}_{k - 1}(i, j, s) & \text{ if $i_{k - 1} + s_{k - 1} \stackrel{?}= j_{k - 1}$} \\
+    \mathsf{s}'_{k - 1}(i, j, s) & \text{ if $i_{k - 1} + s_{k - 1} + 1 \stackrel{?}= j_{k - 1}$} \\
+    0 & \text{ otherwise}
+    \end{cases}.\end{equation*}
+    $$
+  - $$
+    \begin{equation*}\textsf{s}'_k(i, j, s) = \begin{cases}
+    \mathsf{s}_{k - 1}(i, j, s) & \text{ if $i_{k - 1} + s_{k - 1} \stackrel{?}= j_{k - 1} + 2$} \\
+    \mathsf{s}'_{k - 1}(i, j, s) & \text{ if $i_{k - 1} + s_{k - 1} + 1 \stackrel{?}= j_{k - 1} + 2$} \\
+    0 & \text{ otherwise}
+    \end{cases}.\end{equation*}
+    $$
+
+This is a claim, not a definition (we already defined these functions above). We understand all sum expressions in the cases above as taking place over the _integers_. This fact is essentially true "by inspection", and comes from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
+
+### The Case Breakdowns
+
+To arithmetize these, we need ot break down the possible cases. For example, for which bit-triples $(i_{k - 1}, j_{k - 1}, s_{k - 1}) \in \mathcal{B}_1 \times \mathcal{B}_1 \times \mathcal{B}_1$ does it hold that $i_{k - 1} + s_{k - 1} \stackrel{?}= j_{k - 1}$, _as integers_?
+
+We answer this question now. We abbreviate $(i, j, s) \coloneqq (i_{k - 1}, j_{k - 1}, s_{k - 1})$. For each $(i, j, k) \in \mathcal{B}_1 \times \mathcal{B}_1 \times \mathcal{B}_1$:
+- $i + s = j$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) \in \{(0, 0, 0), (0, 1, 1), (1, 1, 0)\}$.
+- $i + s + 1 = j$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) = (0, 1, 0)$.
+- $i + s = j + 2$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) = (1, 0, 1)$.
+- $i + s + 1 = j + 2$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) \in \{(0, 0, 1), (1, 0, 0), (1, 1, 1)\}$.
+
+This gives a pathway towards arithmetization. The next step is to write down multilinear polynomials in $(I, J, S)$ whose restrictions to $\mathcal{B}_3$ respectively "indicate" each of the four subsets above. We know that this is possible, by Lagrange interpolation. As it happens, by being cleverer, we can find expressions for these that use just 2 multiplications a piece.
+- $i + s = j$ holds (over $\mathbb{Z}$) if and only if $1 + j + s + i \cdot (1 + s \cdot (1 + j)) = 1$ (over $\mathbb{F}_2$).
+- $i + s + 1 = j$ holds (over $\mathbb{Z}$) if and only if $(1 - i) \cdot j \cdot (1 - s) = 1$ (over $\mathbb{F}_2$).
+- $i + s = j + 2$ holds (over $\mathbb{Z}$) if and only if $i \cdot (1 - j) \cdot s = 1$ (over $\mathbb{F}_2)$.
+- $i + s + 1 = j + 2$ holds (over $\mathbb{Z}$) if and only if $i + s + j \cdot (1 + s \cdot (1 + i)) = 1$ (over $\mathbb{F}_2$).
+
+As a sanity check, note that since the middle two bullets need to be 1 at _just one point_, we can get away in those two cases with just a single multilinear Lagrange basis polynomial. The other cases are more complicated, but still can get by with just two multiplications each.
+
+### The Arithmetizations
+
+We're now ready to arithmetize $\widetilde{\mathsf{s}}_k$ and $\widetilde{\mathsf{s}}'_k$. Indeed, our arithmetizations come from the above:
+
+- **Base Case.**
+  - $\widetilde{\mathsf{s}}_k = 1$.
+  - $\widetilde{\mathsf{s}}'_k = 0$.
+
+- **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each input triple $(i, j, s) \in \mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
+  - $$
+    \begin{align*}\widetilde{\textsf{s}}_k(I, J, S) &= \left[ 1 + J_{k - 1} + S_{k - 1} + I_{k - 1} \cdot (1 + S_{k - 1} \cdot (1 + J_{k - 1})) \right] \cdot \widetilde{\mathsf{s}}_{k - 1}(I, J, S) \\
+    &+ \left[ (1 - I_{k - 1}) \cdot J_{k - 1} \cdot (1 - S_{k - 1}) \right] \cdot \widetilde{\mathsf{s}}'_{k - 1}(I, J, S).
+    \end{align*}
+    $$
+  - $$
+    \begin{align*}\widetilde{\textsf{s}}'_k(I, J, S) &= \left[ I_{k - 1} \cdot (1 - J_{k - 1}) \cdot S_{k - 1} \right] \cdot \widetilde{\mathsf{s}}_{k - 1}(I, J, S) \\
+    &+ \left[ I_{k - 1} + S_{k - 1} + J_{k - 1} \cdot (I_{k - 1} + S_{k - 1} \cdot (1 + I_{k - 1})) \right] \cdot \widetilde{\mathsf{s}}'_{k - 1}(I, J, S).
+    \end{align*}
+    $$
+
+This shows that for any $(r_i, r_j, r_s)$, we can compute $\widetilde{\mathsf{s}}_6(r_i, r_j, r_s)$ recursively. We initialize two registers, valued $1$ and $0$, respectively. Then, we make 6 passes over those two registers, indexed $k \in \{1, \ldots , 6\}$. In each pass, we can "advance" the state of the two registers by doing no more than 12 multiplications. The total number of multiplications is $12 \cdot 6 = 72$.
