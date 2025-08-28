@@ -1,110 +1,195 @@
-# Constraint Systems [How we capture problem statements systematically]
+# Constraints & Shifted Indices [The Binius64 constraint system]
 
-At the center of our circuit programming API is the `ConstraintSystem`, which is shared between prover and verifier, and describes how the prover's witness data is constrained. After a brief look at the `ConstraintSystem`, we turn to how constraint systems and witnesses are created and used by the prover and verifier.
+This section covers how constraints are structured in Binius64 and how shifted value indices enable efficient bit manipulation.
 
-The prover and verifier invoke `prove` and `verify` functions which take the following inputs.
+## Constraint Forms in Binius64
 
-- **Prove:** a constraint system and a witness.
-- **Verify:** a constraint system and boundary values.
+The formal structure of constraints in Binius64 must be understood before examining shifts.
 
-The [boundary values](https://docs.binius.xyz/binius_core/constraint_system/channel/struct.Boundary.html) are integral to our arithmetization techniques and are [introduced here](/basics/arithmetization/m3/definition#boundary-conditions). They are what allow the verifier to connect the proof received to the statement proven. While the prover doesn't need the boundary values, the prover must often help construct the boundary values and give them to the verifier as advice.
+### The Two Constraint Types
 
-As a circuit programmer you won't need to access any fields of the `ConstraintSystem` directly, but it looks like this:
+Binius64 has exactly two types of constraints:
 
-```rs
-pub struct ConstraintSystem<F: TowerField> {
-	pub oracles: MultilinearOracleSet<F>,
-	pub table_constraints: Vec<ConstraintSet<F>>,
-	pub non_zero_oracle_ids: Vec<OracleId>,
-	pub flushes: Vec<Flush>,
-	pub max_channel_id: ChannelId,
-}
+**AND Constraint:**
+```
+(A_0 ⊕ A_1 ⊕ ... ⊕ A_n) ∧ (B_0 ⊕ B_1 ⊕ ... ⊕ B_m) = C_0 ⊕ C_1 ⊕ ... ⊕ C_k
 ```
 
-The `ConstraintSystem` constrains witness data in four ways:
-
-- **Virtual oracles**: These define relationships between columns that the verifier also knows about. An example of this is `Shifted`, which describes one column as a shift of another one.
-- **Zero-check constraints**: These assert that certain the rows across certain columns satisfy certain equations. We call them "zero-checks" because we express these equations as arithmetic expression on which the rows must vanish.
-- **Nonzero oracles**: These assert that certain columns are not allowed to contain any zeros.
-- **Channel flushes**: These require that all pushes/pulls to a channel must balance each other out. If the tuple (4, 5) is pushed to a channel, the tuple (4, 5) must also be pulled for the channel to be balanced.
-
-Next we outline how to obtain a constrain system, a witness, and how to feed them to the prover and verifier.
-
-## Building the Constraint System
-
-To build both the constraint system and the witness, we use a [`ConstraintSystemBuilder`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html). The prover and verifier use a `ConstraintSystemBuilder` as follows. Let us suppose there is a black box function `build` which accepts the builder, and is responsible for building the entire constraint system as well as the witness. We suppress type parameters for readability.
-
-- **Verifier:** the verifier calls [`ConstraintSystemBuilder::new`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.new) to create a `builder`. Upon passing the builder to our blackbox `build` function, we can extract out the constraint system by calling `builder.build`.
-
-  ```rust
-  let mut builder = ConstraintSystemBuilder::new();
-
-  build(&mut builder)?;
-
-  let constraint_system = builder.build()?;
-  ```
-
-  Provided boundary values, a proof from the prover, and `log_inv_rate` and `security_bits` parameters, the verifier can call
-
-  ```rs
-  fn verify(
-  	constraint_system: &ConstraintSystem,
-  	log_inv_rate: usize,
-  	security_bits: usize,
-  	boundaries: Vec<Boundary>,
-  	proof: Proof,
-  ) -> Result<(), Error>;
-  ```
-
-- **Prover:** the prover calls [`ConstraintSystemBuilder::new_with_witness`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.new_with_witness) to create a `builder`, but must pass in an allocator. Currently we use the simple bump allocator [bumpalo](https://github.com/fitzgen/bumpalo). The prover then calls our blackbox `build` function just as the verifier did, and afterwards extracts both the constraint system and the witness.
-
-  ```rs
-  let allocator = bumpalo::Bump::new();
-  let mut builder = ConstraintSystemBuilder::new_with_witness(&allocator);
-
-  build(&mut builder)?;
-
-  let constraint_system = builder.build()?;
-  let witness = builder.take_witness()?;
-  ```
-
-  Provided the same parameters as the verifier, as well as a domain factory and a backend, the prover can then obtain a proof by calling
-
-  ```rs
-  fn prove(
-  	constraint_system: &ConstraintSystem,
-  	log_inv_rate: usize,
-  	security_bits: usize,
-  	witness: MultilinearExtensionIndex,
-  	domain_factory: DomainFactory,
-  	backend: &Backend,
-  ) -> Result<Proof, Error>;
-  ```
-
-  There is also a helper function [`validate_witness`](https://docs.binius.xyz/binius_core/constraint_system/channel/fn.validate_witness.html) the prover can call to ensure the witness is valid with respect to the constraint system.
-
-  ```rs
-  pub fn validate_witness(
-  	constraint_system: &ConstraintSystem,
-  	boundaries: &[Boundary],
-  	witness: &MultilinearExtensionIndex,
-  ) -> Result<(), Error>;
-  ```
-
-  This is a developer tool that can be helpful when building a constraint system to avoid the cost of generating and verifying a proof.
-
-## The Build Function
-
-Within our blackbox `build` function, we must build both the constraint system and the witness. Since both the prover and verifier are calling `build`, yet only the prover is to build the witness, we must detect whether it is the prover or the verifier calling `build`. Recall that the prover and verifier instantiated the `builder` differently. The prover instantiated with an allocator for the witness and the verifier didn't. Calling [`builder.witness()`](https://docs.binius.xyz/binius_circuits/builder/constraint_system/struct.ConstraintSystemBuilder.html#method.witness) we receive an `Option` that returns the witness (or rather the witness builder) if and only if the builder was instantiated by the prover.
-
-Throughout our `build` function we can build up the witness in prover-only code blocks of the form
-
-```rs
-if let Some(witness) = builder.witness() {
-	// add columns to the witness
-}
+**MUL Constraint:**
+```
+(A_0 ⊕ A_1 ⊕ ... ⊕ A_n) × (B_0 ⊕ B_1 ⊕ ... ⊕ B_m) =
+    (HI_0 ⊕ HI_1 ⊕ ... ⊕ HI_p) · 2^64 + (LO_0 ⊕ LO_1 ⊕ ... ⊕ LO_q)
 ```
 
-Outside of these prover-only code blocks all logic is devoted to building the constraint system shared by the prover and verifier. Care must be taken to ensure the additional code executed by the prover doesn't cause the constraint systems to differ between the prover and verifier, otherwise proof verification will fail.
+Where each term (A_0, B_0, etc.) can be:
+- A wire reference: `v_i` (value at index i in the witness vector)
+- A constant: any 64-bit value
 
-For details on how to create columns, constrain them, and let the prover populate them for the witness, see [the basic pattern](/building/pattern).
+Each operand is a XOR combination of these terms. Since XOR is addition in GF(2^64), these combinations are "free"—they don't require additional constraints. This flexibility becomes more useful when terms are extended to include shifted values.
+
+### Cost Model
+
+The relative costs of constraints in Binius64:
+
+| Constraint Type | Relative Cost | Usage |
+|-----------------|---------------|-------|
+| AND constraint | 1x (baseline) | Bitwise operations, masking |
+| MUL constraint | ~200x | Integer multiplication |
+| XOR operations | Free | Within constraint operands |
+| Shifts | Free | Via shifted value indices |
+
+## Understanding Shifted Value Indices
+
+### The Problem: Bit Manipulation Efficiency
+
+Consider implementing a bit rotation:
+```rust
+// Rotate left by 13 bits
+let rotated = (value << 13) | (value >> 51);
+```
+
+In a bit-level circuit (the traditional approach), this rotation requires:
+- 64 constraints to decompose the word to bits
+- 64 constraints to rearrange the bits
+- 64 constraints to recombine into a word
+
+Total: ~192 constraints for one rotation!
+
+### The Solution: Shifted Value Indices
+
+Binius64 extends the constraint terms by encoding shifts directly into value references.
+
+Each term in a constraint can be a **shifted value index** - a tuple `(value_id, shift_op, shift_amount)`.
+
+Examples:
+- `(v0, sll, 13)` means "value 0 shifted left by 13"
+- `(v1, srl, 5)` means "value 1 shifted right by 5"
+- `(v2, sra, 8)` means "value 2 arithmetic shift right by 8"
+
+This means our constraint operands can now freely mix regular and shifted references:
+```
+(v0, sll, 13) ⊕ (v0, srl, 51) ⊕ v1 ⊕ 0xFF
+```
+All within a single operand, still "free" with no additional constraints.
+
+### How It Works
+
+By allowing shifted references, bit manipulations can be expressed **for free** within constraints.
+
+Example - Rotate left by 13:
+```
+// Traditional: needs multiple constraints
+t1 = v0 << 13
+t2 = v0 >> 51
+result = t1 | t2
+
+// Binius64: single constraint (XOR is free)
+result = (v0 sll 13) XOR (v0 srl 51)
+```
+
+### Practical Examples
+
+#### SHA-256 Sigma Function
+SHA-256's σ_0 function: `ROTR(x,2) ⊕ ROTR(x,13) ⊕ ROTR(x,22)`
+
+```
+// Bit-level: ~192 constraints (3 rotations × 64 bits)
+
+// Binius64: XOR shifted values (free)
+s0 = (x srl 2) XOR (x sll 62) XOR
+     (x srl 13) XOR (x sll 51) XOR
+     (x srl 22) XOR (x sll 42)
+```
+
+Cost: 0 constraints (just XOR of shifted indices)
+
+#### Bit Extraction
+Extract bit N from value V:
+
+```rust
+// Traditional: 64 constraints to decompose to bits
+
+// Binius64: Using CircuitBuilder API
+let shifted = builder.shr(V, N);           // Shift right by N (free - shifted index)
+let bit_n = builder.band(shifted, one);    // AND with 1 (one AND constraint)
+```
+
+Cost: 1 AND constraint total
+
+### Shift Types Supported
+
+Binius64 supports three shift operations:
+
+1. **Logical Left Shift (sll)**: Shifts bits left, filling with zeros
+2. **Logical Right Shift (srl)**: Shifts bits right, filling with zeros
+3. **Arithmetic Right Shift (sra)**: Shifts bits right, preserving sign bit
+
+Each can shift by 0-63 bits and is encoded directly in the shifted value index.
+
+## Practical Impact
+
+The combination of 64-bit word operations and shifted value indices provides significant efficiency gains:
+
+| Operation | Bit-level Circuits | Binius64 | Improvement |
+|-----------|-------------------|----------|-------------|
+| 64-bit rotate | ~192 constraints | 0 constraints | ∞ |
+| SHA-256 round | ~800 constraints | ~50 constraints | 16x |
+| Bit extraction | 64 constraints | 1 constraint | 64x |
+| 64-bit addition | ~320 constraints | 2 constraints | 160x |
+
+## Value Types and Interpretations
+
+In Binius64 circuits, 64-bit values can be interpreted in different ways depending on the operation:
+
+### The Three Interpretations
+
+1. **Unsigned Integers (0 to 2^64-1)**
+   - Used by: `iadd_cin_cout`, `imul`, `icmp_ult`, `icmp_eq`
+   - Standard arithmetic operations
+   - What you typically think of as "numbers"
+
+2. **Bit Patterns**
+   - Used by: `band`, `bor`, `bxor`, shifts, rotations
+   - Pure bitwise operations
+   - No arithmetic meaning, just patterns of 1s and 0s
+
+3. **Binary Field Elements (GF(2^64))**
+   - Used internally by the proof system
+   - Hidden from circuit writers
+   - Addition is XOR, multiplication uses irreducible polynomials
+
+### The MUL Constraint: Integer Multiplication
+
+The MUL constraint performs **integer multiplication**, not field multiplication:
+
+```
+A * B = (HI << 64) | LO
+```
+
+This gives the full 128-bit product split into high and low words, needed for:
+- RSA operations (modular exponentiation)
+- Elliptic curve arithmetic
+- General bignum computations
+
+**Important**: Don't confuse this with field multiplication used internally by the proof system. The MUL constraint does regular "school math" multiplication that produces carries and can overflow.
+
+### Practical Usage
+
+Most circuits work with integers and bit patterns:
+
+```rust
+// Integer operations
+let (sum, carry) = builder.iadd_cin_cout(a, b, cin);    // Treats as integers
+let (hi, lo) = builder.imul(x, y);                      // Integer multiplication
+
+// Bit pattern operations  
+let masked = builder.band(value, mask);                 // Treats as bit patterns
+let shifted = builder.shl(value, 5);                    // Bit manipulation
+let rotated = builder.rotl(value, 13);                  // Bit rearrangement
+
+// The field arithmetic happens behind the scenes in the proof system
+```
+
+## Next Steps
+
+Now that you understand the constraint system and shifted value indices, proceed to [Non-Deterministic Witnesses](/building/nondeterministic) to learn how to use these constraints efficiently in practice.

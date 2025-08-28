@@ -1,0 +1,47 @@
+# Circuit Composition [Building modular circuits]
+
+**TODO: This section is under development**
+
+Circuit composition allows building complex circuits from smaller, reusable components.
+
+## Planned Topics
+
+- Managing witness data flow between circuits
+- The subcircuit pattern for organization  
+- Wire management across circuit boundaries
+- Reusing circuit components
+- Best practices for modular circuit design
+
+## Basic Principles
+
+When composing circuits:
+
+1. **Wire References**: Pass wire references between circuit functions
+2. **Builder Sharing**: Use the same CircuitBuilder instance across components
+3. **Clear Interfaces**: Define clear input/output wire contracts
+4. **Documentation**: Document wire meanings and constraints
+
+## Example Pattern
+
+```rust
+// Component circuit that can be reused
+fn hash_circuit(builder: &CircuitBuilder, input: Wire) -> Wire {
+    // ... implement hash logic ...
+    output_wire
+}
+
+// Main circuit composing components
+fn main_circuit(builder: &CircuitBuilder) {
+    let input = builder.add_witness();
+    
+    // Compose: use hash circuit as component
+    let hash1 = hash_circuit(builder, input);
+    let hash2 = hash_circuit(builder, hash1);
+    
+    // Continue with main logic...
+}
+```
+
+## Next Steps
+
+This completes the Practical Tutorial section. Explore the [Appendix](/building/appendix) for advanced implementation details and examples.

@@ -1,0 +1,133 @@
+# Appendix [Advanced implementation details]
+
+## Addition Implementation
+
+With only AND and MUL constraints, `iadd_cin_cout` (64-bit addition with carry) is implemented using a non-deterministic approach.
+
+### Addition Fundamentals
+
+Consider adding two 4-bit numbers to illustrate the pattern:
+```
+  0101  (5)
++ 0011  (3)
+------
+  1000  (8)
+```
+
+Bit by bit:
+- Bit 0: 1 + 1 = 10 (binary), so sum=0, carry=1
+- Bit 1: 0 + 1 + carry(1) = 10, so sum=0, carry=1
+- Bit 2: 1 + 0 + carry(1) = 10, so sum=0, carry=1
+- Bit 3: 0 + 0 + carry(1) = 01, so sum=1, carry=0
+
+### Bit-Level Rules
+
+For each bit position i:
+```
+sum[i] = a[i] ⊕ b[i] ⊕ carry_in[i]
+carry_out[i] = (a[i] AND b[i]) OR ((a[i] ⊕ b[i]) AND carry_in[i])
+```
+
+The carry formula says:
+- Carry when both inputs are 1: `a[i] AND b[i]`
+- OR carry when exactly one is 1 AND previous carry: `(a[i] ⊕ b[i]) AND carry_in[i]`
+
+### The OR Problem
+
+In Binius64, only AND constraints are available. XOR is free (combining wire references), while OR is not. The carry formula must be expressed without OR.
+
+### Field Connection
+
+In GF(2) (binary field):
+- Addition is XOR: `a + b = a ⊕ b`
+- Multiplication is AND: `a × b = a ∧ b`
+- Note: `1 + 1 = 0` (since `1 ⊕ 1 = 0`)
+
+In GF(2), we can rewrite Boolean operations:
+```
+a OR b = a ⊕ b ⊕ (a AND b)
+```
+
+This works because OR gives 1 when at least one input is 1, while XOR gives 1 when exactly one is 1. The AND term corrects for the case when both are 1.
+
+### Non-deterministic Carry Bits
+
+Instead of computing carry_out, the prover provides all the carry bits as witness values. Then we only need to verify they're correct.
+
+For our addition case: If `cout` contains the correct carry bits at each position, then this relationship must hold:
+```
+(a ⊕ (cout << 1) ⊕ cin_msb) AND (b ⊕ (cout << 1) ⊕ cin_msb) = cout ⊕ (cout << 1) ⊕ cin_msb
+```
+
+Where:
+- `cout << 1` shifts carries to affect the next bit position
+- `cin_msb` is the initial carry-in (from the MSB of cin wire)
+
+This constraint captures the essence of carry propagation without computing it.
+
+### Complete Implementation
+
+```
+// Two constraints verify 64-bit addition:
+
+// Constraint 1: Carry propagation
+(a ⊕ (cout << 1) ⊕ cin_msb) & (b ⊕ (cout << 1) ⊕ cin_msb) = cout ⊕ (cout << 1) ⊕ cin_msb
+
+// Constraint 2: Sum verification
+(a ⊕ b ⊕ (cout << 1) ⊕ cin_msb) & all-1 = sum
+```
+
+The result:
+- Prover computes `sum` and `cout` outside the circuit
+- Circuit verifies they're correct with only 2 constraints
+- No need for 64 full adders (320+ gates)
+
+## Equality Check
+
+To check if `a == b`:
+
+This equality check method is a modification of the Binius64 addition constraint. The principle:
+- If `diff = a ⊕ b` is 0 (meaning a == b): Adding all-1 gives all-1 with no carry out
+- If `diff ≠ 0`: Adding all-1 wraps around and produces a carry out
+
+Implementation:
+1. Compute `diff = x ⊕ y` (0 if equal, non-zero if different)
+2. Add all-1 to diff and track carry propagation using constraint:
+   `(x ⊕ y ⊕ cin) ∧ (all-1 ⊕ cin) = cin ⊕ cout` where `cin = cout << 1`
+3. Check MSB of carry out: 0 means equal, 1 means not equal
+4. Broadcast result: `out_mask = ¬(cout >> 63)` using arithmetic shift
+
+This uses only 2 AND constraints instead of ~64 gates for bit-level comparison.
+
+## Bit Extraction
+
+Extract bit N from value V:
+
+In traditional circuits, you'd decompose the entire value to bits (64 constraints) to access one bit.
+
+In Binius64:
+```rust
+// Using CircuitBuilder API:
+let shifted = builder.shr(V, N);           // Shift right by N (free - shifted index)
+let bit_n = builder.band(shifted, one);    // AND with 1 (one AND constraint)
+
+// Or more directly:
+let bit_n = builder.extract_bit(V, N);    // Convenience method
+```
+
+This requires only ONE AND constraint because the shift is encoded in the shifted value index `(V, shr, N)` and doesn't need a separate constraint.
+
+## SHA-256 Sigma Function
+
+SHA-256's σ_0 function: `ROTR(x,2) ⊕ ROTR(x,13) ⊕ ROTR(x,22)`
+
+```
+// Bit-level: ~192 constraints (3 rotations × 64 bits)
+
+// Binius64: XOR shifted values (free)
+s0 = (x srl 2) XOR (x sll 62) XOR
+     (x srl 13) XOR (x sll 51) XOR
+     (x srl 22) XOR (x sll 42)
+```
+
+Cost: 0 constraints (all operations are free with shifted value indices)

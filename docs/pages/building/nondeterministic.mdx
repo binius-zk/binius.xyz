@@ -1,0 +1,132 @@
+# Non-Deterministic Witnesses [Efficient constraint patterns]
+
+A common pattern in ZK circuits is using **non-deterministic witnesses** - the prover provides intermediate computation values that would be expensive to compute in-circuit, and the circuit verifies they're correct.
+
+## The Core Principle
+
+Instead of computing complex operations within the circuit (requiring many constraints), the prover:
+1. Computes the result outside the circuit
+2. Provides the result as a witness value
+3. The circuit verifies the result is correct with minimal constraints
+
+This is the "verify, don't compute" principle in action.
+
+## Common Applications
+
+This pattern appears throughout circuit design:
+- **Integer division**: Provide quotient and remainder, verify `a = q*b + r`
+- **Square root**: Provide the root, verify `r² = a`
+- **Modular inverse**: Provide inverse, verify `a * a⁻¹ ≡ 1 (mod p)`
+- **Addition with carry**: Provide carry bits, verify carry propagation
+
+## Detailed Example: Integer Modular Reduction
+
+To verify `(a * b) mod p = r` where a, b, p, r are all integers (common in RSA and other cryptographic protocols):
+
+```rust
+// Circuit setup:
+let a = builder.add_witness();        // Private input
+let b = builder.add_witness();        // Private input
+let p = builder.add_inout();          // Public modulus
+let r = builder.add_inout();          // Public result
+
+// The prover also provides these non-deterministic witnesses:
+let quotient = builder.add_witness(); // How many times p fits in a*b
+
+// How the circuit verifies:
+// Step 1: Compute a * b
+let (lo1, hi1) = builder.imul(a, b);           // a * b = (hi1:lo1)
+
+// Step 2: Compute quotient * p
+let (lo2, hi2) = builder.imul(quotient, p);    // quotient * p = (hi2:lo2)
+
+// Step 3: Verify the equation: a * b = quotient * p + r
+// First add quotient*p + r
+let (sum_lo, carry) = builder.iadd_cin_cout(lo2, r, builder.add_constant(Word::ZERO));
+let (sum_hi, _) = builder.iadd_cin_cout(hi2, builder.add_constant(Word::ZERO), carry);
+
+// Step 4: Check that a*b equals quotient*p + r
+builder.assert_eq("verify_lo", lo1, sum_lo);
+builder.assert_eq("verify_hi", hi1, sum_hi);
+
+// What happens at proving time:
+// 1. Prover knows a, b, and computes product = a * b
+// 2. Prover computes quotient = product / p and r = product % p
+// 3. Prover provides all values to the circuit
+// 4. Circuit verifies the mathematical relationship holds
+```
+
+## Performance Impact
+
+Without non-deterministic witnesses and the MUL constraint:
+- We'd need to decompose to bits (128 constraints)
+- Implement schoolbook multiplication (8,192 AND gates)
+- Implement division algorithm (thousands more constraints)
+- Handle carry propagation explicitly
+
+With non-deterministic witnesses:
+- 2 MUL constraints for the multiplications
+- 2 ADD constraints for verification
+- Total: ~20 constraints instead of 10,000+
+
+The prover performs division outside the circuit, and the circuit verifies the mathematical relationship holds.
+
+## Example: Equality Check Implementation
+
+The equality check in Binius64 uses non-deterministic witnesses:
+
+```rust
+// To check if a == b:
+// 1. Prover provides carry-out from adding all-1 to (a ⊕ b)
+let cout = builder.add_witness();
+
+// 2. Circuit verifies the carry propagation
+let diff = builder.bxor(a, b);
+let all_ones = builder.add_constant(Word::ALL_ONE);
+
+// If diff = 0 (a equals b): adding all-1 gives all-1 with no carry
+// If diff ≠ 0: adding all-1 wraps and produces carry
+
+// The actual constraints verify this relationship
+// Result: 2 AND constraints instead of 64 bit comparisons
+```
+
+## Best Practices
+
+### When to Use Non-Deterministic Witnesses
+
+Use this pattern when:
+- The computation requires many constraints (division, modular arithmetic)
+- The prover can efficiently compute the result outside the circuit
+- The result can be verified with fewer constraints than computing it
+
+### When NOT to Use
+
+Avoid when:
+- The computation is already efficient (XOR, shifts with shifted indices)
+- The verification is as expensive as computation
+- The witness values would leak private information unintentionally
+
+## Implementation Guidelines
+
+1. **Identify expensive operations**: Look for operations requiring many constraints
+2. **Design verification relation**: Find a mathematical relationship that verifies correctness
+3. **Add witness wires**: Create witness wires for intermediate values
+4. **Implement verification**: Use minimal constraints to verify the relationship
+5. **Document prover computation**: Clearly specify what the prover must compute
+
+Example template:
+```rust
+// Expensive operation: compute sqrt(x)
+let x = builder.add_witness();           // Input
+let sqrt_x = builder.add_witness();      // Prover provides this
+
+// Verification (1 MUL constraint instead of hundreds)
+let (lo, hi) = builder.imul(sqrt_x, sqrt_x);
+builder.assert_eq("verify_sqrt", lo, x);
+builder.assert_eq("no_overflow", hi, builder.add_constant(Word::ZERO));
+```
+
+## Next Steps
+
+Now that you understand non-deterministic witnesses, proceed to [Control Flow Patterns](/building/control-flow) to learn how to handle conditionals and loops in circuits.

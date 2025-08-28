@@ -1,0 +1,205 @@
+# Proving and Verifying [The complete proof generation flow]
+
+After building your circuit, you need to generate and verify proofs. This section covers the complete process from circuit to verified proof.
+
+## The Complete Flow
+
+Here's the step-by-step process for generating and verifying proofs:
+
+```rust
+use binius_prover::{OptimalPackedB128, Prover};
+use binius_verifier::{Verifier, config::StdChallenger, hash::{StdCompression, StdDigest}};
+use binius_verifier::transcript::ProverTranscript;
+
+// Step 1: Build your circuit
+let builder = CircuitBuilder::new();
+// ... add wires and constraints ...
+let circuit = builder.build();
+
+// Step 2: Set up the constraint system
+let cs = circuit.constraint_system().clone();
+let log_inv_rate = 1; // Security parameter (typically 1-2)
+
+// Step 3: Create verifier and prover
+let verifier = Verifier::<StdDigest, _>::setup(
+    cs, 
+    log_inv_rate, 
+    StdCompression::default()
+)?;
+let prover = Prover::<OptimalPackedB128, _, StdDigest>::setup(
+    verifier.clone()
+)?;
+
+// Step 4: Generate witness
+let mut filler = circuit.new_witness_filler();
+// Set your input values
+filler[input_wire] = Word(42);
+// Populate internal wires (non-deterministic computation)
+circuit.populate_wire_witness(&mut filler)?;
+let witness = filler.into_value_vec();
+
+// Step 5: Generate proof
+let mut prover_transcript = ProverTranscript::new(StdChallenger::default());
+prover.prove(witness.clone(), &mut prover_transcript)?;
+
+// Step 6: Verify proof
+let mut verifier_transcript = prover_transcript.into_verifier();
+verifier.verify(witness.public(), &mut verifier_transcript)?;
+verifier_transcript.finalize()?;
+```
+
+## Key Concepts
+
+### Constraint System
+The compiled representation of your circuit. Contains all the constraints that must be satisfied but not the witness values.
+
+### Security Parameters
+- **log_inv_rate**: Controls the security level and proof size
+  - Higher values = more security but larger proofs
+  - Typical values: 1-2 for most applications
+
+### Witness
+Complete assignment of values to all wires:
+- **Public inputs**: Values known to both prover and verifier
+- **Private witnesses**: Secret values only the prover knows
+- **Internal wires**: Intermediate computation values
+
+### Transcript
+Implements the Fiat-Shamir transformation for non-interactive proofs:
+- Converts interactive protocol to non-interactive
+- Ensures proof cannot be forged or replayed
+
+## Testing Without Full Proving
+
+For development and testing, you can verify constraint satisfaction without generating proofs:
+
+```rust
+#[test]
+fn test_my_circuit() {
+    let builder = CircuitBuilder::new();
+    let a = builder.add_inout();
+    let b = builder.add_inout();
+    let result = builder.icmp_eq(a, b);
+    
+    let circuit = builder.build();
+    let mut w = circuit.new_witness_filler();
+    
+    // Test specific values
+    w[a] = Word(42);
+    w[b] = Word(42);
+    
+    // This will fail if constraints are violated
+    circuit.populate_wire_witness(&mut w).unwrap();
+    
+    // Verify the result
+    assert_eq!(w[result], Word(u64::MAX)); // all-1 for equal
+}
+```
+
+## Complete Example: Private Multiplication
+
+```rust
+use binius_frontend::circuit::Circuit;
+use binius_frontend::compiler::CircuitBuilder;
+use binius_core::word::Word;
+use binius_prover::{OptimalPackedB128, Prover};
+use binius_verifier::{Verifier, config::StdChallenger};
+use binius_verifier::hash::{StdCompression, StdDigest};
+use binius_verifier::transcript::ProverTranscript;
+
+fn build_private_multiply() -> Circuit {
+    let builder = CircuitBuilder::new();
+    
+    // Private inputs
+    let x = builder.add_witness();
+    let y = builder.add_witness();
+    
+    // Public output
+    let product = builder.add_inout();
+    
+    // Compute multiplication
+    let (lo, _hi) = builder.imul(x, y);
+    
+    // Assert product matches
+    builder.assert_eq("verify_product", lo, product);
+    
+    builder.build()
+}
+
+fn prove_private_multiply(x_val: u64, y_val: u64) -> Result<(), Box<dyn std::error::Error>> {
+    let circuit = build_private_multiply();
+    
+    // Setup
+    let cs = circuit.constraint_system().clone();
+    let verifier = Verifier::<StdDigest, _>::setup(cs, 1, StdCompression::default())?;
+    let prover = Prover::<OptimalPackedB128, _, StdDigest>::setup(verifier.clone())?;
+    
+    // Generate witness
+    let mut filler = circuit.new_witness_filler();
+    
+    // Find wire indices (in practice, store these when building)
+    // This is simplified - real code would track wire references
+    filler[0] = Word(x_val);  // x
+    filler[1] = Word(y_val);  // y
+    filler[2] = Word(x_val * y_val);  // product
+    
+    circuit.populate_wire_witness(&mut filler)?;
+    let witness = filler.into_value_vec();
+    
+    // Prove
+    let mut prover_transcript = ProverTranscript::new(StdChallenger::default());
+    prover.prove(witness.clone(), &mut prover_transcript)?;
+    
+    // Verify
+    let mut verifier_transcript = prover_transcript.into_verifier();
+    verifier.verify(witness.public(), &mut verifier_transcript)?;
+    verifier_transcript.finalize()?;
+    
+    println!("Proof verified successfully!");
+    Ok(())
+}
+```
+
+## Performance Considerations
+
+### Proof Generation Time
+- Dominated by constraint count
+- MUL constraints ~200x slower than AND
+- Use non-deterministic witnesses to minimize constraints
+
+### Proof Size
+- Controlled by `log_inv_rate` parameter
+- Typical proof sizes: 10-100 KB
+- Independent of circuit complexity
+
+### Verification Time
+- Much faster than proving
+- Typically milliseconds
+- Scales with proof size, not circuit size
+
+## Common Issues and Solutions
+
+### Issue: `populate_wire_witness` fails
+**Solution**: Check that all input wires have values assigned and constraints are satisfiable.
+
+### Issue: Verification fails
+**Solution**: Ensure public inputs match between proving and verification.
+
+### Issue: Out of memory during proving
+**Solution**: Reduce constraint count using non-deterministic witnesses.
+
+## Testing Strategy
+
+1. **Unit tests**: Test individual circuit components
+2. **Constraint satisfaction**: Verify witness generation without proofs
+3. **Full proving tests**: Generate and verify actual proofs
+4. **Edge cases**: Test with 0, MAX values, and boundary conditions
+
+## Next Steps
+
+You've now learned the complete flow from circuit building to proof verification. To continue:
+
+- Learn about [Circuit Composition](/building/tutorial/composition) for modular design
+- Explore the [Appendix](/building/appendix) for advanced topics
+- Review working examples in the [Binius repository](https://github.com/IrreducibleOSS/binius/tree/main/examples)
+- Start building your own zero-knowledge applications!

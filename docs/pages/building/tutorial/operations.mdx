@@ -1,0 +1,127 @@
+# Common Operations Reference [CircuitBuilder API reference]
+
+Complete reference for operations available in the CircuitBuilder API.
+
+## Comparison Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Equality | `icmp_eq(a, b)` | all-1 if equal, all-0 if not | 2 AND |
+| Less than (unsigned) | `icmp_ult(a, b)` | all-1 if a &lt; b, all-0 if not | 2 AND |
+
+## Arithmetic Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Addition with carry | `iadd_cin_cout(a, b, cin)` | (sum, cout) | 2 AND |
+| Addition (32-bit) | `iadd_32(a, b)` | sum | 1 AND |
+| Subtraction with borrow | `isub_bin_bout(a, b, bin)` | (diff, bout) | 2 AND |
+| Multiplication | `imul(a, b)` | (hi, lo) | 1 MUL (~200x cost) |
+
+## Bitwise Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Bitwise AND | `band(a, b)` | a & b | 1 AND |
+| Bitwise OR | `bor(a, b)` | a \| b | 1 AND |
+| Bitwise XOR | `bxor(a, b)` | a ^ b | Free |
+| Bitwise NOT | `bnot(a)` | ~a | Free (XOR with all-1) |
+| Multi-XOR | `bxor_multi(&[wires])` | XOR of all inputs | Free |
+
+## Shift Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Shift left | `shl(a, n)` | a &lt;&lt; n | 1 AND |
+| Shift right | `shr(a, n)` | a &gt;&gt; n (logical) | 1 AND |
+| Shift right (32-bit) | `shr_32(a, n)` | Lower 32 bits &gt;&gt; n | 1 AND |
+
+Note: n must be 0-63 for 64-bit shifts, 0-31 for 32-bit shifts
+
+## Rotation Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Rotate left | `rotl(a, n)` | rotate_left(a, n) | Free |
+| Rotate right | `rotr(a, n)` | rotate_right(a, n) | Free |
+| Rotate left (32-bit) | `rotl_32(a, n)` | 32-bit rotate left | Free |
+| Rotate right (32-bit) | `rotr_32(a, n)` | 32-bit rotate right | Free |
+
+Note: Rotations are implemented using XOR of shifted indices, making them free
+
+## Selection Operations
+
+| Operation | Method | Returns | Constraint Cost |
+|-----------|--------|---------|-----------------|
+| Select | `select(a, b, cond)` | cond ? b : a | 1 AND |
+
+Note: `cond` should be all-1 (select b) or all-0 (select a)
+
+## Wire Creation
+
+| Wire Type | Method | Purpose |
+|-----------|--------|---------|
+| Public I/O | `add_inout()` | Public inputs/outputs |
+| Private witness | `add_witness()` | Private/secret values |
+| Constant | `add_constant(Word)` | Fixed values |
+| Constant u64 | `add_constant_64(u64)` | 64-bit constant |
+| Internal | `add_internal()` | Intermediate computations |
+
+## Common Constants
+
+```rust
+// Frequently used constants
+let zero = builder.add_constant(Word::ZERO);        // 0x0000000000000000
+let one = builder.add_constant(Word::ONE);          // 0x0000000000000001
+let all_ones = builder.add_constant(Word::ALL_ONE); // 0xFFFFFFFFFFFFFF
+```
+
+## Assertions
+
+| Operation | Method | Purpose |
+|-----------|--------|---------|
+| Assert equality | `assert_eq(name, a, b)` | Verify a equals b |
+
+## Usage Examples
+
+### Masking Operations
+```rust
+// Extract lower 8 bits
+let byte_mask = builder.add_constant_64(0xFF);
+let lower_byte = builder.band(value, byte_mask);
+
+// Clear specific bit (bit 5)
+let bit5_mask = builder.add_constant_64(!(1 &lt;&lt; 5));
+let cleared = builder.band(value, bit5_mask);
+```
+
+### Conditional Assignment
+```rust
+// Set result = condition ? value_true : value_false
+let result = builder.select(value_false, value_true, condition);
+```
+
+### Bit Extraction
+```rust
+// Extract bit N from value
+let shifted = builder.shr(value, N);
+let bit_n = builder.band(shifted, builder.add_constant(Word::ONE));
+```
+
+### Packed Operations
+```rust
+// XOR multiple values efficiently
+let result = builder.bxor_multi(&[w1, w2, w3, w4]);
+```
+
+## Performance Guidelines
+
+1. **Prefer XOR operations** - They're free in Binius64
+2. **Use rotations instead of separate shifts** - Rotations are free
+3. **Batch XOR operations** - Use `bxor_multi` for multiple XORs
+4. **Minimize MUL constraints** - They're ~200x more expensive
+5. **Use shifted indices** - Shifts within constraints are free
+
+## Next: Proving and Verifying
+
+Proceed to [Proving and Verifying](/building/tutorial/proving) to learn how to generate and verify proofs with your circuits.

@@ -1,39 +1,46 @@
-import Collapsible from '../../components/Collapsible';
+# Building with Binius64 [Tutorial on building ZK applications]
 
-import { Callout } from 'vocs/components';
+Tutorial on the building of ZK applications using Binius64.
 
-# Building [Guidance on the building Binius constraint systems]
+## Overview
 
-Binius is a proof system framework that can be found and downloaded [here](https://github.com/IrreducibleOSS/binius). To build on Binius you must build a constraint system. The following pages of documentation are intended as guidance for building Binius constraint systems, and connecting them with Binius [`prove`](https://docs.binius.xyz/binius_core/constraint_system/fn.prove.html) and [`verify`](https://docs.binius.xyz/binius_core/constraint_system/fn.verify.html) functions for a complete proof system.
+This section provides a comprehensive guide to building zero-knowledge circuits using the Binius64 framework. Binius64 is a simplified SNARK protocol that leverages binary field arithmetic to efficiently prove computations on 64-bit words.
 
-## Introductory Content
+### What You'll Learn
 
-In our page about [constraint systems](/building/constraints), we outline the creation of a constraint system, and its interaction with Binius's `prove` and `verify` functions. We moreover present a simple example exhibiting a [bitwise constraint](/building/bitwise).
+- **Circuit Foundations**: Why ZK systems require circuits and how they differ from traditional digital circuits
+- **Constraint Systems**: How to express computations using AND and MUL constraints
+- **Shifted Value Indices**: How Binius64 enables efficient bit manipulation
+- **Circuit Building**: Practical examples using the CircuitBuilder API
+- **Control Flow**: Patterns for handling conditionals and loops in circuits
+- **Proving & Verification**: The complete flow from circuit to proof
 
-## Site Directory
+### Binius64 Characteristics
 
-Below, we sketch this site area's sections in slightly more detail.
+1. **Word-Level Operations**: Works directly with 64-bit words instead of individual bits
+2. **CPU Alignment**: Maps to modern processor instructions
+3. **Two Constraint Types**: AND and MUL constraints
+4. **Zero-Cost Operations**: Shifts and XORs through shifted value indices
 
-<Callout type="note">
-<Collapsible>
-[**The Basic Pattern.**](pattern) Here, we explain our fundamental constraint-building recipe: the _gadget pattern_.
+### Prerequisites
 
-Indeed, anyone building constraints on Binius must ultimately use this gadget pattern repeatedly. Our gadget pattern involves three main steps: [declaring](pattern/declaring) columns, [populating](pattern/populating) them with values, and finally [constraining](pattern/constraining) them. We explain each of these steps in detail, clarifying which steps must be performed by _which_ among the two parties, and how to achieve them in code.
-</Collapsible>
-</Callout>
+- Basic understanding of zero-knowledge proofs concepts
+- Familiarity with Rust programming
+- Understanding of Boolean logic and basic arithmetic
 
-<Callout type="note">
-<Collapsible>
-[**A Lookup Construction.**](lookup) Here, we undertake an extended, worked example, based on a simple _lookup_ protocol.
+### Site Directory
 
-Indeed, lookups are key and important. In this site area, we build a lookup from scratch, using a simple technique. The technique we pursue here is _simpler_ than the [Lasso-based approach](/basics/arithmetization/m3/lasso) we pursue in this site's _basics_ area. It's less efficient for the verifier, but is powerful enough to showcase some key ideas.
-</Collapsible>
-</Callout>
+The building section is organized as follows:
 
-## Further Content
+- **[Theory & Foundations](/building/theory)**: Why circuits are needed in ZK systems
+- **[Constraints & Shifted Indices](/building/constraints)**: The Binius64 constraint system
+- **[Non-Deterministic Witnesses](/building/nondeterministic)**: Efficient constraint patterns
+- **[Control Flow Patterns](/building/control-flow)**: Handling conditionals and loops
+- **[Practical Tutorial](/building/tutorial)**: Complete examples with code
+- **[Appendix](/building/appendix)**: Advanced implementation details
 
-We close off this site area by dropping a few further miscellaneous pages. In _[making transparents](transparents)_, we discuss _explicit transparent_ columns, columns made up exclusively of ad-hoc, verifier-supplied concrete values. These constructions are important in more advanced lookup protocols, like [Lasso](/basics/arithmetization/m3/lasso).
+## Getting Started
 
-Finally, in our [Collatz page](/building/collatz), we take a practice-oriented tour back through our [Collatz arithmetization](/basics/arithmetization/m3/collatz), already developed in our _basics_ site area. This example gives us a concrete look at channels and flushing rules, key concepts in our [M3 arithmetization schema](/basics/arithmetization/m3).
+Start with [Theory & Foundations](/building/theory) to understand why ZK systems require circuits, then proceed through the sections in order. The [Practical Tutorial](/building/tutorial) provides hands-on examples you can run and modify.
 
-Beyond these simple guiding examples, many more examples of Binius constraint systems can be found in our [Binius circuits](https://github.com/IrreducibleOSS/binius/tree/main/crates/circuits/src) directory. For examples involving full prove and verify functionality, we recommend our [Binius examples](https://github.com/IrreducibleOSS/binius/tree/main/examples).
+For working code examples, check the [Binius circuits directory](https://github.com/IrreducibleOSS/binius/tree/main/crates/circuits/src) and [examples](https://github.com/IrreducibleOSS/binius/tree/main/examples).
