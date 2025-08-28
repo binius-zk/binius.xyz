@@ -1,0 +1,218 @@
+# Control Flow Patterns [Handling conditionals and loops in circuits]
+
+Unlike imperative programming, circuits have no runtime control flow. All paths execute, all loops unroll at compile time, and all allocations are statically bounded. This fundamental constraint shapes how algorithms are expressed in circuits.
+
+## Circuit Control Flow Constraints
+
+Where traditional code uses `if`, `for`, and dynamic arrays, circuits use:
+- **Masking** instead of branching
+- **Unrolling** instead of loops
+- **Fixed allocation with length tracking** instead of dynamic arrays
+- **Selection/multiplexing** instead of conditionals and array indexing
+
+## Conditional Logic via Selection
+
+Circuits compute all branches and select the result. The `select` operation (1 AND constraint) replaces if-else:
+
+```rust
+// Traditional: only one branch executes
+let result = if condition { compute_a() } else { compute_b() };
+
+// Circuit: both execute, result selected
+let result_a = compute_a(builder);
+let result_b = compute_b(builder);
+let result = builder.select(result_a, result_b, condition);
+```
+
+The `select` operation uses a single AND constraint: `out = a ⊕ ((cond >> 63) ∧ (b ⊕ a))`
+
+## Array Indexing as Multiplexing
+
+Dynamic array indexing `array[index]` is a special case of conditional selection - choosing one element from many based on an index. This requires a multiplexer tree.
+
+The frontend provides multiplexer circuits in `circuits/multiplexer.rs`:
+
+```rust
+use binius_frontend::circuits::multiplexer::single_wire_multiplex;
+
+// Select one wire from an array based on index
+let selected = single_wire_multiplex(&builder, &array_of_wires, index);
+
+// For selecting groups of wires (e.g., structs)
+use binius_frontend::circuits::multiplexer::multi_wire_multiplex;
+let selected_group = multi_wire_multiplex(&builder, &groups, selector);
+```
+
+### Implementation Details
+
+For a 4-element array, the multiplexer uses a binary decision tree with 3 select operations:
+
+```
+                    selector bits
+                   bit1    bit0
+                    ╱        ╲
+                  0/          \1
+                 ╱              ╲
+           [0,1]                [2,3]
+          ╱    ╲               ╱    ╲
+        0/      \1           0/      \1
+    arr[0]    arr[1]     arr[2]    arr[3]
+```
+
+The multiplexer builds an optimal binary tree:
+- Each level uses one bit from the selector
+- For N inputs, requires ceil(log2(N)) levels
+- Total cost: N-1 select operations (AND constraints)
+
+## Loop Unrolling with Conditional Masking
+
+Loops with early exit conditions require unrolling with masking to handle the conditional logic:
+
+```rust
+// Traditional: early exit with break
+fn sum_until_zero(data: &[u64]) -> u64 {
+    let mut sum = 0;
+    for &val in data {
+        if val == 0 { break; }
+        sum += val;
+    }
+    sum
+}
+
+// Circuit: fully unrolled with masking
+fn sum_until_zero_circuit(builder: &CircuitBuilder, data: &[Wire; MAX_LEN]) -> Wire {
+    let mut sum = builder.add_constant(Word::ZERO);
+    let mut found_zero = builder.add_constant(Word::ZERO);
+
+    for i in 0..MAX_LEN {
+        // Check if current element is zero
+        let is_zero = builder.icmp_eq(data[i], builder.add_constant(Word::ZERO));
+
+        // Update found_zero flag (sticky - once set, stays set)
+        found_zero = builder.bor(found_zero, is_zero);
+
+        // Mask the addition: only add if haven't found zero
+        let mask = builder.bnot(found_zero);
+        let masked_val = builder.band(data[i], mask);
+        let (sum_new, _) = builder.iadd_cin_cout(sum, masked_val, builder.add_constant(Word::ZERO));
+        sum = sum_new;
+    }
+
+    sum
+}
+```
+
+Properties:
+- Loop always runs MAX_LEN iterations
+- Conditional becomes masking (multiply by 0 or all-1)
+- State tracking with sticky flags
+
+## Variable-Length Data Patterns
+
+Variable-length data requires fixed allocation with length tracking and masking:
+
+```rust
+const MAX_ARRAY_SIZE: usize = 1000;
+
+struct VariableLengthArray {
+    values: [Wire; MAX_ARRAY_SIZE],  // Allocate maximum
+    length: Wire,                    // Actual length
+}
+
+impl VariableLengthArray {
+    fn sum(&self, builder: &CircuitBuilder) -> Wire {
+        let mut sum = builder.add_constant(Word::ZERO);
+        let mut carry = builder.add_constant(Word::ZERO);
+
+        for i in 0..MAX_ARRAY_SIZE {
+            // Check if index is within actual bounds
+            let is_active = builder.icmp_ult(
+                builder.add_constant(Word(i as u64)),
+                self.length
+            );
+
+            // is_active is already a mask (all-0s or all-1s)
+            // Mask the value for this position
+            let masked_value = builder.band(self.values[i], is_active);
+
+            // Add to running sum with carry
+            let (new_sum, new_carry) = builder.iadd_cin_cout(sum, masked_value, carry);
+            sum = new_sum;
+            carry = new_carry;
+        }
+
+        sum
+    }
+}
+```
+
+Wire allocation impact for MAX_ARRAY_SIZE = 1000:
+- 1000 wires for array values
+- 1 wire for length
+- 1000+ intermediate wires for comparisons and masks
+- Total: ~3000+ wires regardless of actual array size
+
+## Control Flow Patterns Summary
+
+| Traditional Pattern | Circuit Pattern | Constraint Cost |
+|--------------------|-----------------|-----------------|
+| `if/else` | `select` operation | 1 AND per selection |
+| `array[index]` | Multiplexer tree | N-1 AND for N elements |
+| `for` loop | Full unrolling | All iterations execute |
+| `break/continue` | Masking with flags | 1-2 AND per iteration |
+| Dynamic arrays | Fixed size + length | Overhead for max size |
+
+## Best Practices
+
+### Design Considerations
+
+1. **Minimize MAX sizes**: Smaller bounds reduce circuit size
+2. **Use sticky flags**: Track state changes efficiently
+3. **Batch operations**: Process multiple elements when possible
+4. **Precompute indices**: Calculate array positions outside loops
+
+### Common Pitfalls
+
+- **Forgetting to mask**: Unused array elements must be masked
+- **Conditional side effects**: All branches execute, avoid modifications
+- **Deep nesting**: Each level adds constraints, flatten when possible
+
+## Example: String Processing
+
+```rust
+const MAX_STRING_LEN: usize = 256;
+
+fn find_char(builder: &CircuitBuilder, 
+             string: &[Wire; MAX_STRING_LEN], 
+             length: Wire,
+             target: Wire) -> Wire {
+    let mut found_index = builder.add_constant(Word::ALL_ONE); // -1 = not found
+    let mut already_found = builder.add_constant(Word::ZERO);
+    
+    for i in 0..MAX_STRING_LEN {
+        let i_wire = builder.add_constant(Word(i as u64));
+        
+        // Check if we're within string bounds
+        let in_bounds = builder.icmp_ult(i_wire, length);
+        
+        // Check if this character matches
+        let is_match = builder.icmp_eq(string[i], target);
+        
+        // Should we update? (in bounds, is match, not already found)
+        let should_update = builder.band(in_bounds, is_match);
+        should_update = builder.band(should_update, builder.bnot(already_found));
+        
+        // Update index if this is first match
+        found_index = builder.select(i_wire, found_index, should_update);
+        
+        // Update already_found flag
+        already_found = builder.bor(already_found, should_update);
+    }
+    
+    found_index
+}
+```
+
+## Next Steps
+
+Now that you understand control flow patterns, proceed to the [Practical Tutorial](/building/tutorial) to see complete examples and learn about circuit composition.

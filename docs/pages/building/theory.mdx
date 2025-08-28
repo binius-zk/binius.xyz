@@ -1,0 +1,134 @@
+# Theory and Foundations [Why circuits in zero-knowledge systems]
+
+In this section, we explain why we build circuits in ZK systems, how circuits express computations, and how constraints come into play.
+
+## Circuit Requirements in Zero-Knowledge Systems
+
+Applications built for ZK proving must express computations as circuits rather than as imperative code in languages like Rust. This tutorial focuses on understanding these ZK circuits, without going into the theory of why they are needed for ZK. A circuit in this context is not quite the same as a digital circuit - this distinction will be clarified throughout.
+
+## Universal Logic Gates
+
+### Universal Gate Definition
+
+In digital logic, a **universal gate** is one that can implement any Boolean function. Since any computable function can be expressed as Boolean logic operations, a universal gate set gives us Turing completeness—the ability to compute anything that is computationally possible, just as a Turing machine can.
+
+The most common universal gates are:
+
+1. **NAND**: `¬(A ∧ B)` - NOT of AND
+2. **NOR**: `¬(A ∨ B)` - NOT of OR
+
+Why are these universal? Because you can build any other gate from them:
+- NOT from NAND: `NAND(A, A) = ¬A`
+- AND from NAND: `NAND(NAND(A, B), NAND(A, B)) = A ∧ B`
+- OR from NAND: `NAND(NAND(A, A), NAND(B, B)) = A ∨ B`
+
+### The AND-XOR Universal System
+
+Binius64 uses a different universal system: **AND** and **XOR** gates in GF(2). GF(2) is a low-level mathematical type (a field) used internally by the proof system—the details aren't essential for building circuits.
+
+Proof of universality:
+- NOT: `A ⊕ 1 = ¬A` (XOR with all-1)
+- OR: `A ∨ B = (A ∧ B) ⊕ A ⊕ B` (De Morgan's law in GF(2))
+- Any function: Can be expressed as sum of products (XOR of ANDs)
+
+## From Bits to 64-bit Words
+
+### Efficiency of Bit-Level Circuits
+
+Typical ZK frameworks support the AND + XOR gate set at the bit level:
+```
+// To add two 64-bit numbers in a bit-level circuit:
+// Need 64 full adders, each with ~5 gates
+// Total: ~320 constraints
+```
+
+This is inefficient for common computations that work with 64-bit words, which are now standard on modern processors.
+
+### The Binius64 Insight
+
+Instead of decomposing everything to bits, Binius64 works directly with 64-bit words:
+
+1. **Native word operations**: One constraint instead of 64
+2. **CPU-friendly**: Maps directly to machine instructions
+3. **64x efficiency gain**: For some of the operations
+
+This word-level approach delivers efficiency gains, but real-world circuits need bit manipulations too. Shifted value indices (see [Constraints & Shifted Indices](/building/constraints)) bridge this gap.
+
+## The Three Phases of Zero-Knowledge Circuits
+
+### Zero-Knowledge Circuit Structure
+
+In traditional circuit design, gates compute outputs from inputs. Zero-knowledge circuits have a fundamentally different structure because of their purpose: proving knowledge of something without revealing what is known. For ZK-SNARKs such as Binius64, the problem needs to be transformed into a circuit satisfiability (SAT) problem.
+
+This leads to three distinct phases:
+
+#### Phase 1: Constraint Generation (The Circuit's Structure)
+The **constraint system** is a set of mathematical equations that define what constitutes a valid computation. These equations will later be checked against actual values (the witness).
+
+This phase defines:
+- What relationships must hold between wires (the individual values in the witness)
+- The "rules" that valid witnesses must follow
+- No computation happens here - only rule definition
+
+Example:
+```
+// Constraints for x² = y
+constraints = [
+  x * x = x_squared,     // MUL constraint
+  x_squared - y = 0,     // Equality constraint: x_squared must equal y
+]
+```
+
+#### Phase 2: Witness Generation (The Prover's Work)
+The **witness** is the complete assignment of values to all wires in the circuit. Think of it as:
+- A vector containing the value at every edge in the circuit graph
+- Includes public inputs, private inputs, and all intermediate values
+- The prover computes all these values using regular computation
+
+Example:
+```
+// Prover knows secret x=5, wants to prove x² = 25
+witness = [
+  x = 5,        // private input
+  y = 25,       // public output
+  x_squared = 25 // internal wire
+]
+```
+
+#### Phase 3: Constraint Satisfaction (The Verifier's Check)
+The **verification** checks if a given witness satisfies all constraints:
+- Take the witness vector
+- Plug values into each constraint equation
+- Verify all equations evaluate to true
+
+This is checking math equations - no computation of new values.
+
+## Gates vs Computations vs Constraints
+
+Three key concepts require clarification:
+
+### 1. Gates (Physical/Logical Level)
+A **gate** is a basic logical operation:
+- AND gate: outputs `a ∧ b`
+- XOR gate: outputs `a ⊕ b`
+- OR gate: outputs `a ∨ b`
+
+Gates represent actual computations that happen.
+
+### 2. Computations (What We Want to Do)
+A **computation** is the actual calculation we perform:
+- `z = x + y` (addition)
+- `z = x << 5` (shift)
+- `z = SHA256(message)` (hash function)
+
+### 3. Constraints (How We Verify)
+A **constraint** is a mathematical relation that must hold:
+- Not a computation instruction
+- A verifiable property of the witness
+- Checked after witness is generated
+
+The key insight: In zero-knowledge proofs, circuits express relationships that must be satisfied, not instructions to be executed.
+
+## Next Steps
+
+Now that you understand why circuits are needed and how they differ from traditional computation, proceed to [Constraints & Shifted Indices](/building/constraints) to learn about the Binius64 constraint system.

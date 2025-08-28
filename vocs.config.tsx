@@ -158,62 +158,70 @@ export default defineConfig({
     ],
     "/building": [
       {
-        text: "Building",
+        text: "Building with Binius64",
         link: "/building",
       },
       {
-        text: "Constraint Systems",
+        text: "Theory and Foundations",
+        link: "/building/theory",
+      },
+      {
+        text: "Constraints and Shifted Indices",
         link: "/building/constraints",
       },
       {
-        text: "Bitwise Constraints",
-        link: "/building/bitwise",
+        text: "Non-Deterministic Witnesses",
+        link: "/building/nondeterministic",
       },
       {
-        text: "The Basic Pattern",
-        link: "/building/pattern",
+        text: "Control Flow Patterns",
+        link: "/building/control-flow",
+      },
+      {
+        text: "Practical Tutorial",
+        link: "/building/tutorial",
         collapsed: false,
         items: [
           {
-            text: "Declaring Columns",
-            link: "/building/pattern/declaring",
+            text: "Building First Circuits",
+            link: "/building/tutorial",
           },
           {
-            text: "Populating Columns",
-            link: "/building/pattern/populating",
+            text: "Common Operations",
+            link: "/building/tutorial/operations",
           },
           {
-            text: "Constraining Columns",
-            link: "/building/pattern/constraining",
+            text: "Proving & Verifying",
+            link: "/building/tutorial/proving",
+          },
+          {
+            text: "Circuit Composition",
+            link: "/building/tutorial/composition",
           },
         ],
       },
       {
-        text: "A Lookup Construction",
-        link: "/building/lookup",
+        text: "Appendix",
+        link: "/building/appendix",
         collapsed: false,
         items: [
           {
-            text: "Gadget Design",
-            link: "/building/lookup/gadget",
+            text: "Addition Implementation",
+            link: "/building/appendix#addition-implementation",
           },
           {
-            text: "Creating Components",
-            link: "/building/lookup/components",
+            text: "Example: Equality Check",
+            link: "/building/appendix#equality-check",
           },
           {
-            text: "Example Application",
-            link: "/building/lookup/application",
+            text: "Example: Bit Extraction",
+            link: "/building/appendix#bit-extraction",
+          },
+          {
+            text: "Example: SHA-256 Sigma",
+            link: "/building/appendix#sha-256-sigma-function",
           },
         ],
-      },
-      {
-        text: "Making Transparents",
-        link: "/building/transparents",
-      },
-      {
-        text: "Collatz in Practice",
-        link: "/building/collatz",
       },
     ],
     "/blueprint": [

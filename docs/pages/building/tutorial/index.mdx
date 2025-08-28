@@ -1,0 +1,177 @@
+# Practical Tutorial [Building your first circuits]
+
+This section provides practical examples using the CircuitBuilder API. Prerequisites: Understanding of wire types, constraints, and the witness generation process from previous sections.
+
+## Wire Types Quick Reference
+
+```rust
+// Public input/output wires
+let input = builder.add_inout();
+
+// Private witness wires (zero-knowledge)
+let secret = builder.add_witness();
+
+// Constant values
+let zero = builder.add_constant(Word::ZERO);
+let one = builder.add_constant(Word::ONE);
+let all_ones = builder.add_constant(Word::ALL_ONE);
+let value = builder.add_constant_64(0x1234567890ABCDEF);
+
+// Internal computation wires
+let temp = builder.add_internal();
+```
+
+## Example 1: Simple Equality Check Circuit
+
+```rust
+use binius_frontend::circuit::Circuit;
+use binius_frontend::compiler::CircuitBuilder;
+use binius_core::word::Word;
+use binius_frontend::wire::Wire;
+
+fn build_equality_circuit() -> (Circuit, Wire, Wire, Wire) {
+    // Create a new circuit builder
+    let builder = CircuitBuilder::new();
+
+    // Add two public inputs
+    let a = builder.add_inout();
+    let b = builder.add_inout();
+
+    // Add output wire for result
+    let result = builder.add_inout();
+
+    // Check if a == b (returns all-1 if equal, all-0 if not)
+    let eq_mask = builder.icmp_eq(a, b);
+
+    // Assert that our result matches the equality check
+    builder.assert_eq("check_result", eq_mask, result);
+
+    // Build the circuit and return wire references
+    let circuit = builder.build();
+    (circuit, a, b, result)
+}
+
+// Using the circuit for proving
+fn prove_equality() {
+    let (circuit, a_wire, b_wire, result_wire) = build_equality_circuit();
+
+    // Create witness filler
+    let mut w = circuit.new_witness_filler();
+
+    // Set input values using the wire references
+    w[a_wire] = Word(42);
+    w[b_wire] = Word(42);
+    w[result_wire] = Word(u64::MAX); // all-1 means equal
+
+    // Populate internal wires (fills non-deterministic values)
+    circuit.populate_wire_witness(&mut w).unwrap();
+
+    // Witness is ready for proof generation
+}
+```
+
+## Example 2: Zero-Knowledge Hash Preimage
+
+This example demonstrates private witnesses - proving knowledge of a preimage without revealing it:
+
+```rust
+fn build_hash_preimage_circuit() -> (Circuit, Wire, Wire) {
+    let builder = CircuitBuilder::new();
+
+    // Public input: the hash to check against
+    let expected_hash = builder.add_inout();
+
+    // Private witness: the secret preimage
+    let preimage = builder.add_witness();
+
+    // Simple hash function (demonstration only - not cryptographically secure)
+    // Real circuits would use SHA256 or similar
+    let rotated = builder.rotl(preimage, 13);
+    let mixed = builder.bxor(rotated, builder.add_constant_64(0x1234567890ABCDEF));
+    let hash = builder.bxor(mixed, builder.shr(preimage, 7));
+
+    // Assert the computed hash matches expected
+    builder.assert_eq("verify_hash", hash, expected_hash);
+
+    let circuit = builder.build();
+    (circuit, expected_hash, preimage)
+}
+
+// Proving knowledge of preimage
+fn prove_preimage_knowledge() {
+    let (circuit, expected_hash_wire, preimage_wire) = build_hash_preimage_circuit();
+    let mut w = circuit.new_witness_filler();
+
+    // Secret preimage (only prover knows this)
+    let secret = Word(0xDEADBEEFCAFEBABE);
+    w[preimage_wire] = secret;
+
+    // Compute the hash (same logic as in circuit)
+    let rotated = secret.rotl(13);
+    let mixed = rotated ^ Word(0x1234567890ABCDEF);
+    let hash = mixed ^ secret.shr(7);
+
+    // Public hash value
+    w[expected_hash_wire] = hash;
+
+    circuit.populate_wire_witness(&mut w).unwrap();
+
+    // Generate proof - proves knowledge of preimage without revealing it
+}
+```
+
+## Example 3: Basic Arithmetic Circuit
+
+```rust
+fn build_arithmetic_circuit() -> (Circuit, Wire, Wire, Wire, Wire) {
+    let builder = CircuitBuilder::new();
+
+    // Inputs
+    let a = builder.add_inout();
+    let b = builder.add_inout();
+
+    // Outputs
+    let sum = builder.add_inout();
+    let product_lo = builder.add_inout();
+
+    // Perform addition
+    let (computed_sum, _carry) = builder.iadd_cin_cout(
+        a,
+        b,
+        builder.add_constant(Word::ZERO)
+    );
+
+    // Perform multiplication
+    let (lo, _hi) = builder.imul(a, b);
+
+    // Assert outputs match
+    builder.assert_eq("check_sum", computed_sum, sum);
+    builder.assert_eq("check_product", lo, product_lo);
+
+    let circuit = builder.build();
+    (circuit, a, b, sum, product_lo)
+}
+```
+
+## Practical Tips
+
+- Test circuits with edge cases (0, u64::MAX values)
+- Use descriptive names in `assert_eq` for debugging
+- Remember: comparisons return all-1 or all-0, not 1 or 0
+- `populate_wire_witness` must be called to fill non-deterministic values
+- For testing, `populate_wire_witness` failing indicates constraint violations
+
+## Exercise: Build Your Own Circuit
+
+Try building a circuit that:
+1. Takes two private inputs `x` and `y`
+2. Computes `z = (x + y) ^ (x - y)`
+3. Outputs only `z` as public
+
+This combines arithmetic and bitwise operations while keeping inputs private.
+
+## Next Steps
+
+- Review the [Common Operations Reference](/building/tutorial/operations) for all available operations
+- Learn about [Proving and Verifying](/building/tutorial/proving) to generate actual proofs
+- Explore the [Appendix](/building/appendix) for advanced topics
