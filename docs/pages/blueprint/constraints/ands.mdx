@@ -1,6 +1,6 @@
 # AND Constraints [Bitwise-AND relations on shifted value indices]
 
-We [saw already](/blueprint/constraints/indices) that _shifted value indices_ are tuple $(y, \text{op}, s) \in W \times \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$ consisting of an index $y$ into the prover's runtime-dependent data, a _shift type_ $\text{op}$, and a _shift amount_ $s$.
+As usual, we write $w$ for the full list of prover data (a concatenation of constant, input–output, and witness data). Each component of $w$ is a 64-bit word. We [saw already](/blueprint/constraints/indices) that _shifted value indices_ are tuple $(y, \text{op}, s) \in W \times \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$ consisting of an index $y$ into the prover's runtime-dependent data, a _shift type_ $\text{op}$, and a _shift amount_ $s$.
 
 Now we're ready to describe what AND constraints are.
 
@@ -10,6 +10,6 @@ $$
 \begin{equation*}\left( \bigoplus_{(y, \text{op}, s) \in I_a} \text{op}(w[y], s) \right) \wedge \left( \bigoplus_{(y, \text{op}, s) \in I_b} \text{op}(w[y], s) \right) \stackrel{?}= \left( \bigoplus_{(y, \text{op}, s) \in I_c} \text{op}(w[y], s) \right).\end{equation*}
 $$
 
-Each given constraint system will fix a _total_ number $n_\text{and}$ of AND constraints, and will specify $n_\text{and}$ triples $(I_a, I_b, I_c)$, each of the form already given above.
+Note that both sides of this equality are 64-bit words; the symbol $\wedge$ is a bitwise AND of 64-bit words.
 
-We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for _each_ among the $n_\text{and}$ triples $(I_a, I_b, I_c)$ baked into the constraint system, the above equality holds over $w$.
+Each given constraint system will fix a _total_ number $n_\text{and}$ of AND constraints, and will specify $n_\text{and}$ triples $(I_a, I_b, I_c)$, each of the form already given above. We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for _each_ among the $n_\text{and}$ triples $(I_a, I_b, I_c)$ baked into the constraint system, the above equality holds over $w$.

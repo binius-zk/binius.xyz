@@ -30,7 +30,7 @@ MUL constraints are similar, except that instead of bitwise AND we have unsigned
 
 We explain shifted value indices sightly more formally. This will help in the pages after this one.
 
-Basically, the system's runtime-dependent data is made up of three "stretches": the _constant_ part, the _inout_ part, and the _witness_ part. The lengths of these stretches is fixed at compile-time—say, $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$. It is most convenient to write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ is thus $n \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Each element of $W \coloneqq \{0, \ldots , n - 1\}$ indexes into an element of runtime-dependent data.
+Basically, the system's runtime-dependent data is made up of three "stretches": the _constant_ part, the _inout_ part, and the _witness_ part. The lengths of these stretches is fixed at compile-time—say, $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$. It is most convenient to write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ is thus $n_\text{words} \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Each element of $W \coloneqq \{0, \ldots , n_\text{words} - 1\}$ indexes into an element of runtime-dependent data.
 
 A _shifted value index_ is a triple consisting of an index $y \in W$, a _shift type_—either $\mathsf{sll}$, $\mathsf{srl}$, or $\mathsf{sra}$—and a _shift amount_, required to live in $\{0, \ldots , 63\}$. We can write each such thing like $(y, \text{op}, s)$. Each shifted value index lives in the set
 

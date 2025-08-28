@@ -31,27 +31,17 @@ The constraint system we get out is predictable and simple, but much more useful
 
 <Callout type="note">
 <Collapsible>
-[**Oblong Multilinears.**](oblong) Our first cryptographic step is sumcheck-like. Exploiting our 64-bit word structure, we can use Gruen's [[Gru24](https://eprint.iacr.org/2024/108)]'s _univariate skip_ idea in a really elegant way.
+[**AND Constraints.**](ands) To check whether the prover's data satisfies the constraint system's AND constraints, we need to do a few steps.
 
-To explain how our technique works, we first need to review _oblong-multilinearization_, a technique that comes from Gruen. We also explain a few implementation-oriented considerations. The goal of this step is to reduce the overall satisfaction of AND constraints to _evaluation claims_ on the oblong-multilinearizations of certain polynomials.
+We first arithmetize the problem of AND-constraint satisfaction, by representing that problem as one about [multilinear polynomials](math/multilinears). We actually use [oblong](ands/oblong) multilinears, an idea that comes from [[Gru24](https://eprint.iacr.org/2024/108)]'s _univariate skip_. That technique ends up working especially nicely for us, since we natively use the _64-bit word_ dataype. After running the univariate skip, we wind up with a complicated, Spartan-like sumcheck, called the [shift reduction](ands/reduction), which we also treat in detail.
 </Collapsible>
 </Callout>
 
 <Callout type="note">
 <Collapsible>
-[**The Shift Reduction.**](shifts) This is arguably the most technically involved step in our backend. Here, we reduce evaluation claims on our oblong interpolants directly to an evaluation claim on the witness.
+[**MUL Constraints.**](multiplication) To check whether the prover's data satisfies the constraint system's MUL constraints, we use a totally different technique, this time based on GKR.
 
-Internally, this step involves a multi-stage sumcheck—very roughly like Spartan [[Set20](https://eprint.iacr.org/2019/550.pdf)]'s, but much more complicated. First off, we need to deal with shifting; to do this, we adapt a bunch of ideas from [[DP25](https://eprint.iacr.org/2023/1784)].
-
-We also sketch how we implement our sumchecks efficiently.
-</Collapsible>
-</Callout>
-
-<Callout type="note">
-<Collapsible>
-[**Integer Multiplication.**](multiplication) Beyond bitwise AND constraints, our constraint system separately lets us carry out unsigned, 64-bit integer multiplication.
-
-To handle these, we use a trick based on GKR, and on working "in the exponent".
+Because exponentiating a fixed base by the product of two values is equivalent to exponentiating that base by the two values separately in succession, we can express multiplication in terms of exponentiation. This lets us work "in the exponent", and make use of a GKR-based trick.
 </Collapsible>
 </Callout>
 

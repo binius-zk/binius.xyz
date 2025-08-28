@@ -1,0 +1,9 @@
+# The Shift Indicators [Algebraically representing arithmetic offsets]
+
+In this sub-area, we prepare a key technical building block that we'll use in the shift reduction. How do we _algebraically_ represent logical and arithmetic bitshifts?
+
+We break our treatment of this problem into a number of steps.
+
+- [**Introduction.**](introduction) First, we have to describe the problem we're trying to solve. We introduce what _shift indicators_ mean, and how they help us algebraically treat bitshifts.
+- [**Logical Shifts.**](logical) We begin by constructing our _logical_ shift indicator. Actually, most of the work will come from constructing $\mathsf{srl}$.
+- [**Arithmetic Shifts.**](arithmetic) Now, the problem is to construct a shift indicator for _arithmetic shift right_, which "drags" or "fills" the sign bit rightwards as it goes. We show how this can be done, bootstrapping minimally off of logical shift right.

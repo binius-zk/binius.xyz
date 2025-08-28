@@ -268,44 +268,48 @@ export default defineConfig({
         ],
       },
       {
-        text: "Oblong Multilinears",
-        link: "/blueprint/oblong",
-        collapsed: false,
-        items: [
-          {
-            text: "Univariate Skip",
-            link: "/blueprint/oblong/univariate"
-          },
-        ]
-      },
-      {
-        text: "The Shift Reduction",
-        link: "/blueprint/shifts",
+        text: "AND Constraints",
+        link: "/blueprint/ands",
         collapsed: false,
         items: [
           {
             text: "The Shift Indicators",
-            link: "/blueprint/shifts/indicators",
+            link: "/blueprint/ands/indicators",
             collapsed: true,
             items: [
               {
+                text: "Introduction",
+                link: "/blueprint/ands/indicators/introduction"
+              },
+              {
                 text: "Logical Shifts",
-                link: "/blueprint/shifts/indicators/logical"
+                link: "/blueprint/ands/indicators/logical"
               },
               {
                 text: "Arithmetic Shifts",
-                link: "/blueprint/shifts/indicators/arithmetic"
+                link: "/blueprint/ands/indicators/arithmetic"
               },
             ]
           },
           {
-            text: "Implementation Considerations",
-            link: "/blueprint/shifts/implementation",
+            text: "Oblong Multilinears",
+            link: "/blueprint/ands/oblong",
+            collapsed: false,
+            items: [
+              {
+                text: "Univariate Skip",
+                link: "/blueprint/ands/oblong/univariate"
+              },
+            ]
+          },
+          {
+            text: "The Shift Reduction",
+            link: "/blueprint/ands/reduction",
           }
         ],
       },
       {
-        text: 'Integer Multiplication',
+        text: 'MUL Constraints',
         link: '/blueprint/multiplication/',
       },
       {

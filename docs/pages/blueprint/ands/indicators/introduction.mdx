@@ -1,0 +1,60 @@
+# Introduction [An introduction to shift indicators, and why they help]
+
+Let's say we have an $\ell_\text{words} + 6$-variate multilinear over $\mathbb{F}_2$,
+
+$$
+\begin{equation*}w(Z_0, \ldots , Z_5, Y_0, \ldots , Y_{\ell_\text{words} - 1}).\end{equation*}
+$$
+
+Above, the indeterminates $Z_0, \ldots , Z_5$ control the "bit within the word"; the indeterminates $Y_0, \ldots , Y_{\ell_\text{words} - 1}$ control the "word index". So identifying $w$ with its table of values on $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{words}}$, we can interpret $w$ as a list of $n_\text{words} \coloneqq 2^{\ell_\text{words}}$ 64-bit words. Indeed, for each word index $y \in \mathcal{B}_{\ell_\text{words}}$, the tuple $w\left( z, y \right)_{z \in \mathcal{B}_6}$ gives us 64 bits, which represent the word $w[y]$.
+
+Now, let's say we want to left-shift each of $w$'s $n_\text{words}$ by some fixed amount. This gives us a new $n_\text{words}$-word list. But how does the resulting _polynomial_ relate to $w$? How can we reduce an evaluation claim on the latter to one on the former?
+
+## The Shift Indicators
+
+We introduce _shift indicators_, and explain how they solve this problem.
+
+We recall that our _shift operations_ are _logical left_, _logical right_, and _arithmetic right_, represented respectively by the symbols $\{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. We will fix an $\text{op}$, understood to be one of these three types.
+
+For each such $\text{op}$, we define a corresponding _function_ from $\mathcal{B}_6 \times \mathcal{B}_6 \times \mathcal{B}_6 \to \{0, 1\}$:
+
+$$
+\begin{equation*}\textsf{shift-ind}_\text{op}(i, j, s) \coloneqq \begin{cases}
+1 & \text{ if the $i^{\text{th}}$ bit of $\text{op}(v, s)$ \text{is the $j^{\text{th}}$ bit of $v$}} \\
+0 & \text{ otherwise}
+\end{cases}\end{equation*}
+$$
+
+In other words, for each triple of inputs $i$, $j$ and $s$, it either _is_ or _isn't_ true that the $i$<sup>th</sup> bit position of $\text{op}(v, s)$ is precisely the $j$<sup>th</sup> bit position of $v$ (i.e., for each possible input $v$). The shift indicator picks up that fact.
+
+:::info
+For example, $\mathsf{sll}(v, 10)_{30} = v_{20}$, regardless of $v$. This means that $\textsf{shift-ind}_\mathsf{sll}(30, 20, 10) = 1$. On the other hand, $\mathsf{sll}(v, 10)_{30}$ and $v_{19}$ are unrelated, so $\textsf{shift-ind}_\mathsf{sll}(30, 19, 10) = 0$. Finally, $\mathsf{sll}(v, 10)_9 = 0$ regardless of $v$, so $\textsf{shift-ind}_\mathsf{sll}(9, j, s) = 0$ for each $s \in \mathcal{B}_6$.
+:::
+
+Now, we will write
+
+$$
+\begin{equation*}\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)\end{equation*}
+$$
+
+for the multilinear extension of $\textsf{shift-ind}_\text{op}(i, j, s)$, now understood as a multilinear polynomial—with $\mathbb{F}_2$-coefficients—on $6 \times 3 = 18$ variables.
+
+Are the MLEs $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$ succinct? That is, given arbitrary values $r_i$, $r_j$ and $r_s$, each in $\mathbb{F}_{2^{128}}^6$, can the verifier evaluate $\widetilde{\textsf{shift-ind}}_\text{op}(r_i, r_j, r_s)$ in something like $18$ steps—or does it instead take something like $2^{18}$ steps? These are obviously very different. We will spend the rest of this subsection arguing that it's the former.
+
+## Shifted Witness Polynomials
+
+For now, we assume that the MLEs $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$ are succinct.
+
+Assuming this, we are now able to define _shifted witness polynomials_. Let's again fix $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$ and a multilinear $w(Z_0, \ldots , Z_5, Y_0, \ldots , Y_{\ell_\text{words} - 1})$ as above.
+
+The polynomial
+
+$$
+\begin{equation*}\textsf{shift}_\text{op}(\widetilde{w})(Z, Y, S) \coloneqq \sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(Z, j, S) \cdot \widetilde{w}(j, Y)\end{equation*}
+$$
+
+is multilinear in the variables $Z \in \mathbb{F}_{2^{128}}^6$, $Y \in \mathbb{F}_{2^{128}}^{\ell_\text{words}}$, and $S \in \mathbb{F}_{2^{128}}^6$. Moreover, its restriction to $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{words}} \times \mathcal{B}_6$ gives us all of the $\text{op}$-shifts of $w$. Indeed, let's fix some concrete $s \in \mathcal{B}_6$ and $y \in \mathcal{B}_{\ell_\text{words}}$. We claim that the bits $\left( \textsf{shift}_\text{op}(\widetilde{w})(z, y, s) \right)_{z \in \mathcal{B}_6}$ are exactly the bits of $\text{op}(w[y], s)$! Indeed, this is basically an exercise. For each particular bit $z \in \mathcal{B}_6$, the sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j$, $\textsf{shift-ind}_\text{op}(z, j, s) = 1$, then the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
+
+Moreover, let's say we have a target evaluation point $(r_z, r_y, r_s)$. By performing a 6-round sumcheck with the prover, the verifier can reduce a claim about the value of $\textsf{shift}_\text{op}(\widetilde{w})(r_z, r_y, r_s)$ to a claim about the value of $\widetilde{w}(r_j, r_y)$, for some $r_j$ sampled during the sumcheck. Here, we are crucially using the succinctness of $\widetilde{\textsf{shift-ind}}_\text{op}$, since the verifier will need to evaluate $\widetilde{\textsf{shift-ind}}_\text{op}(r_z, r_j, r_s)$ himself at the end of the sumcheck.
+
+We won't see how to fully put these to use until we get to the [shift reduction](/blueprint/ands/reduction).
