@@ -14,7 +14,7 @@ Now, let's say we want to left-shift each of $w$'s $n_\text{words}$ by some fixe
 
 We introduce _shift indicators_, and explain how they solve this problem.
 
-We recall that our _shift operations_ are _logical left_, _logical right_, and _arithmetic right_, represented respectively by the symbols $\{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. We will fix an $\text{op}$, understood to be one of these three types.
+We recall that our _shift operations_ are _logical left_, _logical right_, and _arithmetic right_, represented respectively by the symbols $\{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. We will fix an $\text{op}$, understood to be one of these three.
 
 For each such $\text{op}$, we define a corresponding _function_ from $\mathcal{B}_6 \times \mathcal{B}_6 \times \mathcal{B}_6 \to \{0, 1\}$:
 
@@ -28,7 +28,7 @@ $$
 In other words, for each triple of inputs $i$, $j$ and $s$, it either _is_ or _isn't_ true that the $i$<sup>th</sup> bit position of $\text{op}(v, s)$ is precisely the $j$<sup>th</sup> bit position of $v$ (i.e., for each possible input $v$). The shift indicator picks up that fact.
 
 :::info
-For example, $\mathsf{sll}(v, 10)_{30} = v_{20}$, regardless of $v$. This means that $\textsf{shift-ind}_\mathsf{sll}(30, 20, 10) = 1$. On the other hand, $\mathsf{sll}(v, 10)_{30}$ and $v_{19}$ are unrelated, so $\textsf{shift-ind}_\mathsf{sll}(30, 19, 10) = 0$. Finally, $\mathsf{sll}(v, 10)_9 = 0$ regardless of $v$, so $\textsf{shift-ind}_\mathsf{sll}(9, j, s) = 0$ for each $s \in \mathcal{B}_6$.
+For example, $\mathsf{sll}(v, 10)_{30} = v_{20}$, regardless of $v$. This means that $\textsf{shift-ind}_\mathsf{sll}(30, 20, 10) = 1$. On the other hand, $\mathsf{sll}(v, 10)_{30}$ and $v_{19}$ are unrelated, so $\textsf{shift-ind}_\mathsf{sll}(30, 19, 10) = 0$. Finally, $\mathsf{sll}(v, 10)_9 = 0$ regardless of $v$, so $\textsf{shift-ind}_\mathsf{sll}(9, j, 10) = 0$ for each $j \in \mathcal{B}_6$.
 :::
 
 Now, we will write
@@ -37,9 +37,9 @@ $$
 \begin{equation*}\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)\end{equation*}
 $$
 
-for the multilinear extension of $\textsf{shift-ind}_\text{op}(i, j, s)$, now understood as a multilinear polynomial—with $\mathbb{F}_2$-coefficients—on $6 \times 3 = 18$ variables.
+for the multilinear extension of $\textsf{shift-ind}_\text{op}(i, j, s)$. We understand this extension as a multilinear polynomial, with $\mathbb{F}_2$-coefficients, on $6 \times 3 = 18$ variables.
 
-Are the MLEs $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$ succinct? That is, given arbitrary values $r_i$, $r_j$ and $r_s$, each in $\mathbb{F}_{2^{128}}^6$, can the verifier evaluate $\widetilde{\textsf{shift-ind}}_\text{op}(r_i, r_j, r_s)$ in something like $18$ steps—or does it instead take something like $2^{18}$ steps? These are obviously very different. We will spend the rest of this subsection arguing that it's the former.
+Are the MLEs $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$ succinct? That is, given arbitrary values $r_i$, $r_j$ and $r_s$, each in $\mathbb{F}_{2^{128}}^6$, can the verifier evaluate $\widetilde{\textsf{shift-ind}}_\text{op}(r_i, r_j, r_s)$ in something like $O(18)$ steps—or does it instead take something like $O(2^{18})$ steps? These are obviously very different. For general multilinears, the latter is the best we can do. We will spend the rest of this subsection arguing that it's the former, in the case of the shift indicators.
 
 ## Shifted Witness Polynomials
 

@@ -1,0 +1,63 @@
+# Arithmetic Shifts [Handling the high sign bits]
+
+To get an efficient evaluation algorithm for $\widetilde{\textsf{shift-ind}}_\mathsf{sra}(I, J, S)$, we can bootstrap off of $\widetilde{\textsf{shift-ind}}_\mathsf{srl}(I, J, S)$.
+
+We first define the following auxiliary function, for each input $(i, s)$ _in_ the cube $\mathcal{B}_6 \times \mathcal{B}_6$:
+
+$$
+\begin{equation*}\textsf{a}_k(i, s) \coloneqq \begin{cases}
+1 & \text{ if $\{ i \} \geq 64 - \{s\}$} \\
+0 & \text{ otherwise}
+\end{cases}.\end{equation*}
+$$
+
+We note that for each triple $(i, j, s)$ _in_ the cube $\mathcal{B}_6 \times \mathcal{B}_6 \times \mathcal{B}_6$,
+
+$$
+\begin{equation*}\textsf{shift-ind}_\mathsf{sra}(i, j, s) = \textsf{shift-ind}_\textsf{srl}(i, j, s) + \prod_{k = 0}^5 j_k \cdot \mathsf{a}(i, s).\end{equation*}
+$$
+
+So it suffices to construct an efficient circuit for $\widetilde{\mathsf{a}}(I, S)$.
+
+## The Auxiliary Functions
+
+Once again, we define a sequence of auxiliary functions for each $k \in \{0, \ldots , 6\}$, now defined on $\mathcal{B}_k \times \mathcal{B}_k$.
+
+$$
+\begin{equation*}\textsf{a}_k(i, s) \coloneqq \begin{cases}
+1 & \text{ if $\{i \} \geq 2^k - \{s\}$} \\
+0 & \text{ otherwise}
+\end{cases}.\end{equation*}
+$$
+
+Clearly, $\mathsf{a} = \mathsf{a}_6$, so it suffices to treat the latter.
+
+## Recursive Construction
+
+Once again, we get a recursive substructure:
+
+- **Base Case.**
+  - $\mathsf{a}_0 = 0$.
+
+- **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each input triple $(i, j, s) \in \mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
+  - $$
+    \begin{equation*}\textsf{a}_k(i, s) = \begin{cases}
+    1 & \text{ if $i_{k - 1} = 1$ and $s_{k - 1} = 1$} \\
+    \mathsf{a}_{k - 1}(i, s) & \text{ if $i_{k = 1} \neq s_{k - 1}$} \\
+    0 & \text{ otherwise}
+    \end{cases}.\end{equation*}
+    $$
+
+Here's a proof sketch. We want to know whether $\{i\} + \{s\} \geq 2^k$ overflows modulo $2^k$. If both summands' most-significant bits are 1, then we definitely get an overflow; if neither are, then we definitely don't. If exactly one of the bits $i_{k - 1}$ and $s_{k - 1}$ equals 1, then we get an overflow if and only if the less-significant substrings (excluding the most-significant bits), when added together, produce an overflow.
+
+### The Arithmetizations
+
+Using this substructure, we once again get arithmetizations for the multilinear extensions $\widetilde{a}_k(I, S)$.
+
+- **Base Case.**
+  - $\widetilde{\mathsf{a}}_0 = 0$.
+
+- **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each $(i, s) \in \mathcal{B}_k \times \mathcal{B}_k$:
+  - $\widetilde{\textsf{a}}_k(I, S) = I_{k - 1} \cdot S_{k - 1} + (I_{k - 1} + S_{k - 1}) \cdot \widetilde{\mathsf{a}}_{k - 1}(I, J, S)$.
+
+This completes the efficient arithmetization of the shift indicator functions.

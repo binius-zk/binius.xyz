@@ -12,7 +12,7 @@ that is, on the cube, these functions just differ by a transposition of their fi
 
 ## The Auxiliary Functions
 
-For each $k \in \{0, \ldots , 6\}$, we will define _two_ auxiliary functions, both defined on $\mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$.
+For each $k \in \{0, \ldots , 6\}$, we will define _two_ auxiliary functions, both defined on $\mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
 
 $$
 \begin{equation*}\textsf{s}_k(i, j, s) \coloneqq \begin{cases}
@@ -37,8 +37,8 @@ Note first that $\textsf{shift-ind}_\mathsf{srl} = \mathsf{s}_6$, so $\widetilde
 We first note that $\mathsf{s}_k$ and $\mathsf{s}'_k$ (without the tildes) have a recursive substructure.
 
 - **Base Case.**
-  - $\mathsf{s}_k = 1$.
-  - $\mathsf{s}'_k = 0$.
+  - $\mathsf{s}_0 = 1$.
+  - $\mathsf{s}'_0 = 0$.
 
 - **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each input triple $(i, j, s) \in \mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
   - $$
@@ -60,7 +60,7 @@ This is a claim, not a definition (we already defined these functions above). We
 
 ### The Case Breakdowns
 
-To arithmetize these, we need ot break down the possible cases. For example, for which bit-triples $(i_{k - 1}, j_{k - 1}, s_{k - 1}) \in \mathcal{B}_1 \times \mathcal{B}_1 \times \mathcal{B}_1$ does it hold that $i_{k - 1} + s_{k - 1} \stackrel{?}= j_{k - 1}$, _as integers_?
+To arithmetize these, we need to break down the possible cases. For example, for which bit-triples $(i_{k - 1}, j_{k - 1}, s_{k - 1}) \in \mathcal{B}_1 \times \mathcal{B}_1 \times \mathcal{B}_1$ does it hold that $i_{k - 1} + s_{k - 1} \stackrel{?}= j_{k - 1}$, _as integers_?
 
 We answer this question now. We abbreviate $(i, j, s) \coloneqq (i_{k - 1}, j_{k - 1}, s_{k - 1})$. For each $(i, j, k) \in \mathcal{B}_1 \times \mathcal{B}_1 \times \mathcal{B}_1$:
 - $i + s = j$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) \in \{(0, 0, 0), (0, 1, 1), (1, 1, 0)\}$.
@@ -68,7 +68,7 @@ We answer this question now. We abbreviate $(i, j, s) \coloneqq (i_{k - 1}, j_{k
 - $i + s = j + 2$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) = (1, 0, 1)$.
 - $i + s + 1 = j + 2$ holds (over $\mathbb{Z}$) if and only if $(i, j, s) \in \{(0, 0, 1), (1, 0, 0), (1, 1, 1)\}$.
 
-This gives a pathway towards arithmetization. The next step is to write down multilinear polynomials in $(I, J, S)$ whose restrictions to $\mathcal{B}_3$ respectively "indicate" each of the four subsets above. We know that this is possible, by Lagrange interpolation. As it happens, by being cleverer, we can find expressions for these that use just 2 multiplications a piece.
+This gives a pathway towards arithmetization. The next step is to write down multilinear polynomials in $(I, J, S)$ whose restrictions to $\mathcal{B}_3$ respectively "indicate" each of the four subsets above. We know that this is possible, by Lagrange interpolation. As it happens, by being cleverer, we can find expressions for these that use very few multiplications a piece (in fact just 2 in each case, which seems to be optimal).
 - $i + s = j$ holds (over $\mathbb{Z}$) if and only if $1 + j + s + i \cdot (1 + s \cdot (1 + j)) = 1$ (over $\mathbb{F}_2$).
 - $i + s + 1 = j$ holds (over $\mathbb{Z}$) if and only if $(1 - i) \cdot j \cdot (1 - s) = 1$ (over $\mathbb{F}_2$).
 - $i + s = j + 2$ holds (over $\mathbb{Z}$) if and only if $i \cdot (1 - j) \cdot s = 1$ (over $\mathbb{F}_2)$.
@@ -81,8 +81,8 @@ As a sanity check, note that since the middle two bullets need to be 1 at _just 
 We're now ready to arithmetize $\widetilde{\mathsf{s}}_k$ and $\widetilde{\mathsf{s}}'_k$. Indeed, our arithmetizations come from the above:
 
 - **Base Case.**
-  - $\widetilde{\mathsf{s}}_k = 1$.
-  - $\widetilde{\mathsf{s}}'_k = 0$.
+  - $\widetilde{\mathsf{s}}_0 = 1$.
+  - $\widetilde{\mathsf{s}}'_0 = 0$.
 
 - **Inductive Case.** For each $k \in \{1, \ldots , 6\}$ and each input triple $(i, j, s) \in \mathcal{B}_k \times \mathcal{B}_k \times \mathcal{B}_k$:
   - $$
