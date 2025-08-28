@@ -18,4 +18,4 @@ Each element $\alpha \in \mathbb{F}_{2^{128}}$ can be represented as a polynomia
 
 Concretely, we use the _[GHASH](https://datatracker.ietf.org/doc/html/rfc8452#appendix-A)_ field. To get that field, we just need to take $f(X) \coloneqq X^{128} + X^7 + X^2 + X + 1$. That polynomial $f(X)$ is indeed irreducible in $\mathbb{F}_2[X]$.
 
-On processors that feature the _[carryless multiplication](https://en.wikipedia.org/wiki/CLMUL_instruction_set) (CLMUL)_ instruction set extension, multiplication in the GHASH field can be carried out extremely efficiently.
+On processors that feature the _[carryless multiplication](https://en.wikipedia.org/wiki/CLMUL_instruction_set)_ (CLMUL) instruction set extension, multiplication in the GHASH field can be carried out extremely efficiently.

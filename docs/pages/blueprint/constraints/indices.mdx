@@ -1,0 +1,14 @@
+# Shifted Value Indices [R1CS, but with bitwise shifts]
+
+Both our _public data_ and our _witness data_ are just long lists of 64-bit unsigned integers. We have two types of constraints, _AND constraints_ and _MUL constraints_. An AND constraint demands that `a & b == c`, where `&` is bitwise AND, and $a$, $b$ and $c$ are all _shifted value indices_. A shifted value index is simply an XOR-of-shifts of witness values.
+
+For example, $a$ might be `w[123] << 44 ^ w[456] ~>> 55`; $b$ might be `w[111] ^ w[444] >> 4`. Let's say $c$ is `w[777]`. When we check whether `a & b == c`, we're asserting: Whatever the prover's witness $w$ is, it should satisfy
+
+```
+(w[123] << 44 ^ w[456] ~>> 55) & (w[111] ^ w[444] >> 4) == w[777].
+```
+Everything above is hardcoded into the constraint system _except_ the witness `w` itself. I.e., all the indices and shift amounts are hardcoded.
+
+Each assertion of this form is an AND constraint; we allow there to be arbitrarily many AND constraints.
+
+MUL constraints are similar, except that instead of `&` (bitwise AND) we have unsigned multiplication of 64-bit integers. The result is double-width; those constraints take the form `a * b == hi || lo`, where `hi` and `lo` are _themselves_ further shifted value indices.

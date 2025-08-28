@@ -1,0 +1,11 @@
+# Constraint Systems [How we represent computations]
+
+In Binius64, we use a constraint system that's R1CS-like, but adapts that system so as to make it work natively with 64-bit unsigned integers. This lets it efficiently represent computations that act on machine words.
+
+Our constraint system enriches R1CS in various ways. First, it operates natively on 64-bit words, as opposed to on "field elements". Further, it has shifts—logical-left, logical-right, and arithmetic-right—natively built in. Finally, instead of supporting the "field multiplication" nonlinearity (which is generally hard to exploit efficiently), we support _bitwise AND_ and _unsigned 64-bit multiplication_ nonlinearities.
+
+We give further details in this site section.
+
+- [**Shifted Value Indices.**](indices) Here, we describe how we enrich R1CS to support bitshifts. In short, instead of operating on subset sums of our witness, our constraint system operates on XORS-of-shifts.
+- [**AND Constraints.**](ands) Here, we sketch the specification of AND constraints, and what it means for them to be fulfilled.
+- [**MUL Constraints.**](muls) Multiplication constraints and a bit tricky, since their outputs are double-width. We cover the details here.

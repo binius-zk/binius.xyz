@@ -243,6 +243,21 @@ export default defineConfig({
       {
         text: "Constraint Systems",
         link: "/blueprint/constraints",
+        collapsed: false,
+        items: [
+          {
+            text: "Shifted Value Indices",
+            link: "/blueprint/constraints/indices"
+          },
+          {
+            text: "AND Constraints",
+            link: "/blueprint/constraints/ands"
+          },
+          {
+            text: "MUL Constraints",
+            link: "/blueprint/constraints/muls"
+          },
+        ],
       },
       {
         text: "Oblong Multilinears",
