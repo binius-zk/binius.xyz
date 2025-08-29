@@ -2,65 +2,65 @@
 
 We've already discussed [multilinear](/blueprint/math/multilinears) polynomials. Here, we discuss a variant of that idea.
 
-We fix nonnegative integer parameters $k$ and $\ell$. We fix a $k$-dimensional $\mathbb{F}_2$-linear subspace $D \subset \mathbb{F}_{2^{128}}$. If we pick an $\mathbb{F}_2$-basis $(\beta_0, \ldots , \beta_{k - 1})$ of $D$, then we can identify $\mathcal{B}_k \cong D$; indeed, it's enough to send $z \mapsto \widehat{z} \coloneqq \sum_{i = 0}^{k - 1} z_i \cdot \beta_i$. Similarly, for each $\ell$, we get in this way an identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$.
+We fix nonnegative integer parameters $k$ and $\ell$. We fix a $k$-dimensional $\mathbb{F}_2$-linear subspace $D \subset \mathbb{F}_{2^{128}}$. If we pick an $\mathbb{F}_2$-basis $(\beta_0, \ldots , \beta_{k - 1})$ of $D$, then we can identify $\mathcal{B}_k \cong D$; indeed, it's enough to send $i \mapsto i_0 \cdot \beta_0 + \cdots + i_{k - 1} \cdot \beta_{k - 1}$. We will write $\widehat{i} \in D$ for the latter thing. Similarly, for each $\ell$, we get in this way an identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$.
 
 We now fix a $k + \ell$-variate multilinear:
 $$
-\begin{equation*}t(Z_0, \ldots , Z_{k - 1}, X_0, \ldots , X_{\ell - 1})\end{equation*}
+\begin{equation*}t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})\end{equation*}
 $$
 over $\mathbb{F}_2$. We are going to create a further _polynomial_, called
 $$
-\begin{equation*}\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1}),\end{equation*}
+\begin{equation*}\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1}),\end{equation*}
 $$
 in $1 + \ell$ variables, such that:
 
-- $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$'s restriction to $D \times \mathcal{B}_\ell$ equals $t(Z_0, \ldots , Z_{k - 1}, X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_k \times \mathcal{B}_\ell$, under the identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$ above; i.e., for each $z \in \mathcal{B}_k$ and $x \in \mathcal{B}_\ell$,
+- $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$'s restriction to $D \times \mathcal{B}_\ell$ equals $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_k \times \mathcal{B}_\ell$, provided we identify those sets under the identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$ above; i.e., for each $i \in \mathcal{B}_k$ and $x \in \mathcal{B}_\ell$,
   $$
-  \begin{equation*}t(z, x) = \widehat{t}(\{z\}, x),\end{equation*}
+  \begin{equation*}t(i, x) = \widehat{t}(\widehat{i}, x),\end{equation*}
   $$
-- $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$ is "low-degree": of degree less than $2^k$ in $\widehat{Z}$ and of degree less than or equal to 1 in each further variable.
+- $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ is "low-degree"; that is, it's of degree less than $2^k$ in $\widehat{I}$ and of degree less than or equal to 1 in each further variable.
 
-We will call $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$ the _oblong-multilinearization_ of $t(Z_0, \ldots , Z_{k - 1}, X_0, \ldots , X_{\ell - 1})$. In general, we will use "hats" to refer to variables that take values along the "long" axis of the domain.
+We will call $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ the _oblong-multilinearization_ of $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$. In general, we will use "hats" to refer to variables that take values along the "long" axis of the domain.
 
 ## Existence and Uniqueness
 
-The oblong-multilinearization $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$ exists and is unique, essentially for reasons similar to [ones we've already seen](/blueprint/math/multilinears). As before, it's enough to prove uniqueness.
+The oblong-multilinearization $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ exists and is unique, essentially for reasons similar to [ones we've already seen](/blueprint/math/multilinears). As before, it's enough to prove existence.
 
 We write $\delta_D$ for the _bivariate_ polynomial, of individual degree less than $2^k$ in both variables, whose restriction to $D \times D$ is the equality indicator function. We claim without proof that this thing exists and is unique. Note that $\delta_D$'s partial specializations within $D$ recover the usual univariate Lagrange interpolation polynomials. That is, for each $\widehat{z} \in D$,
 
 $$
-\begin{equation*}\delta_D(\widehat{Z}, \widehat{z}) = \delta_D(\widehat{z}, \widehat{Z}) = L_{D, \widehat{z}}(\widehat{Z}),\end{equation*}
+\begin{equation*}\delta_D(\widehat{I}, \widehat{i}) = \delta_D(\widehat{i}, \widehat{I}) = L_{D, \widehat{i}}(\widehat{I}),\end{equation*}
 $$
 
-the unique univariate Lagrange polynomial of degree less than $2^k$ whose restriction to $D$ equals 1 exactly at $\hat{z}$, and is 0 everywhere else.
+the unique univariate Lagrange polynomial of degree less than $2^k$ whose restriction to $D$ equals 1 exactly at $\widehat{i}$, and is 0 everywhere else.
 
-To construct $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$, we use $\delta_D$. We claim that the construction:
+To construct $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$, we use $\delta_D$. We claim that the construction:
 
 $$
-\begin{equation*}\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1}) \coloneqq \sum_{z \in \mathcal{B}_6} \delta_D(\widehat{Z}, \widehat{z}) \cdot t(z_0, \ldots , z_{k - 1}, X_0, \ldots , X_{\ell - 1})\end{equation*}
+\begin{equation*}\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1}) \coloneqq \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot t(i_0, \ldots , i_{k - 1}, X_0, \ldots , X_{\ell - 1})\end{equation*}
 $$
 
-gives us what we want. We need to check that $\widehat{t}(\widehat{Z}, X_0, \ldots , X_{\ell - 1})$ has the right degrees both in $\widehat{Z}$ and in the variables $X_0, \ldots , X_{\ell - 1}$ (it does) and that its restriction to $D \times \mathcal{B}_\ell$ takes the right values (it does).
+gives us what we want. We need to check that $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ has the right degrees both in $\widehat{I}$ and in the variables $X_0, \ldots , X_{\ell - 1}$ (it does) and that its restriction to $D \times \mathcal{B}_\ell$ takes the right values (it does).
 
 ## Evaluation
 
 [Soon](/blueprint/ands/oblong/univariate), we will run a sumcheck-like reduction on oblong-multilinears. At the end of that sumcheck, the verifier will need to evaluate these multilinears.
 
-We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{z}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$.
+We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{i}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$.
 
-Unwinding what $\widehat{t}(r_{\widehat{z}}, r_x)$ means, we get:
+Unwinding what $\widehat{t}(r_{\widehat{i}}, r_x)$ means, we get:
 
 $$
-\begin{equation*}\widehat{t}(r_{\widehat{z}}, r_x) = \sum_{z \in \mathcal{B}_6} \delta_D(r_{\widehat{z}}, \widehat{z}) \cdot t(z, r_x).\end{equation*}
+\begin{equation*}\widehat{t}(r_{\widehat{i}}, r_x) = \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot t(i, r_x).\end{equation*}
 $$
 
 Interestingly, this is a problem of Lagrange extrapolation: this value is exactly
 $$
-\begin{equation*}L_{r_x}(r_{\widehat{z}}),\end{equation*}
+\begin{equation*}P_{r_x}(r_{\widehat{i}}),\end{equation*}
 $$
 
-where $L_{r_x}(\widehat{Z})$ is the unique univariate polynomial of degree less than $2^k$ whose values on $D$ satisfy $L_{r_x}(\widehat{z}) = t(z, r_x)$ for each $z \in \mathcal{B}_6$. There are [good algorithms](https://people.maths.ox.ac.uk/trefethen/barycentric.pdf) for this problem, provided that the verifier is willing to read or obtain all $2^k$ values $t(z, r_x)$ and do $O(2^k)$ work. In practice, we assume that $k$ is so small that the verifier is willing to do $O(2^k)$ work.
+where $P_{r_x}(\widehat{I})$ is the unique univariate polynomial of degree less than $2^k$ whose values on $D$ satisfy $P_{r_x}(\widehat{i}) = t(i, r_x)$ for each $i \in \mathcal{B}_6$. There are [good algorithms](https://people.maths.ox.ac.uk/trefethen/barycentric.pdf) for this problem, provided that the verifier is willing to read or obtain all $2^k$ values $t(i, r_x)$ and do $O(2^k)$ work. In practice, we assume that $k$ is so small that the verifier is willing to do $O(2^k)$ work.
 
-If the verifier is willing to do $O(2^k)$ work but would rather evaluate $t(Z, X)$ just once, the verifier can reduce the above sum—by running the sumcheck for 6 rounds—to two claims. One will be about the value of $t(r_z, r_x)$, where $r_z$ is sampled during the sumcheck. The other will be one about the value of $\delta_{D, r_{\widehat{z}}}(r_z)$, where we write $\delta_{D, r_{\widehat{z}}}$ for the _multilinear_ whose values on $\mathcal{B}_6$ satisfy $\delta_{D, r_{\widehat{z}}}(z) = \delta_D(r_{\widehat{z}}, \widehat{z})$ for each $z \in \mathcal{B}_6$; that is, it's the multilinear whose values on the cube are those that the univariate Lagrange basis polynomials respectively take at $r_{\widehat{z}}$. The verifier can evaluate this latter quantity himself, again using Lagrange extrapolation to $r_{\widehat{z}}$, now with coeffients $\left( \widetilde{\texttt{eq}}(r_z, z) \right)_{z \in \mathcal{B}_6}$. We are not aware of a way of evaluating this that takes less than $O(2^k)$ time.
+If the verifier is willing to do $O(2^k)$ work but would rather evaluate $t(I, X)$ just once, the verifier can reduce the above sum—by running the sumcheck for 6 rounds—to two claims. One will be about the value of $t(r_i, r_x)$, where $r_i$ is sampled during the sumcheck. The other will be one about the value of $\delta_{D, r_{\widehat{i}}}(r_i)$, where we write $\delta_{D, r_{\widehat{i}}}$ for the _multilinear_ whose values on $\mathcal{B}_6$ satisfy $\delta_{D, r_{\widehat{i}}}(i) = \delta_D(r_{\widehat{i}}, \widehat{i})$ for each $i \in \mathcal{B}_6$; that is, it's the multilinear whose values on the cube are those that the univariate Lagrange basis polynomials respectively take at $r_{\widehat{i}}$. The verifier can evaluate this latter quantity himself, again using Lagrange extrapolation to $r_{\widehat{i}}$, now with coeffients $\left( \widetilde{\texttt{eq}}(r_i, i) \right)_{i \in \mathcal{B}_6}$. We are not aware of a way of evaluating this that takes less than $O(2^k)$ time.
 
 If the verifier wants to stay fully succinct in $2^k$—i.e., polynomial in $k$—there are ways to achieve this, based on ideas of Haböck (unpublished) and Papini and Haböck [[PH23](https://eprint.iacr.org/2023/1284.pdf)]. We survey those ideas [here](https://hackmd.io/@benediamond/HkqV6_r-R), though we don't use them in Binius64.

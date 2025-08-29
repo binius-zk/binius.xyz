@@ -4,12 +4,12 @@ As usual, we write $w$ for the full list of prover data (a concatenation of cons
 
 Now we're ready to describe what AND constraints are.
 
-Each individual AND constraint is made up of _three lists_ of shifted value indices. Let's call these $(I_a, I_b, I_c)$. The AND constraint $(I_a, I_b, I_c)$ holds, with respect to candidate prover data $w$, if and only if:
+Each individual AND constraint is made up of _three lists_ of shifted value indices. Let's call these $(L_a, L_b, L_c)$. The AND constraint $(L_a, L_b, L_c)$ holds, with respect to candidate prover data $w$, if and only if:
 
 $$
-\begin{equation*}\left( \bigoplus_{(y, \text{op}, s) \in I_a} \text{op}(w[y], s) \right) \& \left( \bigoplus_{(y, \text{op}, s) \in I_b} \text{op}(w[y], s) \right) \stackrel{?}= \left( \bigoplus_{(y, \text{op}, s) \in I_c} \text{op}(w[y], s) \right).\end{equation*}
+\begin{equation*}\left( \bigoplus_{(y, \text{op}, s) \in L_a} \text{op}(w[y], s) \right) \& \left( \bigoplus_{(y, \text{op}, s) \in L_b} \text{op}(w[y], s) \right) \stackrel{?}= \left( \bigoplus_{(y, \text{op}, s) \in L_c} \text{op}(w[y], s) \right).\end{equation*}
 $$
 
 Note that both sides of this equality are 64-bit words; the symbol $\&$ is a bitwise AND of 64-bit words.
 
-Each given constraint system will specify some _total_ number $n_\text{and}$ of AND constraints, and will moreover supply $n_\text{and}$ triples $(I_a, I_b, I_c)$, each of the form already given above. We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for _each_ among the $n_\text{and}$ triples $(I_a, I_b, I_c)$ baked into the constraint system, the above equality holds over $w$.
+Each given constraint system will specify some _total_ number $n_\text{and}$ of AND constraints, and will moreover supply $n_\text{and}$ triples $(L_a, L_b, L_c)$, each of the form already given above. We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for _each_ among the $n_\text{and}$ triples $(L_a, L_b, L_c)$ baked into the constraint system, the above equality holds over $w$.

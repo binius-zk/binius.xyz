@@ -1,0 +1,119 @@
+# The Univariate Skip [Knocking out 6 variables' worth of content]
+
+We are now going to use Gruen's [[Gru24](https://eprint.iacr.org/2024/108)] _univariate skip_ idea for our zerocheck. We avoid fully reviewing how that protocol works, and focus on its specialization to our scenario.
+
+We recall first that we have [already established](/blueprint/ands/mathematizing) an identity
+
+$$
+\begin{equation*}\widetilde{a}(i, x) \cdot \widetilde{b}(i, x) - \widetilde{c}(i, x) \stackrel{?}= 0\end{equation*}
+$$
+
+which, _if_ it holds identically over the domain $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{and}}$, implies that the prover's AND constraints hold. The polynomials $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ involved in that identity are explicit, already written down in that page.
+
+To run the univariate skip, we first need to [oblong-multilinearize](/blueprint/ands/oblong/multilinearization) the polynomials $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ involved in that identity. Applying the oblong-multilinearization transformation blindly to those polynomials (i.e., just substituting them in), we obtain:
+
+$$
+\begin{align*}
+\widehat{a}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{A}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\widehat{b}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{B}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\widehat{c}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{C}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).
+\end{align*}
+$$
+
+By construction, these polynomials take the same values on $D \times \mathcal{B}_{\ell_\text{and}}$ that $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ respectively do on $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{and}}$.
+
+These polynomials are quite complicated, and we will interact much more with them [later](/blueprint/ands/reduction). For now, though, we can temporarily forget how they're constructed internally, view them as black boxes, and run the univariate skip on them.
+
+## Oblong-Multilinear Schwartz–Zippel
+
+We recall how that protocol begins. Our goal is to show that
+
+$$
+\begin{equation*}\widehat{a}(\widehat{i}, x) \cdot \widehat{b}(\widehat{i}, x) - \widehat{c}(\widehat{i}, x) \stackrel{?}= 0\end{equation*}
+$$
+holds for each $\widehat{i} \in D$ and each $x \in \mathcal{B}_{\ell_\text{and}}$. For notation's sake, we can write
+$$
+\begin{equation*}f(\widehat{I}, X) \coloneqq \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X);\end{equation*}
+$$
+our goal is to show that $f(\widehat{I}, X)$ vanishes identically on $D \times \mathcal{B}_{\ell_\text{and}}$. Note that $f(\widehat{I}, X)$ is multivariate in $1 + \ell_\text{and}$ variables; it is _not_ oblong-multilinear.
+
+To assess this question, the univariate skip suggests that we oblong-multilinearize $f(\widehat{I}, X)$, and then evaluate _the resulting_ polynomial at a random point in $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^{\ell_\text{and}}$.
+
+Indeed, the polynomial
+
+$$
+\begin{equation*}\widehat{f}(\widehat{I}, X) \coloneqq \sum_{\widehat{i} \in D} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}, x) \cdot \widetilde{\texttt{eq}}(X, x)\end{equation*}
+$$
+
+agrees identically with $f(\widehat{I}, X)$ on $D \times \mathcal{B}_{\ell_\text{and}}$, and is _moreover_ low-degree (of degree less than $2^k$ in $\widehat{I}$ and multilinear in each other variable). If $f(\widehat{I}, X)$ vanishes on $D \times \mathcal{B}_{\ell_\text{and}}$, then $\widehat{f}(\widehat{I}, X)$ vanishes everywhere; conversely, if $f(\widehat{I}, X)$ _doesn't_ vanish identically on $D \times \mathcal{B}_{\ell_\text{and}}$, then the probability that $\widehat{f}(\widehat{I}, X)$ vanishes on a uniformly randomly chosen point in $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^{\ell_\text{and}}$ will be at most $\frac{2^k - 1 + \ell_\text{and}}{2^{128}}$, which is small.
+
+Thus, the verifier begins by sampling a random point $(r_{\widehat{i}}, r_x)$ in $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^{\ell_\text{and}}$. The goal is now for the verifier to check whether
+
+$$
+\begin{equation*}0 \stackrel{?}= \widehat{f}(r_{\widehat{i}}, r_x) = \sum_{\widehat{i} \in D} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+
+holds.
+
+## The Long Round Polynomial
+
+This quantity of interest $ \widehat{f}(r_{\widehat{i}}, r_x)$ is itself the sum, over $D \times B_{\ell_\text{and}}$, of a further polynomial, which we can call $g(\widehat{I}, X)$:
+
+$$
+\begin{equation*}g(\widehat{I}, X) \coloneqq \delta_D(r_{\widehat{i}}, \widehat{I}) \cdot f(\widehat{I}, X) \cdot \widetilde{\texttt{eq}}(r_x, X).\end{equation*}
+$$
+We can now run a sumcheck-like protocol, in order to assess whether
+
+$$
+\begin{equation*}0 \stackrel{?}= \sum_{\widehat{i} \in D} \sum_{x \in \mathcal{B}_{\ell_\text{and}}} g(\widehat{i}, x)\end{equation*}
+$$
+
+holds. In the very first round, we will take care of the long dimension. The prover's job will be to send the _univariate_ polynomial
+
+$$
+\begin{equation*}h(\widehat{I}) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} g(\widehat{I}, x) = \delta_D(r_{\widehat{i}}, \widehat{I}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
+$$
+The degree of $h(\widehat{I})$ will be at most $3 \cdot (2^k - 1)$. On the other hand, if the prover is honest, then $h(\widehat{I})$ will vanish identically on $D$. To specify it, then, the prover just needs to compute and send its values at $3 \cdot (2^k - 1) + 1 - 2^k = 2 \cdot (2^k - 1)$ points _outside_ of $D$.
+
+Actually, there are a few further clever things the prover should do. But we survey those further in [the next page](/blueprint/ands/oblong/considerations).
+
+## The Rest
+
+Once in possession of $h(\widehat{I})$—and having checked whether it vanishes identically on $D$ (if not already implicit)—the verifier needs to sample a further random value $r'_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$, and send it to the prover. At this point, the verifier sets $s_0 \coloneqq h(r'_{\widehat{i}})$. As of this point, up to soundness error bounded from above by $\frac{3 \cdot (2^k - 1)}{2^{128}}$, the initial claim $0 \stackrel{?}= \sum_{\widehat{i} \in D} \sum_{x \in \mathcal{B}_{\ell_\text{and}}} g(\widehat{i}, x)$ has now been reduced to the further claim:
+
+$$
+\begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} g(r'_{\widehat{i}}, x) = \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r'_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
+$$
+
+This is just a normal, rectangular sum claim; the parties can use the normal, rectangular sumcheck on it.
+
+
+## The End
+
+At the very end of _that_ sumcheck, the verifier will have sampled a further point $r'_x \in \mathbb{F}_{2^{128}}^{\ell_\text{and}}$, over and above $r'_{\widehat{i}}$. The verifier will have reduced the sum claim at issue to the further _evaluation claim_
+
+$$
+\begin{align*}
+s_{\ell_\text{and}} &\stackrel{?}= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot f(r'_{\widehat{i}}, r'_x) \cdot \widetilde{\texttt{eq}}(r_x, r'_x) \\
+&= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \left[ \widehat{a}(r'_{\widehat{i}},  r'_x) \cdot \widehat{b}(r'_{\widehat{i}},  r'_x) - \widehat{c}(r'_{\widehat{i}},  r'_x) \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x);
+\end{align*}
+$$
+
+where $s_{\ell_\text{and}}$ is a further quantity cooked up during the sumcheck. In the second equality, we just unroll the definition of $f(r'_{\widehat{i}}, r'_x)$, which we defined above.
+
+The verifier can himself evaluate $\delta_D(r_{\widehat{i}}, r'_{\widehat{i}})$ in $O(k)$ time and $\widetilde{\texttt{eq}}(r_x, r'_x)$ in $O(\ell)$ time (the first of these two claims is not obvious, but true). If the prover nondeterministically sends the verifier scalars $\alpha_a$, $\alpha_b$ and $\alpha_c$ for which, _it claims_, the following equalities hold:
+
+$$
+\begin{align*}
+\alpha_a &\stackrel{?}= \widehat{a}(r'_{\widehat{i}},  r'_x), \\
+\alpha_b &\stackrel{?}= \widehat{b}(r'_{\widehat{i}},  r'_x), \\
+\alpha_c &\stackrel{?}= \widehat{c}(r'_{\widehat{i}},  r'_x),
+\end{align*}
+$$
+
+Then verifier can explicitly check whether
+$$
+\begin{equation*}s_{\ell_\text{and}} \stackrel{?}= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \left[ \alpha_a \cdot \alpha_b - \alpha_c \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x).
+\end{equation*}
+$$
+If this equality passes, then the verifier will have closed out the univariate skip, _pending_ the correctness of the three evaluation claims just given. We will treat those in the [shift reduction](/blueprint/ands/reduction).

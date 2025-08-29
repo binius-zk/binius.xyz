@@ -2,6 +2,9 @@
 
 Oblong-multilinearization is a technique that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108)]. We use that technique, specializing it for our 64-bit architecture.
 
+The key point is that our fundamental [constraint equation](http://localhost:5173/blueprint/ands/mathematizing#multilinearizing) involves small-field polynomials, polynomials over $\mathbb{F}_2$. If it weren't for that fact, we could just run a standard zerocheck on it. In fact, we still _could_ do just that. But in light of our small-field situation, we can do much better efficiency-wise if we use the univariate skip. As it happens, the univariate skip works very nicely with our 64-bit architecture.
+
 We break our treatment into a few steps, outlined below.
-- [**Oblong-Multilinearization.**](multilinearization) Here, we describe the _generic_ mathematical step that turns a standard, "cubular" multilinear into an oblong one.
-- [**The Univariate Skip.**](univariate) The _univariate skip_ is a technique for zerochecking small-field multivariates. It exploits oblong multilinearization, and is much more efficient than the regular zerocheck.
+- [**Oblong-Multilinearization.**](multilinearization) Here, we describe the _generic_ mathematical step that turns a standard, "cubular" multilinear into an oblong one, which takes prescribed values on a _rectangular_ domain.
+- [**The Univariate Skip.**](univariate) Here, we explain in detail how the univariate skip winds up getting applied in our case.
+- [**Implementation Considerations.**](considerations) Here, we go into a few further technical details about our optimized implementation.

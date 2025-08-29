@@ -325,6 +325,10 @@ export default defineConfig({
                 text: "The Univariate Skip",
                 link: "/blueprint/ands/oblong/univariate"
               },
+              {
+                text: "Implementation Considerations",
+                link: "/blueprint/ands/oblong/considerations"
+              },
             ]
           },
           {

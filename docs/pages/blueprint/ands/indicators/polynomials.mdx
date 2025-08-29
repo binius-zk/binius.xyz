@@ -17,20 +17,20 @@ What happens if we put both $w$ and $\textsf{shift}_{\text{op}}(w)(y, s)$ throug
 At this point, we assume that $n_\text{words} = 2^{\ell_\text{words}}$ is a power of 2. Let's review what multilinearization means, in this context. Going back to our original array $w$, we can identify $w$ with a $6 + \ell_\text{words}$-variate multilinear over $\mathbb{F}_2$:
 
 $$
-\begin{equation*}\widetilde{w}(Z_0, \ldots , Z_5, Y_0, \ldots , Y_{\ell_\text{words}}).\end{equation*}
+\begin{equation*}\widetilde{w}(J_0, \ldots , J_5, Y_0, \ldots , Y_{\ell_\text{words}}).\end{equation*}
 $$
 
-The indeterminates $Z_0, \ldots , Z_5$ control the "bit within the word"; the indeterminates $Y_0, \ldots , Y_{\ell_\text{words} - 1}$ control the "word index". In other words, for each word index $y \in \mathcal{B}_{\ell_\text{words}}$ and each bit index $z \in \mathcal{B}_6$, $\widetilde{w}(z, y) = w[y]_z$ (i.e., the "$z$<sup>th</sup> bit" of the latter).
+The indeterminates $J_0, \ldots , J_5$ control the "bit within the word"; the indeterminates $Y_0, \ldots , Y_{\ell_\text{words} - 1}$ control the "word index". In other words, for each word index $y \in \mathcal{B}_{\ell_\text{words}}$ and each bit index $j \in \mathcal{B}_6$, $\widetilde{w}(j, y) = w[y]_j$ (i.e., the "$j$<sup>th</sup> bit" of the latter).
 
 Similarly, we can define the _shifted witness polynomial_
 
 $$
-\begin{equation*}\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S),\end{equation*}
+\begin{equation*}\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S),\end{equation*}
 $$
 
-simply by multilinear-extending $\textsf{shift}_{\text{op}}(w)(y, s)$. Note that we again need to pick up 6 new variables $Z_0, \ldots , Z_5$, which control the bit within the word. Our defining property is that for each $z \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$ in the cube, $\widetilde{\textsf{shift}}_{\text{op}}(w)(z, y, s) = \textsf{shift}_{\text{op}}(w)(y, s)_z = \text{op}(w[y], s)_z$ (we again take the "$z$<sup>th</sup> bit").
+simply by multilinear-extending $\textsf{shift}_{\text{op}}(w)(y, s)$. Note that we again need to pick up 6 new variables—which we now call $I_0, \ldots , I_5$—that control the bit index within the word. Our defining property is that for each $i \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$ in the cube, $\widetilde{\textsf{shift}}_{\text{op}}(w)(i, y, s) = \textsf{shift}_{\text{op}}(w)(y, s)_i = \text{op}(w[y], s)_i$ (we again take the "$i$<sup>th</sup> bit").
 
-Here is the problem: how do we efficiently relate an evaluation claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S)$ to an evaluation claim on $\widetilde{w}(Z, Y)$? The most naïve possible approach would read $w$'s entire table of values, shift them all, and compute a multilinear evaluation on $6 + \ell_\text{words} + 6$ variables. This is obviously unacceptable.
+Here is the problem: how do we efficiently relate an evaluation claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S)$ to an evaluation claim on $\widetilde{w}(J, Y)$? The most naïve possible approach would read $w$'s entire table of values, shift them all, and compute a multilinear evaluation on $6 + \ell_\text{words} + 6$ variables. This is obviously unacceptable.
 
 ## The Shift Indicators
 
@@ -62,18 +62,18 @@ for the multilinear extension of $\textsf{shift-ind}_\text{op}(i, j, s)$. This e
 We now note the equality of multilinears:
 
 $$
-\begin{equation*}\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(Z, Y, S) = \sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(Z, j, S) \cdot \widetilde{w}(j, Y).\end{equation*}
+\begin{equation*}\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(I, Y, S) = \sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(I, j, S) \cdot \widetilde{w}(j, Y).\end{equation*}
 $$
 
-To check this equality, it's enough to check it on the cube. We fix $z \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$. Our goal is to show that for each such specialization,
+To check this equality, it's enough to check it on the cube. We fix $i \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$. Our goal is to show that for each such specialization,
 
 $$
-\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s) \stackrel{?}= \begin{equation*}\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
+\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(i, y, s) \stackrel{?}= \begin{equation*}\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
-This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(z, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\textsf{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_z$, which itself equals $\textsf{shift}_\text{op}(w)(y, s)_z = \widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s)$, by definition of the latter things. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
+This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(i, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\textsf{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_i$, which itself equals $\textsf{shift}_\text{op}(w)(y, s)_i = \widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(i, y, s)$, by definition of the latter things. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
 
-This equality opens up the door to using the sumcheck to relate a claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S)$ to one on $\widetilde{w}(Z, Y)$. Indeed, given an evaluation claim on the former, by running a 6-round sumcheck, the verifier can reduce it to two evaluation claims, on $\widetilde{\textsf{shift-ind}}_\text{op}$ and $\widetilde{w}$ respectively.
+This equality opens up the door to using the sumcheck to relate a claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S)$ to one on $\widetilde{w}(J, Y)$. Indeed, given an evaluation claim on the former, by running a 6-round sumcheck, the verifier can reduce it to two evaluation claims, on $\widetilde{\textsf{shift-ind}}_\text{op}$ and $\widetilde{w}$ respectively.
 
 _If_ the former, i.e. $\widetilde{\textsf{shift-ind}}_\text{op}$, is succinct, then we have solved our problem. Indeed, the verifier can evaluate that one himself, and then output the single, final evaluation claim on $\widetilde{w}$.
 
-The rest of this site section will be devoted to arguing that the polynomials $\widetilde{\textsf{shift-ind}}_\text{op}(Z, Y, S)$ are succinct, for each $\text{op}$.
+The rest of this site section will be devoted to arguing that the polynomials $\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)$ are succinct, for each $\text{op}$.

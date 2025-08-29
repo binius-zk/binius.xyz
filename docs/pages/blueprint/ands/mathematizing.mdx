@@ -4,7 +4,7 @@ In this page, we recast the problem of [AND constraint](/blueprint/constraints/a
 
 ## The Constraint Matrices
 
-We fix prover data $w$, of length $n_\text{words}$, and a set of AND constraints. As we've already explained, these amount to a list of $n_\text{and}$ triples $(I_a, I_b, I_c)$, indexed by $x \in \{0, \ldots , n_\text{and} - 1\}$. Each triple's three lists $I_a$, $I_b$ and $I_c$ are themselves made up of [shifted value indices](/blueprint/constraints/indices), triples of the form $(y, \text{op}, s) \in \{0, \ldots , n_\text{words} - 1\} \times \{\mathsf{sll}, \mathsf{sra}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
+We fix prover data $w$, of length $n_\text{words}$, and a set of AND constraints. As we've already explained, these amount to a list of $n_\text{and}$ triples $(L_a, L_b, L_c)$, indexed by $x \in \{0, \ldots , n_\text{and} - 1\}$. Each triple's three lists $L_a$, $L_b$ and $L_c$ are themselves made up of [shifted value indices](/blueprint/constraints/indices), triples of the form $(y, \text{op}, s) \in \{0, \ldots , n_\text{words} - 1\} \times \{\mathsf{sll}, \mathsf{sra}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
 
 We first re-express this data in matrix form. We are going to write down a bunch of binary-valued matrices. For _each_ $\text{op} \in \{\mathsf{sll}, \mathsf{sra}, \mathsf{sra}\}$, we are going to write down an $n_\text{and} \times n_\text{words} \times 64$ "matrix" $A_{\text{and}, \text{op}}$—so, $A_{\text{and}, \text{op}}$ is three-dimensional—by declaring that, for each $x \in \{0, \ldots , n_\text{and} - 1\}$, $y \in \{0, \ldots , n_\text{words} - 1\}$, and $s \in \{0, \ldots , 63\}$,
 
@@ -12,13 +12,13 @@ $$
 \begin{equation*}A_{\text{and}, \text{op}}[x, y, s] = 1\end{equation*}
 $$
 
-if and only if the $x$<sup>th</sup> constraint triple $(I_a, I_b, I_c)$'s first component $I_a$ contains the triple $(y, \text{op}, s)$. In other words: "Does the $x$<sup>th</sup> constraint's '$A$ part' contain $\text{op}(w[y], s)$ as an XOR-summand?" We create similar three-dimensional "matrices" for $B$ and $C$.
+if and only if the $x$<sup>th</sup> constraint triple $(L_a, L_b, L_c)$'s first component $L_a$ contains the triple $(y, \text{op}, s)$. In other words: "Does the $x$<sup>th</sup> constraint's '$A$ part' contain $\text{op}(w[y], s)$ as an XOR-summand?" We create similar three-dimensional "matrices" $B_{\text{and}, \text{op}}$ and $C_{\text{and}, \text{op}}$.
 
-Thus, we get $3 \times 3 = 9$ total three-dimensional matrices, namely $A_{\text{and}, \text{op}}$, $B_{\text{and}, \text{op}}$ and $C_{\text{and}, \text{op}}$ for _each_ $\text{op}$. Note that we are implicitly assuming there are no duplicates triples in any of the lists $(I_a, I_b, I_c)$ (for any $x$). Of course, having duplicates would be pointless, since these would get XOR'd out.
+Thus, we get $3 \times 3 = 9$ total three-dimensional matrices, namely $A_{\text{and}, \text{op}}$, $B_{\text{and}, \text{op}}$ and $C_{\text{and}, \text{op}}$ for _each_ $\text{op}$. Note that we are implicitly assuming there are no duplicates triples in any of the lists $(L_a, L_b, L_c)$ (for any $x$). Of course, having duplicates would be pointless, since these would get XOR'd out.
 
 ## Sum Expressions
 
-We now define three arrays, $a$, $b$ and $a$, each of length $n_\text{and}$, and containing 64-bit words. For these, we use the [shifted witness functions](/blueprint/ands/indicators/polynomials) $\textsf{shift}_\text{op}(w)(y, s)$. For each $x \in \{0, \ldots , n_\text{and}\}$, we define:
+We now define three arrays, $a$, $b$ and $a$, each of length $n_\text{and}$, and containing 64-bit words. For these, we use the [shifted witness functions](/blueprint/ands/indicators/polynomials) $\textsf{shift}_\text{op}(w)(y, s)$. For each $x \in \{0, \ldots , n_\text{and} - 1\}$, we define:
 
 $$
 \begin{align*}
@@ -28,7 +28,7 @@ c[x] &\coloneqq \sum_\text{op} \sum_{s = 0}^{63} \sum_{y = 0}^{n_\text{words} - 
 \end{align*}
 $$
 
-It follows essentially by definition that $w$ satisfies the constraint system if and only if $a \mathrel{\&} b = c$, where we now let the bitwise AND symbol $\&$ act _componentwise_ across all three arrays.
+It follows essentially by definition that $w$ satisfies the constraint system if and only if $a[x] \mathrel{\&} b[x] = c[x]$ holds for _each_ $x \in \{0, \ldots , n_\text{and} - 1\}$.
 
 ## Multilinearizing
 
@@ -38,18 +38,32 @@ By identifying the matrices $A_{\text{and}, \text{op}}$, $B_{\text{and}, \text{o
 
 $$
 \begin{align*}
-\widetilde{a}(Z, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(X, y, S) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(Z, y, S), \\
-\widetilde{b}(Z, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(X, y, S) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(Z, y, S), \\
-\widetilde{c}(Z, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(X, y, S) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(Z, y, S).
+\widetilde{a}(I, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(I, y, s), \\
+\widetilde{b}(I, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(I, y, s), \\
+\widetilde{c}(I, X) &\coloneqq \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift}}_\text{op}(w)(I, y, s).
 \end{align*}
 $$
 
-It's again true essentially by definition that our constraint system is satisfied if and only if, for all inputs $z \in \mathcal{B}_6$ and $x \in \mathcal{B}_{\ell_\text{and}}$ in the cube, the identity
+It's again true essentially by definition that our constraint system is satisfied if and only if, for all inputs $i \in \mathcal{B}_6$ and $x \in \mathcal{B}_{\ell_\text{and}}$ in the cube, the identity
 
 $$
-\begin{equation*}\widetilde{a}(z, x) \cdot \widetilde{b}(z, x) - \widetilde{c}(z, x) \stackrel{?}= 0.\end{equation*}
+\begin{equation*}\widetilde{a}(i, x) \cdot \widetilde{b}(i, x) - \widetilde{c}(i, x) \stackrel{?}= 0.\end{equation*}
 $$
 
-holds identically. Here, the $\cdot$ is _field multiplication_, which in this setting takes place between $\mathbb{F}_2$-elements necessarily.
+holds. Here, the $\cdot$ is _field multiplication_, which in this setting takes place between $\mathbb{F}_2$-elements necessarily. Note now that we are quantifying _both_ over word indices $x \in \mathcal{B}_{\ell_\text{and}}$ _and_ bit indices $i \in \mathcal{B}_6$.
 
-We have officially gotten something that we can zerocheck. As we will see later, in order to make the _end_ of the zerocheck tractable for the verifier, we will need to eventually use our [shift indicators](/blueprint/ands/indicators/polynomials). But for now, we've made it far enough to kick off the zerocheck.
+We have officially gotten something that we can zerocheck.
+
+## Using Shift Indicators
+
+In order to prepare the way for what's coming, we do one further step. We [showed already](/blueprint/ands/indicators/polynomials) that the shifted witness polynomials $\widetilde{\textsf{shift}}_\text{op}(w)(I, y, S)$ can themselves be expressed using shift indicators. Unrolling that step now, we obtain the following  equivalent expressions for $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{C}(I, X)$:
+
+$$
+\begin{align*}
+\widetilde{a}(I, X) &= \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{A}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(I, j, s) \cdot \widetilde{w}(j, y), \\
+\widetilde{b}(I, X) &= \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{B}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(I, j, s) \cdot \widetilde{w}(j, y), \\
+\widetilde{c}(I, X) &= \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{C}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(I, j, s) \cdot \widetilde{w}(j, y).
+\end{align*}
+$$
+
+These are identically equal (as polynomials) to the above expressions we gave; they just unroll the shifted witness polynomials and rearrange the sums.

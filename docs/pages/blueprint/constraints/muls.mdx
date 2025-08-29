@@ -1,9 +1,9 @@
 # MUL Constraints [Enforcing unsigned-integer-multiplication relations]
 
-Each MUL constraint is tuple $(I_a, I_b, I_\text{hi}, I_\text{lo})$ of _four_ lists of shifted value indices. Now, we define $a$ and $b$ as before; that is, we let
+Each MUL constraint is tuple $(L_a, L_b, I_\text{hi}, I_\text{lo})$ of _four_ lists of shifted value indices. Now, we define $a$ and $b$ as before; that is, we let
 
 $$
-\begin{equation*}a \coloneqq \bigoplus_{(y, \text{op}, s) \in I_a} \text{op}(w[y], s) \text{ and } b \coloneqq \bigoplus_{(y, \text{op}, s) \in I_b} \text{op}(w[y], s);\end{equation*}
+\begin{equation*}a \coloneqq \bigoplus_{(y, \text{op}, s) \in L_a} \text{op}(w[y], s) \text{ and } b \coloneqq \bigoplus_{(y, \text{op}, s) \in L_b} \text{op}(w[y], s);\end{equation*}
 $$
 
 moreover, we similarly define
@@ -12,7 +12,7 @@ $$
 \begin{equation*}\text{hi} \coloneqq \bigoplus_{(y, \text{op}, s) \in I_\text{hi}} \text{op}(w[y], s) \text{ and } \text{lo} \coloneqq \bigoplus_{(y, \text{op}, s) \in I_\text{lo}} \text{op}(w[y], s).\end{equation*}
 $$
 
-We say that the MUL constraint $(I_a, I_b, I_\text{hi}, I_\text{lo})$ holds over $w$ if:
+We say that the MUL constraint $(L_a, L_b, I_\text{hi}, I_\text{lo})$ holds over $w$ if:
 
 $$
 \begin{equation*}a \cdot b \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}.\end{equation*}
@@ -20,6 +20,6 @@ $$
 
 Above, the quantities $a$, $b$, $\text{hi}$ and $\text{lo}$ are all understood as elements of $\{0, \ldots , 2^{64} - 1\}$; all multiplications take place in _the integers_.
 
-That is, we're asserting that if we use the shifted value indices in $I_a$ $I_b$ to cook up integers $a$ and $b$ in $\{0, \ldots , 2^{64} - 1\}$, and if we multiply these things _as integers_, then we end up with a double-width product in $\{0, \ldots , 2^{128} - 1\}$ whose high and low halves, respectively, are $\text{hi}$ and $\text{lo}$.
+That is, we're asserting that if we use the shifted value indices in $L_a$ $L_b$ to cook up integers $a$ and $b$ in $\{0, \ldots , 2^{64} - 1\}$, and if we multiply these things _as integers_, then we end up with a double-width product in $\{0, \ldots , 2^{128} - 1\}$ whose high and low halves, respectively, are $\text{hi}$ and $\text{lo}$.
 
-Each of our constraint systems will specify a total number $n_\text{mul}$ of MUL constraints $(I_a, I_b, I_\text{hi}, I_\text{lo})$. We will say that the witness data $w$ fulfills our constraint system's MUL constraints if _all_ of the equalities of the above form (i.e., one for each MUL constraint) hold over $w$.
+Each of our constraint systems will specify a total number $n_\text{mul}$ of MUL constraints $(L_a, L_b, I_\text{hi}, I_\text{lo})$. We will say that the witness data $w$ fulfills our constraint system's MUL constraints if _all_ of the equalities of the above form (i.e., one for each MUL constraint) hold over $w$.
