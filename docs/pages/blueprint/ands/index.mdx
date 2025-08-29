@@ -7,5 +7,6 @@ These steps serve to reduce our initial constraint-satisfaction problem to a low
 We explain these steps in detail throughout the below pages.
 
 - [**The Shift Indicators.**](indicators) In this page, we prepare a key mathematical building block. These are polynomials whose restrictions to the cube "indicate" arithmetic offsets. In this effort, we wind up generalizing and building off of [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
-- [**Oblong Multilinears.**](oblong) Here, we explain how we apply the univariate skip to the AND-constraint-satisfication problem. Along the way, we need to explain what _oblong multilinears_ and the _univariate skip_ are.
+- [**Mathematizing the Problem.**](mathematizing) Equipped with our shift indicators, we explain how to recast the question of a witness's satisfaction of a constraint system's [AND constraints](/blueprint/constraints/ands) into a problem about multilinear polynomials.
+- [**Oblong Multilinears.**](oblong) Here, we explain _oblong-multilinears_ and the univariate skip. We also explain how we apply it to our particular problem (the assessment of AND-constraint satisfaction).
 - [**The Shift Reduction.**](reduction) This step takes the _output_ of the univariate skip reduction and further reduces it, until it becomes a claim about the witness. It's a complicated, multi-phase sumcheck. We describe that sumcheck and some considerations around its implementation.

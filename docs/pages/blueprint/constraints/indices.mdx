@@ -1,41 +1,24 @@
-# Shifted Value Indices [Think R1CS, but with bitwise shifts]
+# Shifted Value Indices [Specifying shifted components of the witness]
 
-A "shifted value index" is just an XOR-of-shifts of prover data elements. The _number_ of elements involved, the _indices_ of these elements, and finally the shift amounts and types, are all "known at compile time" (hardcoded into the constraint system). Only the actual public and witness prover elements upon which these indices act appear at "runtime".
+A _shifted value index_ is basically a witness component that has been shifted in a prescribed way by a prescribed amount. They will feature essentially in our constraints, which we describe after this. Here, we specify them in detail.
 
-Both our _public data_ and our _witness data_ are just long lists of 64-bit words. A _shifted value index_ is an XOR-of-shifts of elements of this prover data, like e.g.
-```
-w[123] << 44 ^ w[456] ~>> 55 ^ w[789] >> 3.
-```
-We allow _logical left_ shifts (`<<`), _logical right_ shifts (`>>`), and _arithmetic right_ shifts (`~>>`). 
-Here, we write `w` for the prover's witness data. Actually it's more accurate to think of `w` as the _concatenation_ of the prover's public (input–output) data and his witness data. The numbers above (`123`, `44`, etc.) should be thought of as fixed in advance; the _actual values_ of `w` (at the positions `w[123]`, etc.) will be runtime-dependent.
+## Shift Types
 
-## Constraints
+We support three shift types, _logical left_, _logical right_, and _arithmetic right_. We write these symbolically as $\{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$
 
-We describe our constraint system more formally in the [AND constraints](/blueprint/constraints/ands) and [MUL constraints](/blueprint/constraints/muls) pages. Here, we drop a sketch of what's to come.
+Our shift operations do what they sound like. Each acts exclusively on 64-bit words; we allow _shift amounts_ $s \in \{0, \ldots , 63\}$. Logical leftshift shifts towards the more-significant end, zero-filling; logical rightshift shifts towards the less-significant end. Arithmetic rightshift "sign-extends"; whatever the most-significant (63<sup>rd</sup>) bit is will be "dragged" or populated rightwards.
 
-An AND constraint demands that `a & b == c`, where _each_ of the three operands $a$, $b$ and $c$ are shifted value indices. Here, `&` is bitwise AND of 64-bit words.
+## Prover Data
 
-For example, let's say we have `a = w[123] << 44 ^ w[456] ~>> 55`, `b = w[111] ^ w[444] >> 4`, and `c = w[777]`. When we assert the constraint `a & b == c`, we're asserting: Whatever the prover's witness $w$ is, it should satisfy
+Our system's runtime-dependent data is made up of three "stretches": the _constant_ part, the _input–output_ part, and the _witness_ part. Both the constant and input–output parts will be "visible" to the verifier, and will made to exactly match public data visible to the verifier. The prover's witness data will impact the verifier's runtime only polylogarithmically.
 
-```
-(w[123] << 44 ^ w[456] ~>> 55) & (w[111] ^ w[444] >> 4) == w[777].
-```
-Everything above is hardcoded into the constraint system except the witness `w` itself; i.e., all the indices and shift amounts are hardcoded. Note that both sides of the above equality are 64-bit words.
+The lengths of these stretches will be fixed at compile-time; we can write $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$ for these lengths. We will write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ will thus be $n_\text{words} \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Thus each element $y$ of the index set $W \coloneqq \{0, \ldots , n_\text{words} - 1\}$ will index into an element of runtime-dependent data.
 
-Each _particular_ assertion of this form makes up an AND constraint; we allow there to be arbitrarily many AND constraints.
-
-MUL constraints are similar, except that instead of bitwise AND we have unsigned multiplication of 64-bit integers. The result is double-width; those constraints take the form `a * b == hi || lo`, where `hi` and `lo` are _themselves_ further shifted value indices. Here, we're saying that the shifted value indices `hi` and `lo` should yield the high and low halves, respectively, of `a * b`.
-
-## More Formally
-
-We explain shifted value indices sightly more formally. This will help in the pages after this one.
-
-Basically, the system's runtime-dependent data is made up of three "stretches": the _constant_ part, the _inout_ part, and the _witness_ part. The lengths of these stretches is fixed at compile-time—say, $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$. It is most convenient to write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ is thus $n_\text{words} \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Each element of $W \coloneqq \{0, \ldots , n_\text{words} - 1\}$ indexes into an element of runtime-dependent data.
-
-A _shifted value index_ is a triple consisting of an index $y \in W$, a _shift type_—either $\mathsf{sll}$, $\mathsf{srl}$, or $\mathsf{sra}$—and a _shift amount_, required to live in $\{0, \ldots , 63\}$. We can write each such thing like $(y, \text{op}, s)$. Each shifted value index lives in the set
+A _shifted value index_ is a triple consisting of an index $y \in W$, a shift type $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, and a _shift amount_ $s \in \{0, \ldots , 63\}$. We can write each such thing like $(y, \text{op}, s)$. Each shifted value index lives in the set
 
 $$
 \begin{equation*}(y, \text{op}, s) \in W \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}.\end{equation*}
 $$
 
-For example, $(55, \mathsf{sll}, 10)$ is the shifted value index "take the 55<sup>th</sup> component of runtime-dependent data, and shift it left by 10 steps". I.e., `w[55] << 10`. As usual, we write $w$ for the _concatenation_ of the constant, public and witness data.
+For example, $(55, \mathsf{sll}, 10)$ is the shifted value index "take the 55<sup>th</sup> component of runtime-dependent data, and shift it left by 10 steps". I.e., `w[55] << 10`.
+

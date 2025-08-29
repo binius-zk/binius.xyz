@@ -1,0 +1,27 @@
+# Introduction [Think R1CS, but with bitwise shifts]
+
+A "shifted value index" is basically an XOR-of-shifts of prover data elements. The _number_ of things XOR'd, the _indices_ of these elements, and finally the shift amounts and directions, are all "known at compile time" (hardcoded into the constraint system). Only the actual public and witness prover elements upon which these indices act arise at "runtime".
+
+Both our _public data_ and our _witness data_ are just long lists of 64-bit words. A _shifted value index_ is an XOR-of-shifts of elements of this prover data, like e.g.:
+```
+w[123] << 44 ^ w[456] ~>> 55 ^ w[789] >> 3.
+```
+We allow _logical left_ shifts (`<<`), _logical right_ shifts (`>>`), and _arithmetic right_ shifts (`~>>`). 
+Here, we write `w` for the prover's witness data. Actually it's more accurate to think of `w` as the _concatenation_ of the prover's public (input–output) data and his witness data. The numbers above (`123`, `44`, etc.) should be thought of as fixed in advance; the _actual values_ of `w` (at the positions `w[123]`, etc.) will be runtime-dependent.
+
+## Constraints
+
+We describe our constraint system more formally in the [AND constraints](/blueprint/constraints/ands) and [MUL constraints](/blueprint/constraints/muls) pages. Here, we drop a sketch of what's to come.
+
+An AND constraint demands that `a & b == c`, where _each_ of the three operands $a$, $b$ and $c$ are shifted value indices. Here, `&` is bitwise AND of 64-bit words.
+
+For example, let's say we have `a = w[123] << 44 ^ w[456] ~>> 55`, `b = w[111] ^ w[444] >> 4`, and `c = w[777]`. When we assert the constraint `a & b == c`, we're asserting: _Whatever the prover's witness $w$ is, it should satisfy_
+
+```
+(w[123] << 44 ^ w[456] ~>> 55) & (w[111] ^ w[444] >> 4) == w[777].
+```
+Everything above is hardcoded into the constraint system except the witness `w` itself; i.e., all the indices and shift amounts are hardcoded. It'll be the prover's job to supply a witness $w$ for which the above thing actually holds. Note that both sides of the above equality are 64-bit words.
+
+Each _particular_ assertion of this form makes up an AND constraint; we allow there to be arbitrarily many AND constraints.
+
+MUL constraints are similar, except that instead of bitwise AND we have unsigned multiplication of 64-bit integers. The result is double-width; those constraints take the form `a * b == hi || lo`, where `hi` and `lo` are _themselves_ further shifted value indices. Here, we're saying that the shifted value indices `hi` and `lo` should yield the high and low halves, respectively, of `a * b`.

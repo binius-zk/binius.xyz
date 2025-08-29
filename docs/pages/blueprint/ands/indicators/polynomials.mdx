@@ -1,0 +1,77 @@
+# Shifted Witness Polynomials [Expressing bitshifting algebraically]
+
+Let's say we have a length-$n_\text{words}$ vector $w$, whose components $w[y]$ are 64-bit words.
+
+Let's now fix some [shift type](/blueprint/constraints/indices) $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$ and a shift amount $s \in \{0, \ldots , 63\}$. Let's say we want to shift each of $w$'s $n_\text{words}$ components by $s$ using $\text{op}$. This gives us a new $n_\text{words}$-word list. Let's give it a name: for each $y \in \{0, \ldots , n_\text{words} - 1\}$, we let
+
+$$
+\begin{equation*}\textsf{shift}_{\text{op}}(w)(y, s) \coloneqq \text{op}(w[y], s).\end{equation*}
+$$
+
+## As Polynomials
+
+Our question is what happens if we put both $w$ and $\textsf{shift}_{\text{op}}(w)(y, s)$ through [multilinearization](/blueprint/math/multilinears). How do the resulting multilinears relate to each other?
+
+At this point, we assume that $n_\text{words} = 2^{\ell_\text{words}}$ is a power of 2. Let's review what multilinearization means, in this context. Going back to our original array $w[y]$, we can identify $w$ with a $6 + \ell_\text{words}$-variate multilinear over $\mathbb{F}_2$:
+
+$$
+\begin{equation*}\widetilde{w}(Z_0, \ldots , Z_5, Y_0, \ldots , Y_{\ell_\text{words}}).\end{equation*}
+$$
+
+The indeterminates $Z_0, \ldots , Z_5$ control the "bit within the word"; the indeterminates $Y_0, \ldots , Y_{\ell_\text{words} - 1}$ control the "word index". In other words, for each word index $y \in \mathcal{B}_{\ell_\text{words}}$ and each bit index $z \in \mathcal{B}_6$, $\widetilde{w}(z, y) = w[y]_z$ (i.e., the "$z$<sup>th</sup> bit" of the latter).
+
+Similarly, we can define the _shifted witness polynomial_
+
+$$
+\begin{equation*}\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S),\end{equation*}
+$$
+
+simply by multilinear-extending $\textsf{shift}_{\text{op}}(w)(y, s)$. Note that we again need to pick up 6 new variables $Z_0, \ldots , Z_5$, which control the bit within the word. Our defining property is that for each $z \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$ in the cube, $\widetilde{\textsf{shift}}_{\text{op}}(w)(z, y, s) = \textsf{shift}_{\text{op}}(w)(y, s)_z = \text{op}(w[y], s)_z$ (we again take the "$z$<sup>th</sup> bit").
+
+Here is the problem: how do we efficiently relate an evaluation claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S)$ to an evaluation claim on $\widetilde{w}(Z, Y)$? The most naïve possible approach would read $w$'s entire table of values, shift them all, and compute a multilinear evaluation on $6 + \ell_\text{words} + 6$ variables. This is obviously unacceptable.
+
+## The Shift Indicators
+
+We introduce _shift indicators_, and explain how they help us solve this problem. We again fix a shift type $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
+
+For each such $\text{op}$, we define a corresponding _function_ from $\mathcal{B}_6 \times \mathcal{B}_6 \times \mathcal{B}_6 \to \{0, 1\}$:
+
+$$
+\begin{equation*}\textsf{shift-ind}_\text{op}(i, j, s) \coloneqq \begin{cases}
+1 & \text{ if the $i^{\text{th}}$ bit of $\text{op}(v, s)$ \text{is the $j^{\text{th}}$ bit of $v$}} \\
+0 & \text{ otherwise}
+\end{cases}\end{equation*}
+$$
+
+For each triple of inputs $i$, $j$ and $s$, it either _is_ or _isn't_ true that the $i$<sup>th</sup> bit position of $\text{op}(v, s)$ is precisely the $j$<sup>th</sup> bit position of $v$ (i.e., for each possible input $v$). The shift indicator picks up that fact.
+
+:::info
+For example, $\mathsf{sll}(v, 10)_{30} = v_{20}$, regardless of $v$. This means that $\textsf{shift-ind}_\mathsf{sll}(30, 20, 10) = 1$. On the other hand, $\mathsf{sll}(v, 10)_{30}$ and $v_{19}$ are unrelated, so $\textsf{shift-ind}_\mathsf{sll}(30, 19, 10) = 0$. Finally, $\mathsf{sll}(v, 10)_9 = 0$ regardless of $v$, so $\textsf{shift-ind}_\mathsf{sll}(9, j, 10) = 0$ for each $j \in \mathcal{B}_6$.
+:::
+
+Now, we will write
+
+$$
+\begin{equation*}\widetilde{\textsf{shift-ind}}_\text{op}(I, J, S)\end{equation*}
+$$
+
+for the multilinear extension of $\textsf{shift-ind}_\text{op}(i, j, s)$. This extension is a multilinear polynomial, with $\mathbb{F}_2$-coefficients, on $6 \times 3 = 18$ variables.
+
+We now note the equality of multilinears:
+
+$$
+\begin{equation*}\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(Z, Y, S) = \sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(Z, j, S) \cdot \widetilde{w}(j, Y).\end{equation*}
+$$
+
+To check this equality, it's enough to check it on the cube. We fix $z \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$. Our goal is to show that for each such specialization,
+
+$$
+\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s) \stackrel{?}= \begin{equation*}\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
+$$
+This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(z, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\text{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_z$; this quantity itself equals $\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s)$ by definition of the latter. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
+
+This equality opens up the door to using the sumcheck to relate a claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S)$ to one on $\widetilde{w}(Z, Y)$. Indeed, given an evaluation claim on the former, by running a 6-round sumcheck, the verifier can reduce it to two evaluation claims, on $\widetilde{\textsf{shift-ind}}_\text{op}$ and $\widetilde{w}$ respectively.
+
+_If_ the former, i.e. $\widetilde{\textsf{shift-ind}}_\text{op}$, is succinct, then we have solved our problem. Indeed, the verifier can evaluate that one himself, and then output the single, final evaluation claim on $\widetilde{w}$.
+
+The rest of this site section will be devoted to arguing that the polynomials $\widetilde{\textsf{shift-ind}}_\text{op}(Z, Y, S)$ are succinct, for each $\text{op}$.

@@ -263,6 +263,10 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
+            text: "Introduction",
+            link: "/blueprint/constraints/introduction"
+          },
+          {
             text: "Shifted Value Indices",
             link: "/blueprint/constraints/indices"
           },
@@ -274,6 +278,10 @@ export default defineConfig({
             text: "MUL Constraints",
             link: "/blueprint/constraints/muls"
           },
+          {
+            text: "Completeness",
+            link: "/blueprint/constraints/completeness"
+          }
         ],
       },
       {
@@ -287,8 +295,8 @@ export default defineConfig({
             collapsed: true,
             items: [
               {
-                text: "Introduction",
-                link: "/blueprint/ands/indicators/introduction"
+                text: "Shifted Witness Polynomials",
+                link: "/blueprint/ands/indicators/polynomials"
               },
               {
                 text: "Logical Shifts",
@@ -301,12 +309,16 @@ export default defineConfig({
             ]
           },
           {
+            text: "Mathematizing the Problem",
+            link: "/blueprint/ands/mathematizing"
+          },
+          {
             text: "Oblong Multilinears",
             link: "/blueprint/ands/oblong",
             collapsed: false,
             items: [
               {
-                text: "Univariate Skip",
+                text: "The Univariate Skip",
                 link: "/blueprint/ands/oblong/univariate"
               },
             ]
