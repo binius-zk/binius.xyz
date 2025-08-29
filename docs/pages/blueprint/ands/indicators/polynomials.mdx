@@ -8,11 +8,13 @@ $$
 \begin{equation*}\textsf{shift}_{\text{op}}(w)(y, s) \coloneqq \text{op}(w[y], s).\end{equation*}
 $$
 
+We will call these the _shifted witness functions_.
+
 ## As Polynomials
 
-Our question is what happens if we put both $w$ and $\textsf{shift}_{\text{op}}(w)(y, s)$ through [multilinearization](/blueprint/math/multilinears). How do the resulting multilinears relate to each other?
+What happens if we put both $w$ and $\textsf{shift}_{\text{op}}(w)(y, s)$ through [multilinearization](/blueprint/math/multilinears)? How will the resulting multilinears relate to each other?
 
-At this point, we assume that $n_\text{words} = 2^{\ell_\text{words}}$ is a power of 2. Let's review what multilinearization means, in this context. Going back to our original array $w[y]$, we can identify $w$ with a $6 + \ell_\text{words}$-variate multilinear over $\mathbb{F}_2$:
+At this point, we assume that $n_\text{words} = 2^{\ell_\text{words}}$ is a power of 2. Let's review what multilinearization means, in this context. Going back to our original array $w$, we can identify $w$ with a $6 + \ell_\text{words}$-variate multilinear over $\mathbb{F}_2$:
 
 $$
 \begin{equation*}\widetilde{w}(Z_0, \ldots , Z_5, Y_0, \ldots , Y_{\ell_\text{words}}).\end{equation*}
@@ -68,7 +70,7 @@ To check this equality, it's enough to check it on the cube. We fix $z \in \math
 $$
 \widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s) \stackrel{?}= \begin{equation*}\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
-This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(z, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\text{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_z$; this quantity itself equals $\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s)$ by definition of the latter. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
+This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(z, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(z, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\textsf{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_z$, which itself equals $\textsf{shift}_\text{op}(w)(y, s)_z = \widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(z, y, s)$, by definition of the latter things. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
 
 This equality opens up the door to using the sumcheck to relate a claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(Z, Y, S)$ to one on $\widetilde{w}(Z, Y)$. Indeed, given an evaluation claim on the former, by running a 6-round sumcheck, the verifier can reduce it to two evaluation claims, on $\widetilde{\textsf{shift-ind}}_\text{op}$ and $\widetilde{w}$ respectively.
 

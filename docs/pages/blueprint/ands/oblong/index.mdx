@@ -1,7 +1,7 @@
 # Oblong Multilinears [How (a bit of) univariatization helps us]
 
-Oblong-multilinearization is a technique that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108)]. We use a variant of that technique, adapted in order to be maximally compatible with our 64-bit architecture.
+Oblong-multilinearization is a technique that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108)]. We use that technique, specializing it for our 64-bit architecture.
 
 We break our treatment into a few steps, outlined below.
 - [**Oblong-Multilinearization.**](multilinearization) Here, we describe the _generic_ mathematical step that turns a standard, "cubular" multilinear into an oblong one.
-- [**The Univariate Skip.**](univariate)
+- [**The Univariate Skip.**](univariate) The _univariate skip_ is a technique for zerochecking small-field multivariates. It exploits oblong multilinearization, and is much more efficient than the regular zerocheck.

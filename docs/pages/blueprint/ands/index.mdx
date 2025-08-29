@@ -1,6 +1,6 @@
 # AND Constraints [Evaluating bitwise ANDs of 64-bit words]
 
-To treat AND constraints, we need to do a number of cryptographic steps. First, we need to arithmetize the problem using multilinears. Next, we need to oblong-multilinearize everything, and run the univariate skip.
+Here, we turn to the problem of cryptographically checking whether some fixed list of [AND constraints](/blueprint/constraints/ands) actually holds over prover data $w$. To do this, we need to do a number of cryptographic steps. First, we need to arithmetize the problem using multilinears. Next, we need to oblong-multilinearize everything, and run the univariate skip.
 
 These steps serve to reduce our initial constraint-satisfaction problem to a lower-level one, involving evaluation claims on certain multilinears _related_ to the witness. Next, we need to further reduce those claims, until they become claims about the witness itself.
 

@@ -315,8 +315,12 @@ export default defineConfig({
           {
             text: "Oblong Multilinears",
             link: "/blueprint/ands/oblong",
-            collapsed: false,
+            collapsed: true,
             items: [
+              {
+                text: "Oblong-Multilinearization",
+                link: "/blueprint/ands/oblong/multilinearization"
+              },
               {
                 text: "The Univariate Skip",
                 link: "/blueprint/ands/oblong/univariate"

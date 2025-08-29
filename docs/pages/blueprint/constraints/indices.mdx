@@ -10,15 +10,21 @@ Our shift operations do what they sound like. Each acts exclusively on 64-bit wo
 
 ## Prover Data
 
-Our system's runtime-dependent data is made up of three "stretches": the _constant_ part, the _input–output_ part, and the _witness_ part. Both the constant and input–output parts will be "visible" to the verifier, and will made to exactly match public data visible to the verifier. The prover's witness data will impact the verifier's runtime only polylogarithmically.
+Our system's runtime-dependent, prover-supplied data will be a long array of 64-bit words. This data will be made up of three "stretches": the _constant_ part, the _input–output_ part, and the _witness_ part. Both the constant and input–output parts will be "visible" to the verifier, and will made to exactly match public data known to the verifier. The input–output part can be thought of as the "statement"; it will change from proof to proof, but will be visible to the verifier. The prover's witness data will impact the verifier's runtime only polylogarithmically.
 
-The lengths of these stretches will be fixed at compile-time; we can write $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$ for these lengths. We will write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ will thus be $n_\text{words} \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Thus each element $y$ of the index set $W \coloneqq \{0, \ldots , n_\text{words} - 1\}$ will index into an element of runtime-dependent data.
+The lengths of three these stretches will be fixed at compile-time; we can write $n_\text{const}$, $n_\text{inout}$, and $n_\text{witness}$ for these lengths. We will write $w$ for the _concatenation_ of all three of these stretches. The total length of $w$ will thus be $n_\text{words} \coloneqq n_\text{const} + n_\text{inout} + n_\text{witness}$. Thus each element $y \in \{0, \ldots , n_\text{words} - 1\}$ will index into an element of prover data. We will write $w[y]$ for the $y$<sup>th</sup> prover word.
 
-A _shifted value index_ is a triple consisting of an index $y \in W$, a shift type $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, and a _shift amount_ $s \in \{0, \ldots , 63\}$. We can write each such thing like $(y, \text{op}, s)$. Each shifted value index lives in the set
+Throughout, we use the term "prover data", and not "witness", for $w$, since only part of the prover data will consist of the witness. But intuitively, $w$ is witness-like.
+
+## Shifted Value Indices
+
+A _shifted value index_ is a triple consisting of an index $y \in \{0, \ldots , n_\text{words} - 1\}$, a shift type $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, and a _shift amount_ $s \in \{0, \ldots , 63\}$. We can write each such thing like $(y, \text{op}, s)$. Each shifted value index lives in the set
 
 $$
-\begin{equation*}(y, \text{op}, s) \in W \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}.\end{equation*}
+\begin{equation*}(y, \text{op}, s) \in \{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}.\end{equation*}
 $$
 
-For example, $(55, \mathsf{sll}, 10)$ is the shifted value index "take the 55<sup>th</sup> component of runtime-dependent data, and shift it left by 10 steps". I.e., `w[55] << 10`.
+Each shifted value index represents a _component_ of the prover's data, a shift _operation_ or _type_, and a shift _amount_.
+
+For example, the shifted value index $(55, \mathsf{sll}, 10)$ represents `w[55] << 10`, "the 55<sup>th</sup> component of runtime-dependent data, shifted left by 10 steps".
 

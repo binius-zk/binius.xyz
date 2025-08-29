@@ -13,7 +13,7 @@ Bitwise NOT is similar; to obtain a wire $y = \overline{x}$, we can constrain
 ```
 x & 0xFFFFFFFFFFFFFFFF = y ⊕ 0xFFFFFFFFFFFFFFFF.
 ```
-Since $z = x \vee y$ is equivalent to $\overline{z} = \overline{x} \wedge \overline{y}$, we can use
+Since $z = x \vee y$ is equivalent to $\overline{z} = \overline{x} \mathrel{\&} \overline{y}$, we can use
 ```
 x ⊕ 0xFFFFFFFFFFFFFFFF & y ⊕ 0xFFFFFFFFFFFFFFFF = z ⊕ 0xFFFFFFFFFFFFFFFF
 ```
