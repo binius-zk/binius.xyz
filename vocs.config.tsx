@@ -43,15 +43,6 @@ export default defineConfig({
       rehypeKatex,
     ]
   },
-  vite: {
-    plugins: [{
-      name: 'disable-llms',
-      enforce: 'pre',
-      configResolved(config) {
-        config.plugins = config.plugins.filter(p => p.name !== 'llms')
-      }
-    }]
-  },
   topNav: [
     {
       text: 'Basics',

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import ArrowIcon from "./ArrowIcon";
+import SVG from "react-inlinesvg";
 
 const footerShapes = [
   { primary: "01.png", alt: "01-dark.png", hiddenMobile: false },
@@ -75,32 +76,18 @@ const LandingPage = () => {
         Unlock the full potential of high-performance ZK with Binius      
       </p>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
-        marginTop: '64px'
-      }}>
-        <a href="/basics" style={{ textDecoration: 'none' }}>
-          <div style={{ 
-            backgroundColor: '#ACE5B9',
-            padding: '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            color: isDarkMode ? '#1D272A' : 'inherit',
-            transition: 'filter 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-16">
+        <a href="/basics">
+          <div className="bg-green hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate ">
             <img
               src="books-icon.svg"
               alt="Books Icon"
-              style={{ width: '40px', height: '40px', marginBottom: '24px' }}
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1 }}>
+            <div className="flex flex-col gap-4 flex-grow">
               <h2>Basics</h2>
-              <p style={{ marginBottom: '16px' }}>
+              <p className="mb-4">
                 Understand Binius fundamentals and core concepts
               </p>
             </div>
@@ -108,51 +95,33 @@ const LandingPage = () => {
           </div>
         </a>
 
-        <a href="/building" style={{ textDecoration: 'none' }}>
-          <div style={{ 
-            backgroundColor: '#F6C956',
-            padding: '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            color: isDarkMode ? '#1D272A' : 'inherit',
-            transition: 'filter 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}>
+        <a href="/building">
+          <div className="bg-orange hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
               src="power-button-icon.svg"
               alt="Building Icon"
-              style={{ width: '40px', height: '40px', marginBottom: '24px' }}
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1 }}>
+            <div className="flex flex-col gap-4 flex-grow">
               <h2>Building</h2>
-              <p style={{ marginBottom: '16px' }}>Learn how to write a SNARK with Binius</p>
+              <p className="mb-4">Learn how to write a SNARK with Binius</p>
             </div>
             <ArrowIcon />
           </div>
         </a>
 
-        <a href="/blueprint" style={{ textDecoration: 'none' }}>
-          <div style={{ 
-            backgroundColor: '#7BCDE6',
-            padding: '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            color: isDarkMode ? '#1D272A' : 'inherit',
-            transition: 'filter 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}>
+        <a href="/blueprint">
+          <div className="bg-blue hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
               src="blueprint-icon.svg"
               alt="Blueprint Icon"
-              style={{ width: '40px', height: '40px', marginBottom: '24px' }}
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1 }}>
+            <div className="flex flex-col gap-4 flex-grow">
               <h2>Blueprint</h2>
-              <p style={{ marginBottom: '16px' }}>
+              <p className="mb-4">
                 Learn how Binius proofs are generated and verified
               </p>
             </div>
@@ -160,26 +129,17 @@ const LandingPage = () => {
           </div>
         </a>
 
-        <a href="/benchmarks" style={{ textDecoration: 'none' }}>
-          <div style={{ 
-            backgroundColor: '#F45A2A',
-            padding: '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            color: isDarkMode ? '#1D272A' : 'inherit',
-            transition: 'filter 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}>
+        <a href="/benchmarks">
+          <div className="bg-red hover:brightness-110 transition-all p-8 flex flex-col h-full dark:text-slate">
             <img
               src="chart-icon.svg"
               alt="Chart Icon"
-              style={{ width: '40px', height: '40px', marginBottom: '24px' }}
+              className="mb-6"
+              style={{ width: '40px', height: '40px' }}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1 }}>
+            <div className="flex flex-col gap-4 flex-grow">
               <h2>Benchmarks</h2>
-              <p style={{ marginBottom: '16px' }}>Explore up-to-date comparative benchmarks</p>
+              <p className="mb-4">Explore up-to-date comparative benchmarks</p>
             </div>
             <ArrowIcon />
           </div>
@@ -223,10 +183,10 @@ const LandingPage = () => {
           </p>
           <div className="flex pr-6 md:justify-end justify-center mt-6 md:mt-0">
             <a href="https://x.com/IrreducibleHW" target="_blank">
-              <img src="x-icon.svg" className="mr-6" style={{ width: '20px', height: '20px' }} />
+              <SVG src="x-icon.svg" className="mr-6" style={{ width: '20px', height: '20px' }} />
             </a>
             <a href="https://github.com/IrreducibleOSS" target="_blank">
-              <img src="github-icon.svg" style={{ width: '20px', height: '20px' }} />
+              <SVG src="github-icon.svg" style={{ width: '20px', height: '20px' }} />
             </a>
           </div>
         </div>
