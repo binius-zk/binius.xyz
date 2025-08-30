@@ -334,7 +334,18 @@ export default defineConfig({
           {
             text: "The Shift Reduction",
             link: "/blueprint/ands/reduction",
-          }
+            collapsed: true,
+            items: [
+              {
+                text: "The Sumchecks",
+                link: "/blueprint/ands/reduction/sumchecks"
+              },
+              {
+                text: "Implementation Considerations",
+                link: "/blueprint/ands/reduction/considerations"
+              }
+            ]
+          },
         ],
       },
       {

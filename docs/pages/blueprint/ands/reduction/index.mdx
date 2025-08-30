@@ -1,0 +1,8 @@
+# The Shift Reduction [The heart of the AND protocol]
+
+The shift reduction is the heart of our AND reduction protocol. Here, we pick up where we left off at [the end](/blueprint/ands/oblong/univariate#the-end) of the univariate skip. To assess the claims made by the prover at the end of that protocol, we engage in a complex, multi-phase sumcheck. The details are natural, but involved, and need to be spelled out.
+
+We do so throughout the following sub-pages.
+
+- [**The Sumchecks.**](sumchecks) Here, we show that the sumcheck the parties need to run can be naturally broken up into two phases. The idea is very vaguely Spartan-like [[Set20](https://eprint.iacr.org/2019/550)], but more complicated.
+- [**Implementation Considerations.**](considerations) Here, we go into more detail on the technical aspects of the prover's implementation. It's essential that our prover can exploit the sparsity of the constraint system he's working with.
