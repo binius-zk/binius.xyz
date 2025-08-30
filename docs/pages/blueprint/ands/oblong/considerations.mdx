@@ -52,4 +52,4 @@ So here is what the prover does, on input $r_{\widehat{i}}$, $r_x$:
  - for each $\widehat{i} \in D'' \setminus D$, set $h(\widehat{i}) \coloneqq \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot h'(\widehat{i})$.
  - return the values of $h(\widehat{I})$ on $D'' \setminus D$.
 
-This completes the description of the prover's calculation of the first round polynomial.
+This completes the description of the prover's calculation of the first round polynomial. In practice, we use a lookup technique whereby we break each of the words $a[x]$, $b[x]$ and $c[x]$ into eight 8-bit chunks. Since the additive NTT extrapolation operation we're carrying out is linear, it suffices to precompute eight lookup tables, each containing 256 length-64 arrays of $\mathbb{F}_{2^{128}}$-elements. The total data size here is 2 MiB.
