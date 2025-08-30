@@ -1,6 +1,6 @@
 # Oblong Multilinears [How (a bit of) univariatization helps us]
 
-Oblong-multilinearization is a technique that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108)]. We use that technique, specializing it for our 64-bit architecture.
+Oblong-multilinearization is a technique that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1]. We use that technique, specializing it for our 64-bit architecture.
 
 The key point is that our fundamental [constraint equation](http://localhost:5173/blueprint/ands/mathematizing#multilinearizing) involves small-field polynomials, polynomials over $\mathbb{F}_2$. If it weren't for that fact, we could just run a standard zerocheck on it. In fact, we still _could_ do just that. But in light of our small-field situation, we can do much better efficiency-wise if we use the univariate skip. As it happens, the univariate skip works very nicely with our 64-bit architecture.
 

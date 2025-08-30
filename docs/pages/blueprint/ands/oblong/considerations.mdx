@@ -1,0 +1,55 @@
+# Implementation Considerations [Implementing the univariate skip efficiently on 64-bit architectures]
+
+In [the previous page](/blueprint/ands/oblong/univariate), we explained the three oblong-multilinears $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ on which the prover needs to run his univariate skip. Before it can proceed, it must populate the tables of values of these polynomials. Each polynomial is represented by its values on $D \times \mathcal{B}_{\ell_\text{and}}$, which are moreover all bits (elements of $\mathbb{F}_2$). Thus, there will be $64 \times n_\text{and}$ such values. In practice, these will thus be stored as three length-$n_\text{and}$ arrays of 64-bit words.
+
+Thankfully, these arrays are not hard to come by. Indeed, we already saw them once: they are the arrays $a$, $b$ and $c$ [we defined](/blueprint/ands/mathematizing#sum-expressions) when we first mathematized the problem of the prover's constraint satisfaction.
+
+## Computing the Initial Arrays
+
+Using a straightforward algorithm, we can compute $a$, $b$ and $c$ in a way that exploits the sparsity of the constraint system. Here it is. On input a constraint system and a length-$n_\text{words}$ vector of 64-bit prover data $w$, the prover runs:
+
+- allocate arrays $a$, $b$ and $c$, each containing $n_\text{words}$ 64-bit words, initially all 0s.
+- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
+  - load the $x$<sup>th</sup> tuple $(L_a, L_b, L_c)$ from the constraint system.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_a$ **do**: update $a[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_b$ **do**: update $b[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_c$ **do**: update $c[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+- output the arrays $a$, $b$ and $c$.
+
+We recall that if and only if the prover's data $w$ satisfies the constraint system, the resulting arrays returned by this algorithm will satisfy $a[x] \mathrel{\&} b[x] = c[x]$ for each $x \in \{0, \ldots , n_\text{and} - 1\}$.
+
+## The Extrapolation Trick
+
+Skipping ahead a bit, after the prover receives the initial challenges $r_{\widehat{i}}$ and $r_x$ from the verifier, its first task will be to compute the values of the round polynomial
+$$
+\begin{equation*}h(\widehat{I}) = \delta_D(r_{\widehat{i}}, \widehat{I}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+at _at least_ $3 \cdot (2^k - 1) + 1 - 2^k = 2 \cdot (2^k - 1)$ points _outside_ of $D$.
+
+We are going to first apply an idea that's related to one noticed by Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 3.2] in the cubular case. The idea is this: the polynomial
+
+$$
+\begin{equation*}h'(\widehat{I}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)-\end{equation*}
+$$
+
+i.e., the same as $h'(\widehat{I})$, but without the $\delta_D(r_{\widehat{i}}, \widehat{I})$ factor—is lower-degree in $\widehat{I}$. Indeed, its degree in $\widehat{I}$ is just $2 \cdot (2^k - 1)$ at most. Moreover, it likewise vanishes on $D$. Thus to uniquely specify $h'(\widehat{I})$, the prover can learn its values at just $2 \cdot (2^k - 1) + 1 - 2^k = 2^k - 1$ points outside of $D$. We write $D' \supset D$ for a larger domain of size at least $2 \cdot 2^k - 1$.
+
+Having done this, the prover can _then_ extrapolate $h'(\widehat{I})$ onto an even-larger domain $D''$ containing $D'$, of total size at least $3 \cdot (2^k - 1) + 1$. At that point, the prover can multiply in $\delta_D(r_{\widehat{i}}, \widehat{I})$ pointwise on $D'' \setminus D$ (again, everything vanishes on $D$). It can send the final values of $h'(\widehat{I})$ on $D'' \setminus D$ to the verifier. Since these latter steps happen outside of the "hot loop", their costs will be negligible compared to that loop's cost.
+
+So here is the algorithm. We can freely round up and let $D'$'s size be $2 \cdot 2^k$ and $D''$'s size $3 \cdot 2^k$. Indeed, we can let $D'$ be the union of $D$ and a nontrivial affine coset of $D$ (we recall that $D \subset \mathbb{F}_{2^{128}}$ is an $\mathbb{F}_2$-linear subspace). Similarly, we can let $D''$ be the union of $D'$ with a third distinct coset.
+
+## Round Polynomial Computation
+
+So here is what the prover does, on input $r_{\widehat{i}}$, $r_x$:
+
+- tensor-expand $r_x$; i.e., compute the array $\left( \widetilde{\texttt{eq}}(r_x, x) \right)_{x \in \mathcal{B}_{\ell_\text{and}}}$.
+- initialize an empty array of $64$ $128$-bit field elements, say $\mathsf{h}'$, indexed by the set $D' \setminus D$.
+- **for** each $x \in \{0, \ldots , n_\text{words} - 1\}$ **do**:
+  - interpret the three 64-bit words $a[x]$, $b[x]$ and $c[x]$ as the respective vectors of values that three different $\mathbb{F}_2$-valued univariate polynomials, say $a_x(\widehat{I})$, $b_x(\widehat{I})$, and $c_x(\widehat{I})$, each of degree less than $2^k$, take on $D \subset \mathbb{F}_{2^{128}}$. using the Lin–Chung–Han additive NTT [[LCH14](https://arxiv.org/abs/1404.3458)] or some lookup-based variant of it (see e.g. [[Hu+25](https://eprint.iacr.org/2025/717)]), extrapolate $a_x(\widehat{I})$, $b_x(\widehat{I})$, and $c_x(\widehat{I})$ to $D'$. concretely, this gives us three length-64 arrays, each of whose elements is a $\mathbb{F}_{2^{128}}$-element.
+  - **for** each $\widehat{i} \in D'$ **do**:
+    - $\mathsf{h}'[\widehat{i}] \mathrel{+}= \left[ a_x(\widehat{i}) \cdot b_x(\widehat{i}) - c_x(\widehat{i}) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)$.
+ - interpret $\mathsf{h}'$ as the vector of values that a polynomial $h'(\widehat{I})$, of degree less than $2 \cdot 2^k$, which also vanishes identically on $D$, takes on $D' \setminus D$. using a further variant of the additive NTT [[LCH14](https://arxiv.org/abs/1404.3458)] (this time dealing with a domain of size $3 \cdot 2^k$), extrapolate $h'(\widehat{I})$ onto $D''$.
+ - for each $\widehat{i} \in D'' \setminus D$, set $h(\widehat{i}) \coloneqq \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot h'(\widehat{i})$.
+ - return the values of $h(\widehat{I})$ on $D'' \setminus D$.
+
+This completes the description of the prover's calculation of the first round polynomial.

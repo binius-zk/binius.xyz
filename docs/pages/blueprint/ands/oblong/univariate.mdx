@@ -1,6 +1,6 @@
 # The Univariate Skip [Knocking out 6 variables' worth of content]
 
-We are now going to use Gruen's [[Gru24](https://eprint.iacr.org/2024/108)] _univariate skip_ idea for our zerocheck. We avoid fully reviewing how that protocol works, and focus on its specialization to our scenario.
+We are now going to use Gruen's [[Gru24](https://eprint.iacr.org/2024/108), § 5.1] _univariate skip_ idea for our zerocheck. We avoid fully reviewing how that protocol works, and focus on its specialization to our scenario.
 
 We recall first that we have [already established](/blueprint/ands/mathematizing) an identity
 
@@ -37,7 +37,7 @@ $$
 $$
 our goal is to show that $f(\widehat{I}, X)$ vanishes identically on $D \times \mathcal{B}_{\ell_\text{and}}$. Note that $f(\widehat{I}, X)$ is multivariate in $1 + \ell_\text{and}$ variables; it is _not_ oblong-multilinear.
 
-To assess this question, the univariate skip suggests that we oblong-multilinearize $f(\widehat{I}, X)$, and then evaluate _the resulting_ polynomial at a random point in $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^{\ell_\text{and}}$.
+The univariate skip suggests that, to assess this question, we oblong-multilinearize $f(\widehat{I}, X)$, and then evaluate _the resulting_ polynomial at a random point in $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^{\ell_\text{and}}$.
 
 Indeed, the polynomial
 

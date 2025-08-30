@@ -33,7 +33,7 @@ The constraint system we get out is predictable and simple, but much more useful
 <Collapsible>
 [**AND Constraints.**](ands) To check whether the prover's data satisfies the constraint system's AND constraints, we need to do a few steps.
 
-We first arithmetize the problem of AND-constraint satisfaction, by representing that problem as one about [multilinear polynomials](math/multilinears). We actually use [oblong](ands/oblong) multilinears, an idea that comes from Gruen's [[Gru24](https://eprint.iacr.org/2024/108)]'s _univariate skip_. That technique ends up working especially nicely for us, since we natively use the _64-bit word_ dataype. After running the univariate skip, we wind up with a complicated, Spartan-like sumcheck, called the [shift reduction](ands/reduction), which we also treat in detail.
+We first arithmetize the problem of AND-constraint satisfaction, by representing that problem as one about [multilinear polynomials](math/multilinears). We actually use [oblong](ands/oblong) multilinears, an idea that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1]'s _univariate skip_. That technique ends up working especially nicely for us, since we natively use the _64-bit word_ dataype. After running the univariate skip, we wind up with a complicated, Spartan-like sumcheck, called the [shift reduction](ands/reduction), which we also treat in detail.
 </Collapsible>
 </Callout>
 
