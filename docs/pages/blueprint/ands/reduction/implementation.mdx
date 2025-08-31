@@ -1,0 +1,49 @@
+# Prover Implementation [Implementing the shift reduction in a sparsity-aware way]
+
+We now get into the implementation of the prover of the [shift reduction](/blueprint/ands/reduction). A lot of ground was already covered in the [previous page](/blueprint/ands/reduction/sumchecks), where described the overall two-phase sumcheck structure.
+
+Here, we describe more explicitly how the prover can precompute the various tables of values that it needs in order to carry out those sumchecks. The point is to exploit the sparsity of the constraint system, and to get something that scales linearly in the witness size.
+
+There are actually a few ways to do this, which are essentially similar in spirit and have slightly different tradeoffs at the implementation level. We are going to describe one which is conceptually simple and gets the key ideas.
+
+## The First Phase
+
+We now describe the prover's implementation of the [first phase](/blueprint/ands/reduction/sumchecks#the-first-phase) of the shift reduction.
+
+### Computation of h polynomials
+
+We recall the definitions of the polynomials $h_\text{op}(J, S)$. For each $j \in \mathcal{B}_6$ and $s \in \mathcal{B}_6$:
+
+$$
+\begin{equation*}h_\text{op}(j, s) = \sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s).\end{equation*}
+$$
+
+First, the prover should precompute $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$. As we've [already said](/blueprint/ands/oblong/multilinearization#partial-specialization), the prover can do this efficiently using a technique related to Lagrange interpolation.
+
+We recall now what the shift indicators [mean](/blueprint/ands/indicators/polynomials#the-shift-indicators). We note that for each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}\}$, for each $j \in \mathcal{B}_6$ and each $s \in \mathcal{B}_6$, there is at most one $i \in \mathcal{B}_6$ for which $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) = 1$. We can thus set $h_\text{op}(j, s)$ equal to that single value.
+
+The case $\text{op} = \mathsf{sra}$ is slightly more tricky. Here, the case $j = 63$ is exceptional. In this case, for each $s \in \mathcal{B}_6$, $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) = 1$ for _each_ $i \in \mathcal{B}_6$ for which $\{i\} \geq 64 - \{s\}$.
+
+Putting everything together, we get the following algorithm. We write $\mathsf{delta}$ for the length-64 array flattening of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$.
+
+- allocate empty, $64 \times 64$, all-zero arrays $\mathsf{h}_{\mathsf{sll}}$, $\mathsf{h}_{\mathsf{sra}}$ and $\mathsf{h}_{\mathsf{sra}}$, containing $\mathbb{F}_{2^{128}}$-elements.
+- **for** $j \in \{0, \ldots , 63\}$ **do**:
+  - **for** $s \in \{0, \ldots , 63 - j\}$ **do**: set $\mathsf{h}_{\mathsf{sll}}[j][s] \coloneqq \mathsf{delta}[j + s]$
+  - **for** $s \in \{0, \ldots , j\}$ **do** set $\mathsf{h}_{\mathsf{srl}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
+  - **for** $s \in \{0, \ldots , j\}$ **do** set $\mathsf{h}_{\mathsf{sra}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
+- **for** $s \in \{1, \ldots , 63\}$ **do** update $\mathsf{h}_{\mathsf{sra}}[63][s] \mathrel{+}= \mathsf{h}_{\mathsf{sra}}[63][s - 1]$.
+- return $\mathsf{h}_{\mathsf{sll}}$, $\mathsf{h}_{\mathsf{sra}}$ and $\mathsf{h}_{\mathsf{sra}}$.
+
+In the last line of the algorithm above, we do a "running prefix sum" trick. This completes our description of the prover's computation of the polynomials $h_\text{op}(J, S)$.
+
+### Computation of g polynomials
+
+We now turn to the polynomials $g_{a, \text{op}}(J, S)$, $g_{b, \text{op}}(J, S)$ and $g_{c, \text{op}}(J, S)$. We reproduce their definitions here. For each $j \in \mathcal{B}_6$ and $s \in \mathcal{B}_6$:
+
+$$
+\begin{align*}
+g_{a, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y), \\
+g_{b, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y), \\
+g_{c, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y).
+\end{align*}
+$$

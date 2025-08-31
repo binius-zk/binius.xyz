@@ -30,7 +30,7 @@ $$
 
 It follows essentially by definition that $w$ satisfies the constraint system if and only if $a[x] \mathrel{\&} b[x] = c[x]$ holds for _each_ $x \in \{0, \ldots , n_\text{and} - 1\}$.
 
-We pause to mention here that there is a straightforward efficient algorithm that computes $a$, $b$ and $c$, which exploits the sparsity of the constraint system. Here it is. On input a constraint system and a length-$n_\text{words}$ vector of 64-bit prover data $w$, the prover runs:
+There is a straightforward efficient algorithm that computes $a$, $b$ and $c$, which exploits the sparsity of the constraint system. On input a constraint system and a length-$n_\text{words}$ vector of 64-bit prover data $w$, the prover runs:
 
 - allocate arrays $a$, $b$ and $c$, each containing $n_\text{words}$ 64-bit words, initially all 0s.
 - **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:

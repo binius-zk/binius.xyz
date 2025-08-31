@@ -51,6 +51,15 @@ For each triple of inputs $i$, $j$ and $s$, it either _is_ or _isn't_ true that 
 For example, $\mathsf{sll}(v, 10)_{30} = v_{20}$, regardless of $v$. This means that $\textsf{shift-ind}_\mathsf{sll}(30, 20, 10) = 1$. On the other hand, $\mathsf{sll}(v, 10)_{30}$ and $v_{19}$ are unrelated, so $\textsf{shift-ind}_\mathsf{sll}(30, 19, 10) = 0$. Finally, $\mathsf{sll}(v, 10)_9 = 0$ regardless of $v$, so $\textsf{shift-ind}_\mathsf{sll}(9, j, 10) = 0$ for each $j \in \mathcal{B}_6$.
 :::
 
+With a bit of work we can unwind exactly what these mean. For each $i$, $j$ and $s$ in $\mathcal{B}_6$,
+- $\widetilde{\textsf{shift-ind}}_{\mathsf{sll}}(i, j, s) = 1$ if and only if $\{j\} + \{s\} = \{i\}$.
+- $\widetilde{\textsf{shift-ind}}_{\mathsf{srl}}(i, j, s) = 1$ if and only if $\{i\} + \{s\} = \{j\}$.
+- $\widetilde{\textsf{shift-ind}}_{\mathsf{sra}}(i, j, s) = 1$ if and only if $\{i\} + \{s\} = \{j\}$ _or_ both $\{j\} = 63$ and $\{i\} \geq 64 - \{s\}$ hold.
+
+We will come back to these descriptions when we arithmetize the functions, in the next two pages.
+
+## Multilinear Shift Indicators
+
 Now, we will write
 
 $$
@@ -68,8 +77,9 @@ $$
 To check this equality, it's enough to check it on the cube. We fix $i \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$. Our goal is to show that for each such specialization,
 
 $$
-\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(i, y, s) \stackrel{?}= \begin{equation*}\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
+\begin{equation*}\widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(i, y, s) \stackrel{?}= \sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
+
 This is basically an exercise. The sum $\sum_{j \in \mathcal{B}_6} \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y)$ has at most one nonzero summand. If, for some $j \in \mathcal{B}_6$, $\textsf{shift-ind}_\text{op}(i, j, s) = 1$, the sum will pick up exactly the $j$<sup>th</sup> bit $\widetilde{w}(j, y)$, which itself equals $w[y]_j$. On the other hand, by definition of $\textsf{shift-ind}_\text{op}$, $w[y]_j = \text{op}(w[y], s)_i$, which itself equals $\textsf{shift}_\text{op}(w)(y, s)_i = \widetilde{\textsf{shift}}_\text{op}(\widetilde{w})(i, y, s)$, by definition of the latter things. This is basically an idea from [[DP25](https://eprint.iacr.org/2023/1784), § 4.3].
 
 This equality opens up the door to using the sumcheck to relate a claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S)$ to one on $\widetilde{w}(J, Y)$. Indeed, given an evaluation claim on the former, by running a 6-round sumcheck, the verifier can reduce it to two evaluation claims, on $\widetilde{\textsf{shift-ind}}_\text{op}$ and $\widetilde{w}$ respectively.

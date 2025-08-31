@@ -332,8 +332,8 @@ export default defineConfig({
                 link: "/blueprint/ands/reduction/sumchecks"
               },
               {
-                text: "Implementation Considerations",
-                link: "/blueprint/ands/reduction/considerations"
+                text: "Prover Implementation",
+                link: "/blueprint/ands/reduction/implementation"
               }
             ]
           },

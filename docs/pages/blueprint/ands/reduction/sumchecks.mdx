@@ -66,7 +66,7 @@ g_{c, \text{op}}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \
 \end{align*}
 $$
 
-Crucially, everything above is multilinear in $J$ and $S$. moreover, by definition, our claims amount to:
+Crucially, everything above is multilinear in $J$ and $S$. By definition, our claims amount to:
 
 $$
 \begin{align*}
@@ -82,7 +82,7 @@ $$
 \begin{equation*}\alpha_0 \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot \Big[ \lambda_a \cdot g_{a, \text{op}}(j, s) + \lambda_b \cdot g_{b, \text{op}}(j, s) + \lambda_c \cdot g_{c, \text{op}}(j, s) \Big].\end{equation*}
 $$
 
-Thus, the prover can begin by tabulating the $2^6 \times 2^6$ tables of values of all three functions $h_\text{op}(J, S)$, and all three functions $\lambda_a \cdot g_{a, \text{op}}(J, S) + \lambda_b + g_{b, \text{op}}(J, S) + \lambda_c \cdot g_{c, \text{op}}(J, S)$, so 6 functions total (i.e., we are letting $\text{op}$ vary). The total resulting data here is of size $2^6 \cdot 2^6 \cdot 6$ field elements, or 384 KiB total. In the [next page](/blueprint/ands/reduction/considerations), we talk about how the prover can prepare these tables of values efficiently, exploiting the sparsity of the constraint system.
+Thus, the prover can begin by tabulating the $2^6 \times 2^6$ tables of values of all three functions $h_\text{op}(J, S)$, and all three functions $\lambda_a \cdot g_{a, \text{op}}(J, S) + \lambda_b + g_{b, \text{op}}(J, S) + \lambda_c \cdot g_{c, \text{op}}(J, S)$, so 6 functions total (i.e., we are letting $\text{op}$ vary). The total resulting data here is of size $2^6 \cdot 2^6 \cdot 6$ field elements, or 384 KiB total. In the [next page](/blueprint/ands/reduction/implementation), we talk about how the prover can prepare these tables of values efficiently, exploiting the sparsity of the constraint system.
 
 In any case, skipping that for now, we can tell the parties to run the sumcheck above. The sumcheck is 12-dimensional, over a sum of three products of multilinears (i.e., taken over $\text{op}$). After 12 rounds, the parties will have reduced the prover's claim to the further claim:
 
@@ -105,7 +105,7 @@ $$
 
 Above, we use a typographical device where we write $m$ and $M$ for "one of" the symbols $a$, $b$ and $c$, $A$, $B$ and $C$ and so on.
 
-In any case, we can now view the _above_ expression as a further sumcheck, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/ands/reduction/considerations), we go into how the prover can tabulate the necessary values efficiently.
+In any case, we can now view the _above_ expression as a further sumcheck, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/ands/reduction/implementation), we go into how the prover can tabulate the necessary values efficiently.
 
 For now, we instruct the parties to run an $\ell_\text{words}$-round sumcheck on the above. After doing that, they wind up with a further claim of the form:
 
@@ -117,6 +117,6 @@ where $r_y$ is a further value sampled during the sumcheck.
 
 We work under the assumption that the verifier can evaluate the entire bracketed quantity himself. We have already [talked at great length](/blueprint/ands/indicators) about how the verifier can efficiently, locally, compute the evaluations $h_\text{op}(r_j, r_s)$ himself. Our case is a bit different than what we previously covered, since the verifier will need to evaluate $\textsf{shift-ind}_\text{op}(i, r_j, r_s)$ for _each_ $i \in \mathcal{B}_6$, as opposed to just at a single point. But the idea is similar. The verifier can carry out this computation in a way whose cost grows linearly in the size of $\mathcal{B}_6$ (64 for us, obviously), and with small constants. The concrete cost is very low.
 
-It remains for the verifier to evaluate $\widetilde{A}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$ for each $\text{op}$. This is a bit trickier. There is a straightforward way for the verifier to do this that takes $O(n_\text{words}) + O(n_\text{and}) + O(\text{circuit size})$ work, which we again cover in the [next page](/blueprint/ands/reduction/considerations). This cost is practically tolerable for us. If this had to be improved—and in particular made fully succinct—the Spark compiler [[Set20](https://eprint.iacr.org/2019/550)] is suitable for this kind of thing.
+It remains for the verifier to evaluate $\widetilde{A}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$ for each $\text{op}$. This is a bit trickier. There is a straightforward way for the verifier to do this that takes $O(n_\text{words}) + O(n_\text{and}) + O(\text{circuit size})$ work, which we again cover in the [next page](/blueprint/ands/reduction/implementation). This cost is practically tolerable for us. If this had to be improved—and in particular made fully succinct—the Spark compiler [[Set20](https://eprint.iacr.org/2019/550)] is suitable for this kind of thing.
 
 In any case, it remains for the verifier to output the single evaluation claim on $\widetilde{w}(r_j, r_y)$. This is exactly the kind of thing that our [PCS](/blueprint/commitment) is designed to treat, so this completes our treatment of the AND reduction, at least from the verifier's point of view.
