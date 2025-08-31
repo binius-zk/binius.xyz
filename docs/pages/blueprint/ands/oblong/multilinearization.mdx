@@ -42,6 +42,28 @@ $$
 
 gives us what we want. We need to check that $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ has the right degrees both in $\widehat{I}$ and in the variables $X_0, \ldots , X_{\ell - 1}$ (it does) and that its restriction to $D \times \mathcal{B}_\ell$ takes the right values (it does).
 
+## Partial Specialization
+
+We will also encounter the following problem a few times. Given a multilinear $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$ and its oblong-multilinearization $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ as above, and given some scalar $r_{\widehat{i}} \in \mathbb{F}_{2^{128}}$, the partial specialization $\widehat{t}(r_{\widehat{i}}, X_0, \ldots , X_{\ell - 1})$ is an $\ell$-variate multilinear. How can we compute its table of values on the cube $\mathcal{B}_\ell$?
+
+To answer this question, we just need to look at the expression for $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ above. It follows from that expression that, for each $x \in \mathcal{B}_\ell$,
+
+$$
+\begin{equation*}\widehat{t}(r_{\widehat{i}}, x_0, \ldots , x_{\ell - 1}) = \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot t(i_0, \ldots , i_{k - 1}, x_0, \ldots , x_{\ell - 1}).\end{equation*}
+$$
+
+This fact suggests the following algorithm.
+
+- precompute the list of values $\left( \delta_D(r_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$.
+- initialize an empty, length-$2^\ell$ array $\mathsf{t}$ containing $\mathbb{F}_{2^{128}}$-elements.
+- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do** in parallel:
+  - let $\mathsf{t}[x] \coloneqq \sum_{i \in \mathcal{B}_k} t(i_0, \ldots , i_{k - 1}, x_0, \ldots , x_{\ell - 1}) \cdot \delta_D(r_{\widehat{i}}, \widehat{i})$.
+- return $\mathsf{t}$.
+
+The array $\mathsf{t}$ returned by the above algorithm yields the table of values on $\mathcal{B}_\ell$ of $\widehat{t}(r_{\widehat{i}}, X_0, \ldots , X_{\ell - 1})$, as desired. Each instance of the inner bulletpoint is actually a _subset sum_ of $\left( \delta_D(r_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, since the coefficients of the sum expression are bits.
+
+The computation of $\left( \delta_D(r_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$ above turns out to be a standard subroutine in [Lagrange interpolation](https://people.maths.ox.ac.uk/trefethen/barycentric.pdf), and can be carried out extremely efficiently (we use a "division-free" variant of the Barycentric weights computation algorithm).
+
 ## Evaluation
 
 [Soon](/blueprint/ands/oblong/univariate), we will run a sumcheck-like reduction on oblong-multilinears. At the end of that sumcheck, the verifier will need to evaluate these multilinears.

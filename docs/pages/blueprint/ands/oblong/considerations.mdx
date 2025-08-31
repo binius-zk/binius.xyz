@@ -4,20 +4,6 @@ In [the previous page](/blueprint/ands/oblong/univariate), we explained the thre
 
 Thankfully, these arrays are not hard to come by. Indeed, we already saw them once: they are the arrays $a$, $b$ and $c$ [we defined](/blueprint/ands/mathematizing#sum-expressions) when we first mathematized the problem of the prover's constraint satisfaction.
 
-## Computing the Initial Arrays
-
-Using a straightforward algorithm, we can compute $a$, $b$ and $c$ in a way that exploits the sparsity of the constraint system. Here it is. On input a constraint system and a length-$n_\text{words}$ vector of 64-bit prover data $w$, the prover runs:
-
-- allocate arrays $a$, $b$ and $c$, each containing $n_\text{words}$ 64-bit words, initially all 0s.
-- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
-  - load the $x$<sup>th</sup> tuple $(L_a, L_b, L_c)$ from the constraint system.
-  - **for** each shifted value index $(y, \text{op}, s) \in L_a$ **do**: update $a[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
-  - **for** each shifted value index $(y, \text{op}, s) \in L_b$ **do**: update $b[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
-  - **for** each shifted value index $(y, \text{op}, s) \in L_c$ **do**: update $c[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
-- output the arrays $a$, $b$ and $c$.
-
-We recall that if and only if the prover's data $w$ satisfies the constraint system, the resulting arrays returned by this algorithm will satisfy $a[x] \mathrel{\&} b[x] = c[x]$ for each $x \in \{0, \ldots , n_\text{and} - 1\}$.
-
 ## The Extrapolation Trick
 
 Skipping ahead a bit, after the prover receives the initial challenges $r_{\widehat{i}}$ and $r_x$ from the verifier, its first task will be to compute the values of the round polynomial
@@ -53,3 +39,30 @@ So here is what the prover does, on input $r_{\widehat{i}}$, $r_x$:
  - return the values of $h(\widehat{I})$ on $D'' \setminus D$.
 
 This completes the description of the prover's calculation of the first round polynomial. In practice, we use a lookup technique whereby we break each of the words $a[x]$, $b[x]$ and $c[x]$ into eight 8-bit chunks. Since the additive NTT extrapolation operation we're carrying out is linear, it suffices to precompute eight lookup tables, each containing 256 length-64 arrays of $\mathbb{F}_{2^{128}}$-elements. The total data size here is 2 MiB.
+
+## The Univariate Specialization
+
+As we already saw, at the [end of the initial round](/blueprint/ands/reduction/sumchecks#the-first-phase) of the univariate skip, the verifier will sample a single scalar $r'_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and send it to the prover. The parties' "cubular" sumcheck will be run on
+
+$$
+\begin{align*}
+s_0 &\stackrel{?}= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r'_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) \\
+&= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(r'_{\widehat{i}}, x) \cdot \widehat{b}(r'_{\widehat{i}}, x) - \widehat{c}(r'_{\widehat{i}}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x).
+\end{align*}
+$$
+
+To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized, $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on the cube $\mathcal{B}_{\ell_\text{and}}$. We [recall](/blueprint/ands/oblong/univariate) that the polynomials $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$—i.e., pre-specialization—are _themselves_ [oblong-multilinearizations](/blueprint/ands/oblong/multilinearization) of [explicit](/blueprint/ands/mathematizing#using-shift-indicators) $6 + \ell_\text{and}$-variate multilinears $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$.
+
+This brings us to our next question: how do the tables of values of the $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to the tables of values of $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$, which we already know? These latter are just the [simple arrays](/blueprint/ands/mathematizing#sum-expressions) $a$, $b$ and $c$.
+
+We have already [answered this question](/blueprint/ands/oblong/multilinearization#partial-specialization) in the general context of oblong-multilinearization. In our context, we can say a bit more. Now, we have $k = 6$. Moreover, moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
+
+$$
+\begin{gather*}
+\left( \widetilde{a}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}, \\
+\left( \widetilde{b}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}, \\
+\left( \widetilde{c}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}
+\end{gather*}
+$$
+
+are stored conveniently as the three 64-bit registers $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/ands/oblong/multilinearization#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{words} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients are $a[x]$, $b[x]$ and $c[x]$.

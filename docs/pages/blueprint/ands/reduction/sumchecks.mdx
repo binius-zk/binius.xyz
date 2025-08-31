@@ -38,17 +38,15 @@ $$
 \begin{align*}
 \alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
 \alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{C}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].
+\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].
 \end{align*}
 $$
 
 This wouldn't do us much good, if it weren't for the following further observation. In each of the three expressions above, both bracketed quantities are _multilinear_ in both $J$ and $S$.
 
-Indeed, each left-hand bracketed quantity is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and not in $\delta_D(r'_{\widehat{i}}, \widehat{i})$. Similarly, each right-hand bracketed expression is also multilinear in $j$ and $s$, since $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$ depends on $s$ but not $j$ while $\widetilde{w}(j, y)$ depends on $j$ but not $s$.
+Indeed, in each left-hand bracketed quantity, each summand is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and not in $\delta_D(r'_{\widehat{i}}, \widehat{i})$; thus, the entire sum is also multilinear in $j$ and $s$. Similarly, in each right-hand bracketed expression, each summand is also multilinear in $j$ and $s$, since $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$ depends on $s$ but not $j$ while $\widetilde{w}(j, y)$ depends on $j$ but not $s$, and so the sum itself again also is. Thus all bracketed sums are themselves multilinear in $j$ and $s$, and we can treat each expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of just three products of multilinears (i.e., over varying $\text{op}$).
 
-As a result, we can treat each expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of three products of multilinears (i.e., over varying $\text{op}$).
-
-We cover more details in the next segment.
+If this weren't true, then the above multivariates in $J$ and $S$ would not be expressible as compositions of multilinears in $J$ and $S$ with _reasonable_ composition functions. Rather, the composition functions would be enormous—with $3 \times 64$, $3 \times n_\text{words}$, or even $3 \times 64 \times n_\text{words}$ summands—as opposed to just $3$.
 
 ## The First Phase
 

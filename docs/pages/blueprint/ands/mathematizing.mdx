@@ -30,6 +30,16 @@ $$
 
 It follows essentially by definition that $w$ satisfies the constraint system if and only if $a[x] \mathrel{\&} b[x] = c[x]$ holds for _each_ $x \in \{0, \ldots , n_\text{and} - 1\}$.
 
+We pause to mention here that there is a straightforward efficient algorithm that computes $a$, $b$ and $c$, which exploits the sparsity of the constraint system. Here it is. On input a constraint system and a length-$n_\text{words}$ vector of 64-bit prover data $w$, the prover runs:
+
+- allocate arrays $a$, $b$ and $c$, each containing $n_\text{words}$ 64-bit words, initially all 0s.
+- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
+  - load the $x$<sup>th</sup> tuple $(L_a, L_b, L_c)$ from the constraint system.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_a$ **do**: update $a[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_b$ **do**: update $b[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+  - **for** each shifted value index $(y, \text{op}, s) \in L_c$ **do**: update $c[x] \mathrel{\oplus}= \text{op}(w[y], s)$.
+- output the arrays $a$, $b$ and $c$.
+
 ## Multilinearizing
 
 Now, we turn everything into polynomials. At this point, we assume that $n_\text{and} = 2^{\ell_\text{and}}$ and $n_\text{words} = 2^{\ell_\text{words}}$ are both powers of 2. As usual, $\mathcal{B}_\ell \coloneqq \{0, 1\}^\ell$ means the $\ell$-dimensional cube.
