@@ -2,6 +2,9 @@
   "name": "binius.xyz",
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "vocs dev",
     "build": "vocs build",
@@ -10,17 +13,20 @@
     "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
-    "@types/react": "latest",
+    "@types/react": "^19.1.12",
     "axios": "^1.7.9",
-    "react": "latest",
-    "react-dom": "latest",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-inlinesvg": "^4.1.5",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "typescript": "latest",
-    "vocs": "latest"
+    "vocs": "^1.0.13"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "@tailwindcss/cli": "^4.0.0",
+    "@tailwindcss/upgrade": "^4.0.6",
+    "husky": "^9.1.7",
+    "tailwindcss": "^4.0.0"
   }
 }

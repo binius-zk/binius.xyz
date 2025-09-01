@@ -4,6 +4,18 @@ import rehypeKatex from 'rehype-katex'
 
 export default defineConfig({
   title: 'binius.xyz',
+  vite: {
+    plugins: [{
+      name: 'disable-llms',
+      enforce: 'pre',
+      configResolved(config) {
+        // Filter out the llms plugin to avoid build errors
+        const filteredPlugins = config.plugins.filter(p => p.name !== 'llms')
+        // @ts-ignore - we need to override readonly property
+        config.plugins = filteredPlugins
+      }
+    }]
+  },
   head() {
     return (
       <>
