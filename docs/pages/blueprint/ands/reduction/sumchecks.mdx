@@ -1,50 +1,46 @@
 # The Sumchecks [The two phases of the shift reduction]
 
-Here, we get into the details.
-
-We jump right into it. We recall that at [the end](/blueprint/ands/univariate/protocol#the-end) of the univariate skip, we left off with three evaluation claims made by the prover:
+We recall that at [the end](/blueprint/ands/univariate/protocol#the-end) of the univariate skip, we left off with three evaluation claims made by the prover:
 
 $$
 \begin{align*}
-\alpha_a &\stackrel{?}= \widehat{a}(r'_{\widehat{i}},  r'_x), \\
-\alpha_b &\stackrel{?}= \widehat{b}(r'_{\widehat{i}},  r'_x), \\
-\alpha_c &\stackrel{?}= \widehat{c}(r'_{\widehat{i}},  r'_x),
+\alpha_a &\stackrel{?}= \widehat{a}(r_{\widehat{i}},  r'_x), \\
+\alpha_b &\stackrel{?}= \widehat{b}(r_{\widehat{i}},  r'_x), \\
+\alpha_c &\stackrel{?}= \widehat{c}(r_{\widehat{i}},  r'_x),
 \end{align*}
 $$
 
 As of this point, the verifier has reduced the prover's AND-constraint satisfaction to these three equalities, to which we turn now.
 
-Unrolling the right-hand sides using the definitions of those quantities [already given](/blueprint/ands/univariate/protocol), and also rearranging a few of those expressions' sums, we get the following three claims:
+Unrolling the right-hand sides using the definitions of those quantities [already given](/blueprint/ands/univariate/protocol), and also rearranging a few sums, we get the following three claims:
 
 $$
 \begin{align*}
-\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
-\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).
+\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).
 \end{align*}
 $$
 
 ## A Factorization
 
-At this point, we _could_ just tell the prover to "run the sumcheck algorithm". The problem is that this sum is enormous: it is over $\ell_\text{words} + 18$ variables. Its raw table of values would thus be something like $2^{18}$ times as large as the witness, which is absurd and unacceptable.
+At this point, it would be correct to just tell the prover to "run the sumcheck algorithm". The problem is that this sum is enormous: it is over $\ell_\text{words} + 18$ variables. Its raw table of values would thus be something like $2^{18}$ times as large as the witness, which is absurd and unacceptable.
 
 The essential point for us is that that not all variables appear in all functions. If they did, we'd have no choice but to run the standard algorithm. As it happens, though, each function has only some of the variables $I$, $J$, $S$, and $Y$. Moreover, the way that these variables are "distributed" allows some very interesting things to happen.
 
-Let us explain. First, note that for each $s$, $j$ and $\text{op}$, among the four inner polynomials, two of them contain $i$ but not $y$ (namely $\delta_D(r'_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$), and the other two contain $y$ but not $i$ (namely $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$, and the same for $B$ and $C$).
-
-Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $s$, $j$ and $\text{op}$. In this way, we get the following factorizations:
+First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the first and third contain $i$ but not $y$, while the second and fourth contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we get the following factorizations:
 
 $$
 \begin{align*}
-\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
-\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].
+\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
+\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
+\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].
 \end{align*}
 $$
 
 This wouldn't do us much good, if it weren't for the following further observation. In each of the three expressions above, both bracketed quantities are _multilinear_ in both $J$ and $S$.
 
-Indeed, in each left-hand bracketed quantity, each summand is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and not in $\delta_D(r'_{\widehat{i}}, \widehat{i})$; thus, the entire sum is also multilinear in $j$ and $s$. Similarly, in each right-hand bracketed expression, each summand is also multilinear in $j$ and $s$, since $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$ depends on $s$ but not $j$ while $\widetilde{w}(j, y)$ depends on $j$ but not $s$, and so the sum itself again also is. Thus all bracketed sums are themselves multilinear in $j$ and $s$, and we can treat each expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of just three products of multilinears (i.e., over varying $\text{op}$).
+Indeed, in each left-hand bracketed quantity, each summand is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and not in $\delta_D(r_{\widehat{i}}, \widehat{i})$; thus, the entire sum is also multilinear in $j$ and $s$. Similarly, in each right-hand bracketed expression, each summand is again multilinear in $j$ and $s$, $\widetilde{w}(j, y)$ depends on $j$ but _not_ on $s$, while $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s)$ and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s)$ depend on $s$ but _not_ on $j$. Thus all bracketed sums are themselves multilinear in $j$ and $s$, and we can treat each expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of just three products of multilinears (i.e., over varying $\text{op}$).
 
 If this weren't true, then the above multivariates in $J$ and $S$ would not be expressible as compositions of multilinears in $J$ and $S$ with _reasonable_ composition functions. Rather, the composition functions would be enormous—with $3 \times 64$, $3 \times n_\text{words}$, or even $3 \times 64 \times n_\text{words}$ summands—as opposed to just $3$.
 
@@ -53,7 +49,7 @@ If this weren't true, then the above multivariates in $J$ and $S$ would not be e
 The above remarks suggest the following first step. As a purely notational matter, we introduce some abbreviations. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, we define the following 12-variate multilinears on $J$ and $S$:
 
 $$
-\begin{equation*}h_\text{op}(J, S) \coloneqq \sum_{i \in \mathcal{B}_6} \delta_D(r'_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, J, S);\end{equation*}
+\begin{equation*}h_\text{op}(J, S) \coloneqq \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, J, S);\end{equation*}
 $$
 
 similarly, for each $\text{op}$, we define:

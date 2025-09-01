@@ -1,0 +1,106 @@
+# Implementation Considerations [Implementing the univariate skip efficiently on 64-bit architectures]
+
+We recall that the prover's goal is to evaluate the polynomial
+
+$$
+\begin{equation*}g(\widehat{I}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, x) \cdot \widehat{b}(\widehat{I}, x) - \widehat{c}(\widehat{I}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+
+on at least $2^k - 1$ points outside of $D$.
+
+In this page, we describe a highly optimized implementation, which strategically uses the [Rijndael field](/blueprint/ands/univariate/rijndael#the-rijndael-field) "where possible".
+
+## The Underlying Arrays
+
+The polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and $\widehat{c}(\widehat{I}, x)$ above are [defined](/blueprint/ands/univariate/protocol#oblong-multilinearization) to be the [oblong-multilinearizations](/blueprint/ands/univariate/multilinearization) of [explicit polynomials](/blueprint/ands/mathematizing#multilinearizing) that depend on the prover's data. Unwinding what everything means, we see that $\widehat{a}(\widehat{I}, x)$'s, $\widehat{b}(\widehat{I}, x)$'s and $\widehat{c}(\widehat{I}, x)$'s respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are nothing more than the length-$n_\text{and}$, 64-bit-word-valued [arrays](/blueprint/ands/mathematizing#sum-expressions) $a$, $b$ and $c$ we've already seen. The prover can prepare these tables of values [efficiently](/blueprint/ands/mathematizing#sum-expressions).
+
+## Efficient Lookup-Based Extrapolation
+
+Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an abstract, $6$-dimensional subspace. Now, we want to enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that
+$$
+\begin{equation*}D \subset D' \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}.\end{equation*}
+$$
+This condition is not hard to set up (we can construct both subspaces in $K$, and embed them).
+
+Finally, we prepare one more step. Below, we will need the mapping
+
+$$
+\begin{equation*}\text{Extrap} : \mathbb{F}_2^{64} \to \mathbb{F}_{2^8}^{64}\end{equation*}
+$$
+
+that extrapolates a bitstring from $D$ to $D' \setminus D$. On the other hand, we want to work in the Rijndael field $K$, so things get a bit more subtle.
+
+On input a 64-bit word $(p_0, \ldots , p_{63})$, $\text{Extrap}$ interprets that word as the values that some univariate polynomial $P(\widehat{I})$, of degree less than 64, takes on $D \subset \mathbb{F}_{2^{128}}$. (I.e., this $P(\widehat{I})$ happens to take $\mathbb{F}_2$-valued values on $D$.) This data specifies $P(\widehat{I})$ uniquely, as a polynomial in $\mathbb{F}_{2^{128}}[\widehat{I}]^{\prec 64}$. Finally, $\text{Extrap}$ maps:
+
+$$
+\begin{equation*}\text{Extrap} : (p_0, \ldots , p_{63}) \mapsto \Big( \iota^{-1}(P(\widehat{i})) \Big)_{\widehat{i} \in D' \setminus D}.\end{equation*}
+$$
+
+We note that since $D' \subset \mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$ and $P(\widehat{I})$ is bit-valued on $D$, $P(\widehat{I})$'s values on $D'$ themselves live in $\mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$. I.e., the evaluations $P(\widehat{i})$ for $\widehat{i} \in D' \setminus D$ live in the image of $\iota$, and $\iota^{-1}(P(\widehat{i}))$ is well-defined. This means that each output $\text{Extrap}(p_0, \ldots , p_{63})$ is an element of $K^{64} \cong \mathbb{F}_{2^8}^{64}$.
+
+Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8, length-8 chunks. For each chunk, we precompute a length-256 table, containing all 256 evaluations of $\text{Extrap}$ on input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
+
+## The Round Polynomial
+
+We have [already seen](/blueprint/ands/univariate/protocol#protocol-description) that the prover must evaluate $g(\widehat{I})$ on $2^k - 1$ points outside of $D$. Thus it's enough for the prover to evaluate $g(\widehat{I})$ on $D' \setminus D$.
+
+We proceed with the prover's algorithm. The prover's inputs are the arrays $a$, $b$ and $c$ above and the verifier's partially-deterministic challenge $\overline{r_x} = (\gamma_0, \gamma_1, \gamma_2, \ldots , \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell_\text{and} - 4}})$, as well as the global basis elements $\beta_0$, $\beta_1$, $\beta_2$, and the precomputed mapping $\text{Extrap}$ above.
+
+- initialize an empty accumulator array of $64$ $\mathbb{F}_{2^{128}}$-elements, say $\mathsf{g}$.
+- tensor-expand $\overline{r_x}$; i.e., compute the array $\left( \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{v \in \mathcal{B}_{\ell_\text{and}} - 3}$.
+- **for** each $v \in \mathcal{B}_{\ell_\text{and} - 3}$ **do**:
+  - initialize an all-zero accumulator of 64 $K$-elements (i.e. bytes), say $\textsf{temp}$.
+  - **for** each $u \in \mathcal{B}_3$ **do**:
+    - let $x \coloneqq u \mathbin{\Vert} v$.
+    - define $\mathsf{a} \coloneqq \text{Extrap}(a[x])$, $\mathsf{b} \coloneqq \text{Extrap}(b[x])$ and $\mathsf{c} \coloneqq \text{Extrap}(c[x])$.
+    - **for** each $j \in \{0, \ldots , 63\}$, update $\mathsf{temp}[j] \mathrel{+}= \left( \mathsf{a}[j] \cdot \mathsf{b}[j] - \mathsf{c}[j] \right) \cdot \widetilde{\texttt{eq}}(\beta, u)$.
+  - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{g} \mathrel{+}= \iota(\mathsf{temp}[j]) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v)$.
+- return $\mathsf{g}$.
+
+We claim that the array $\mathsf{g}$ returned by this algorithm contains exactly the values of $g(\widehat{i})$ for $\widehat{i} \in D' \setminus D$, which is what we want.
+
+## Correctness
+
+The correctness of the above algorithm is not completely obvious. It relies on the following nested sum expression (recall also the analysis done [here](/blueprint/ands/univariate/rijndael#deterministic-zerocheck)). For each $\widehat{i} \in D' \setminus D$,
+
+$$
+\begin{equation*}\sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{v \in \mathcal{B}_{\ell_\text{and}} - 3} \left[ \sum_{u \in \mathcal{B}_3} f(\widehat{i}, u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\gamma, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).\end{equation*}
+$$
+
+For each pair of outer and inner loop indices $v \in \mathcal{B}_{\ell_\text{and} - 3}$ and $u \in \mathcal{B}_3$, the arrays $\mathsf{a}$, $\mathsf{b}$ and $\mathsf{c}$ contain the isomorphic inverses under $\iota$ of $\widehat{a}(\widehat{i}, x)$, $\widehat{b}(\widehat{i}, x)$ and $\widehat{c}(\widehat{i}, x)$, respectively, for $\widehat{i} \in D' \setminus D$, by definition of $\text{Extrap}$. As of the end of the inner loop, then, the accumulator $\mathsf{temp}$ will contain:
+
+$$
+\begin{equation*}\left( \sum_{u \in \mathcal{B}_3} \iota^{-1}\left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\beta, u) \right)_{\widehat{i} \in D' \setminus D}.\end{equation*}
+$$
+Here, we use the fact that $\iota^{-1} : \mathbb{F}_{2^8} \to K$ is a ring homomorphism. Upon applying $\iota$ (in the forward direction) componentwise to this vector and then multiplying ${\texttt{eq}}(\overline{r_x}, v)$ componentwise, we get:
+
+$$
+\begin{equation*}\left( \Big( \sum_{u \in \mathcal{B}_3} \left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\gamma, u) \Big) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{\widehat{i} \in D' \setminus D},\end{equation*}
+$$
+which is exactly the $v$<sup>th</sup> summand of the sum expression above.
+
+## Efficiency
+
+The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ embeddings and 64 multiplications in the GHASH field. "Between" iterations, we work entirely in $K$.
+
+## The Univariate Specialization
+
+As we [already saw](/blueprint/ands/univariate/protocol#protocol-description), after the prover sends $g(\widehat{I})$, the verifier will sample a single scalar $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and send it to the prover. The parties' "cubular" sumcheck will be run on
+
+$$
+\begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(r_{\widehat{i}}, x) \cdot \widehat{b}(r_{\widehat{i}}, x) - \widehat{c}(r_{\widehat{i}}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
+$$
+
+To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r_{\widehat{i}}, X)$, $\widehat{b}(r_{\widehat{i}}, X)$ and $\widehat{c}(r_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$. As we [saw above](/blueprint/ands/univariate/implementation#the-underlying-arrays), the tables of values of these latter oblong-multilinears are just the [simple arrays](/blueprint/ands/mathematizing#sum-expressions) $a$, $b$ and $c$. How do the tables of values of $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to $a$, $b$ and $c$?
+
+We have already [answered this question](/blueprint/ands/univariate/multilinearization#partial-specialization) in the general context of oblong-multilinearization. In our context, we have $k = 6$. Moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
+
+$$
+\begin{gather*}
+\left( \widetilde{a}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}, \\
+\left( \widetilde{b}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}, \\
+\left( \widetilde{c}(i_0, \ldots , i_5, x_0, \ldots , x_{\ell_\text{and} - 1}) \right)_{i \in \mathcal{B}_6}
+\end{gather*}
+$$
+
+are stored as $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/ands/univariate/multilinearization#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{words} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients come from $a[x]$, $b[x]$ and $c[x]$.

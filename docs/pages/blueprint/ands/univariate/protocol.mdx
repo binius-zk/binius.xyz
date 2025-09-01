@@ -41,17 +41,17 @@ Our goal is now to show that $f(\widehat{I}, X)$ vanishes identically on $D \tim
 
 We now describe the protocol explicitly. Later, we explain soundness and implementation considerations.
 
-- the verifier samples a _partial_ challenge $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, as usual in the [deterministic zerocheck variant](/blueprint/ands/univariate/deterministic#deterministic-zerocheck). the verifier sends $\overline{r_x}$ to the prover.
+- the verifier samples a _partial_ challenge $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, as usual in the [deterministic zerocheck variant](/blueprint/ands/univariate/rijndael#deterministic-zerocheck). the verifier sends $\overline{r_x}$ to the prover.
 - the parties both define
   $$
   \begin{equation*} r_x \coloneqq (\gamma_0, \gamma_1, \gamma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}),\end{equation*}
   $$
-  where the elements $\gamma_0$, $\gamma_1$, and $\gamma_2$ of $\mathbb{F}_{2^{128}}$ the fixed [deterministic challenges](/blueprint/ands/univariate/deterministic#embedding) we've already explained.
+  where the elements $\gamma_0$, $\gamma_1$, and $\gamma_2$ of $\mathbb{F}_{2^{128}}$ the fixed [deterministic challenges](/blueprint/ands/univariate/rijndael#embedding) we've already explained.
 - the univariate polynomial
   $$
   \begin{equation*}g(\widehat{I}) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
   $$
-  is univariate, of degree at most $2 \cdot (2^k - 1)$, and vanishes on $D$ if the prover is honest. The prover sends this polynomial, by sending its values on at least $2^k - 1$ points outside of $D$ (we will be more precise about this [later](/blueprint/ands/univariate/considerations)).
+  is univariate, of degree at most $2 \cdot (2^k - 1)$, and vanishes on $D$ if the prover is honest. The prover sends this polynomial, by sending its values on at least $2^k - 1$ points outside of $D$ (we will be more precise about this [later](/blueprint/ands/univariate/implementation)).
 - the verifier checks that $g(\widehat{I})$ vanishes identically on $D$.
 - the verifier samples a single challenges $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and sends it to the prover.
 - both parties write $s_0 \coloneqq g(r_{\widehat{i}})$, and run an $\ell_\text{and}$-round sumcheck on the claim
@@ -75,7 +75,7 @@ will hold, by definition of $g(\widehat{I})$; this is exactly the claim that the
 
 If the prover is _dishonest_, then there exists an $\widehat{i}^* \in D$ for which the set $\left( f(\widehat{i}^*, x) \right)_{x \in \mathcal{B}_{\ell_\text{and}}}$ of bits is not identically zero.
 
-By the soundness analysis of the [partially-deterministic zerocheck](/blueprint/ands/univariate/deterministic#deterministic-zerocheck), the chance, over the verifier's choice of $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, that
+By the soundness analysis of the [partially-deterministic zerocheck](/blueprint/ands/univariate/rijndael#deterministic-zerocheck), the chance, over the verifier's choice of $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, that
 $$
 \begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}^*, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
 $$
@@ -103,10 +103,8 @@ will be false, which proves soundness.
 At the very end of the $\ell_\text{and}$-round sumcheck, the verifier will need to evaluate
 
 $$
-\begin{align*}
-s_{\ell_\text{and}} &\stackrel{?}= f(r_{\widehat{i}}, r'_x) \cdot \widetilde{\texttt{eq}}(r_x, r'_x) \\
-&= \left[ \widehat{a}(r_{\widehat{i}}, r'_x) \cdot \widehat{b}(r_{\widehat{i}},  r'_x) - \widehat{c}(r_{\widehat{i}},  r'_x) \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x);
-\end{align*}
+\begin{equation*}
+s_{\ell_\text{and}} \stackrel{?}= f(r_{\widehat{i}}, r'_x) \cdot \widetilde{\texttt{eq}}(r_x, r'_x) = \left[ \widehat{a}(r_{\widehat{i}}, r'_x) \cdot \widehat{b}(r_{\widehat{i}},  r'_x) - \widehat{c}(r_{\widehat{i}},  r'_x) \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x);\end{equation*}
 $$
 
 here, $s_{\ell_\text{and}}$ and $r'_x$ are further quantities that will arise during the sumcheck. In the second equality, we unroll the definition of $f(r_{\widehat{i}}, r'_x)$, using our definition of $f(\widehat{I}, X)$ above.

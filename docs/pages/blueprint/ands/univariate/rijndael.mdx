@@ -1,6 +1,6 @@
-# The Determinsitic Zerocheck [A zerocheck enhancement for small-field polynomials]
+# The Rijndael Field [Mathematical groundwork for our small-field zerocheck]
 
-Here, we record a variant of an idea due to Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)], as well as some mathematical preliminaries.
+In this page, we lay some mathematical groundwork. These are necessary for us to prepare the way for the Dao–Thaler [[DT24](https://eprint.iacr.org/2024/1038)] variant that we use.
 
 ## The Rijndael Field
 
@@ -38,7 +38,7 @@ We moreover assume that we have a precomputed, efficient field embedding from $\
 
 Mathematically, the embedding $\iota$ is not unique; it amounts to choosing a root of the Rijndael polynomial $X^8 + X^4 + X^3 + X + 1$ in the GHASH field. There are 8 choices.
 
-We write $\gamma_0$, $\gamma_1$, and $\gamma_2$ for the images under $\iota$ of $\beta_0$, $\beta_1$ and $\beta_2$. We note that $\gamma_0$, $\gamma_1$, and $\gamma_2$ are also such that $\left( \widetilde{\texttt{eq}}(\gamma, u) \right)_{u \in \mathcal{B}_3}$ is linearly independent over $\mathbb{F}_2$. Indeed,
+We write $\gamma_0$, $\gamma_1$, and $\gamma_2$ for the images under $\iota$ of $\beta_0$, $\beta_1$ and $\beta_2$. We note that the elements $\left( \widetilde{\texttt{eq}}(\gamma, u) \right)_{u \in \mathcal{B}_3}$ are also linearly independent over $\mathbb{F}_2$. Indeed,
 $$
 \begin{equation*}\widetilde{\texttt{eq}}(\gamma, u) = \widetilde{\texttt{eq}}(\iota(\beta), u) = \iota\left( \widetilde{\texttt{eq}}(\beta, u)\right)\end{equation*}
 $$
@@ -46,7 +46,7 @@ holds for each $u \in \mathcal{B}_3$, since $\iota$ is a field embedding (and "c
 
 ## Deterministic Zerocheck
 
-We now set up a zerocheck scenario. We fix an $\ell$-variate $\mathbb{F}_2$-polynomial $t(X_0, \ldots , X_{\ell - 1})$, which is claimed to vanish identically on $\mathcal{B}_\ell$.
+We now explain a zerocheck variant, adapting an idea of Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)]. We fix an $\ell$-variate $\mathbb{F}_2$-polynomial $t(X_0, \ldots , X_{\ell - 1})$, which is claimed to vanish identically on $\mathcal{B}_\ell$.
 
 In the usual zerocheck, the verifier samples an $\ell$-dimensional fully random challenge $r_x \gets \mathbb{F}_{2^{128}}^\ell$; the parties then run a sumcheck on the claim
 
@@ -56,7 +56,7 @@ $$
 
 By a standard analysis, the soundness analysis of this maneuver is bounded from above by $\frac{\ell}{2^{128}}$.
 
-We now explain a variant approach, adapting Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)]. The verifier can instead sample an $\ell - 3$-dimensional random challenge $\overline{r_x}$, and let
+Instead, we instruct the verifier to sample an $\ell - 3$-dimensional random challenge $\overline{r_x}$, and let
 $$
 \begin{equation*} r_x \coloneqq (\gamma_0, \gamma_1, \gamma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}).\end{equation*}
 $$
@@ -65,9 +65,8 @@ The first three components of $r_x$ are now "deterministic". The parties can now
 $$
 \begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
 $$
-in the usual way.
 
-This variant is also sound—in fact, its soundness error is bounded from above by just $\frac{\ell - 3}{2^{128}}$. Indeed, if we write
+This variant is also sound. In fact, its soundness error is bounded from above by just $\frac{\ell - 3}{2^{128}}$. Indeed, if we write
 $$
 \begin{equation*}\overline{t}(X_0, \ldots , X_{\ell - 4}) \coloneqq \sum_{u \in \mathcal{B}_3} t(u_0, u_1, u_2, X_0, \ldots , X_{\ell - 4}) \cdot \widetilde{\texttt{eq}}(\gamma, u)\end{equation*}
 $$
@@ -82,4 +81,4 @@ Since the $\mathbb{F}_{2^{128}}$-elements $\left( \widetilde{\texttt{eq}}(\gamma
 
 On the other hand, the right-hand sum above is exactly the evaluation of the multilinear extension of $\overline{t}(X_0, \ldots , X_{\ell - 4})$ at $\overline{r_x}$. Since we just argued that $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is not identically zero over $\mathcal{B}_{\ell - 3}$, the usual soundness analysis of the zerocheck imples that, except with probability at most $\frac{\ell - 3}{2^{128}}$ over the verifier's choice of $\overline{r_x}$, the above sum is nonzero.
 
-As we will see [later](/blueprint/ands/univariate/considerations), our prover will be able to exploit this special structure of $r_x$ during its computation of the univariate skip.
+We will say more [later](/blueprint/ands/univariate/implementation#round-polynomial-computation) about how the prover can actually exploit the structure of this $r_x$ during its univariate skip.
