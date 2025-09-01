@@ -313,8 +313,8 @@ export default defineConfig({
                 link: "/blueprint/ands/univariate/multilinearization"
               },
               {
-                text: "The Rijndael Field",
-                link: "/blueprint/ands/univariate/rijndael"
+                text: "The Deterministic Zerocheck",
+                link: "/blueprint/ands/univariate/deterministic"
               },
               {
                 text: "The Protocol",

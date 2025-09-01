@@ -1,28 +1,51 @@
 # Implementation Considerations [Implementing the univariate skip efficiently on 64-bit architectures]
 
-In [the previous page](/blueprint/ands/univariate/protocol), we explained the three oblong-multilinears $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ on which the prover needs to run his univariate skip. Before it can proceed, it must populate the tables of values of these polynomials. Each polynomial is represented by its values on $D \times \mathcal{B}_{\ell_\text{and}}$, which are moreover all bits (elements of $\mathbb{F}_2$). Thus, there will be $64 \times n_\text{and}$ such values. In practice, these will thus be stored as three length-$n_\text{and}$ arrays of 64-bit words.
-
-Thankfully, these arrays are not hard to come by. Indeed, we already saw them once: they are the arrays $a$, $b$ and $c$ [we defined](/blueprint/ands/mathematizing#sum-expressions) when we first mathematized the problem of the prover's constraint satisfaction.
-
-## The Extrapolation Trick
-
-Skipping ahead a bit, after the prover receives the initial challenges $r_{\widehat{i}}$ and $r_x$ from the verifier, its first task will be to compute the values of the round polynomial
-$$
-\begin{equation*}h(\widehat{I}) = \delta_D(r_{\widehat{i}}, \widehat{I}) \cdot \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
-$$
-at _at least_ $3 \cdot (2^k - 1) + 1 - 2^k = 2 \cdot (2^k - 1)$ points _outside_ of $D$.
-
-We are going to first apply an idea that's related to one noticed by Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 3.2] in the cubular case. The idea is this: the polynomial
+We recall that the prover's goal is to evaluate the polynomial
 
 $$
-\begin{equation*}h'(\widehat{I}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)-\end{equation*}
+\begin{equation*}g(\widehat{I}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(\widehat{I}, x) \cdot \widehat{b}(\widehat{I}, x) - \widehat{c}(\widehat{I}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
 $$
 
-i.e., the same as $h'(\widehat{I})$, but without the $\delta_D(r_{\widehat{i}}, \widehat{I})$ factor—is lower-degree in $\widehat{I}$. Indeed, its degree in $\widehat{I}$ is just $2 \cdot (2^k - 1)$ at most. Moreover, it likewise vanishes on $D$. Thus to uniquely specify $h'(\widehat{I})$, the prover can learn its values at just $2 \cdot (2^k - 1) + 1 - 2^k = 2^k - 1$ points outside of $D$. We write $D' \supset D$ for a larger domain of size at least $2 \cdot 2^k - 1$.
+on at least $2^k - 1$ points outside of $D$.
 
-Having done this, the prover can _then_ extrapolate $h'(\widehat{I})$ onto an even-larger domain $D''$ containing $D'$, of total size at least $3 \cdot (2^k - 1) + 1$. At that point, the prover can multiply in $\delta_D(r_{\widehat{i}}, \widehat{I})$ pointwise on $D'' \setminus D$ (again, everything vanishes on $D$). It can send the final values of $h'(\widehat{I})$ on $D'' \setminus D$ to the verifier. Since these latter steps happen outside of the "hot loop", their costs will be negligible compared to that loop's cost.
+In this page, we describe a highly optimized implementation, which strategically uses the [Rijndael field](/blueprint/ands/univariate/deterministic#the-rijndael-field) "where possible".
 
-So here is the algorithm. We can freely round up and let $D'$'s size be $2 \cdot 2^k$ and $D''$'s size $3 \cdot 2^k$. Indeed, we can let $D'$ be the union of $D$ and a nontrivial affine coset of $D$ (we recall that $D \subset \mathbb{F}_{2^{128}}$ is an $\mathbb{F}_2$-linear subspace). Similarly, we can let $D''$ be the union of $D'$ with a third distinct coset.
+## The Underlying Arrays
+
+The polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and $\widehat{c}(\widehat{I}, x)$ above are [defined](/blueprint/ands/univariate/protocol#oblong-multilinearization) to be the [oblong-multilinearizations](/blueprint/ands/univariate/multilinearization) of [explicit polynomials](/blueprint/ands/mathematizing#multilinearizing) that depend on the prover's data. Unwinding what everything means, we see that $\widehat{a}(\widehat{I}, x)$'s, $\widehat{b}(\widehat{I}, x)$'s and $\widehat{c}(\widehat{I}, x)$'s respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are nothing more than the length-$n_\text{and}$, 64-bit-word-valued [arrays](/blueprint/ands/mathematizing#sum-expressions) $a$, $b$ and $c$ we've already seen. The prover can prepare these tables of values [efficiently](/blueprint/ands/mathematizing#sum-expressions).
+
+## Efficient Lookup-Based Extrapolation
+
+We also saw already that the prover must evaluate $g(\widehat{I})$ on $2^k - 1$ points outside of $D$. Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an abstract, $6$-dimensional subspace. Now, we want to enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7. We require that
+
+$$
+\begin{equation*}D \subset D' \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}.\end{equation*}
+$$
+This condition is not hard to set up (we can construct both subspaces in $K$, and embed them).
+
+Finally, we prepare one more step. Below, we will need the mapping
+
+$$
+\begin{equation*}\text{Extrap} : \mathbb{F}_2^{64} \to \mathbb{F}_{2^8}^{64}\end{equation*}
+$$
+
+that extrapolates a bitstring from $D$ to $D' \setminus D$. On the other hand, we want to work in the Rijndael field $K$, so things get a bit more subtle.
+
+On input a 64-bit word $(\alpha_0, \ldots , \alpha_{63})$, $\text{Extrap}$ interprets that word as the values that some univariate polynomial $p(\widehat{I})$, of degree less than 64, takes on $D \subset \mathbb{F}_{2^{128}}$. (I.e., this $p(\widehat{I})$ happens to take $\mathbb{F}_2$-valued values on $D$.) This data specifies $p(\widehat{I})$ uniquely, as a polynomial in $\mathbb{F}_{2^{128}}[\widehat{I}]^{\prec 64}$. Finally, $\text{Extrap}$ maps:
+
+$$
+\begin{equation*}\text{Extrap} : (\alpha_0, \ldots , \alpha_{63}) \mapsto \Big( \iota^{-1}(p(\widehat{i})) \Big)_{\widehat{i} \in D' \setminus D}.\end{equation*}
+$$
+
+We note that since $D' \subset \mathbb{F}_{2^{8}}$ and $p(\widehat{I})$ is bit-valued, $p(\widehat{I})$ takes byte-values on $D'$, so the evaluations $p(\widehat{i})$ live in the image of $\iota$ and $\iota^{-1}(p(\widehat{i}))$ is well-defined.
+
+Since $\text{Extrap}$, we can implement it in the following efficient way, using precomputation. We break the input $(\alpha_0, \ldots , \alpha_{63})$ into 8, length-8 chunks. For each chunk, we precompute a length-256 table, containing
+
+## The Round Polynomial
+
+We proceed with the prover's algorithm. As before, we fix, global elements $\beta_0, \beta_1, \beta_2$ of the Rijndael field $K$ for which $\left( \widetilde{\texttt{eq}}(\beta, u) \right)_{u \in \mathcal{B}_3}$ are an $\mathbb{F}_2$-basis of $K$.
+
+The prover's inputs are the arrays $a$, $b$ and $c$ above,
 
 ## Round Polynomial Computation
 
