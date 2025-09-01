@@ -1,4 +1,4 @@
-# Implementation Considerations [Implementing the univariate skip efficiently on 64-bit architectures]
+# Prover Implementation [Our efficient prover implementation of the Rijndael univariate skip]
 
 We recall that the prover's goal is to evaluate the polynomial
 
@@ -16,7 +16,8 @@ The polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and
 
 ## Efficient Lookup-Based Extrapolation
 
-Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an abstract, $6$-dimensional subspace. Now, we want to enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that
+Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an abstract, $6$-dimensional subspace. Now, we want to enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that $D' \subset \mathbb{F}_{2^{128}}$ too, so we have a chain of inclusions
+
 $$
 \begin{equation*}D \subset D' \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}.\end{equation*}
 $$
@@ -28,7 +29,7 @@ $$
 \begin{equation*}\text{Extrap} : \mathbb{F}_2^{64} \to \mathbb{F}_{2^8}^{64}\end{equation*}
 $$
 
-that extrapolates a bitstring from $D$ to $D' \setminus D$. On the other hand, we want to work in the Rijndael field $K$, so things get a bit more subtle.
+that extrapolates a bitstring from $D$ to $D' \setminus D$. On the other hand, we want to work in the Rijndael field $K$, so we need to inverse-embed each element of the result.
 
 On input a 64-bit word $(p_0, \ldots , p_{63})$, $\text{Extrap}$ interprets that word as the values that some univariate polynomial $P(\widehat{I})$, of degree less than 64, takes on $D \subset \mathbb{F}_{2^{128}}$. (I.e., this $P(\widehat{I})$ happens to take $\mathbb{F}_2$-valued values on $D$.) This data specifies $P(\widehat{I})$ uniquely, as a polynomial in $\mathbb{F}_{2^{128}}[\widehat{I}]^{\prec 64}$. Finally, $\text{Extrap}$ maps:
 
@@ -36,11 +37,11 @@ $$
 \begin{equation*}\text{Extrap} : (p_0, \ldots , p_{63}) \mapsto \Big( \iota^{-1}(P(\widehat{i})) \Big)_{\widehat{i} \in D' \setminus D}.\end{equation*}
 $$
 
-We note that since $D' \subset \mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$ and $P(\widehat{I})$ is bit-valued on $D$, $P(\widehat{I})$'s values on $D'$ themselves live in $\mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$. I.e., the evaluations $P(\widehat{i})$ for $\widehat{i} \in D' \setminus D$ live in the image of $\iota$, and $\iota^{-1}(P(\widehat{i}))$ is well-defined. This means that each output $\text{Extrap}(p_0, \ldots , p_{63})$ is an element of $K^{64} \cong \mathbb{F}_{2^8}^{64}$.
+Since $D' \subset \mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$ and $P(\widehat{I})$ is bit-valued on $D$, $P(\widehat{I})$'s values on $D'$ themselves live in $\mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$. I.e., the evaluations $P(\widehat{i})$ for $\widehat{i} \in D' \setminus D$ live in the image of $\iota$, and $\iota^{-1}(P(\widehat{i}))$ is well-defined. This means that each output $\text{Extrap}(p_0, \ldots , p_{63})$ is an element of $K^{64} \cong \mathbb{F}_{2^8}^{64}$.
 
-Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8, length-8 chunks. For each chunk, we precompute a length-256 table, containing all 256 evaluations of $\text{Extrap}$ on input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
+Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8, length-8 chunks. For each chunk, we precompute a length-256 table, containing all 256 evaluations of $\text{Extrap}$ on the input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
 
-## The Round Polynomial
+## The Algorithm
 
 We have [already seen](/blueprint/ands/univariate/protocol#protocol-description) that the prover must evaluate $g(\widehat{I})$ on $2^k - 1$ points outside of $D$. Thus it's enough for the prover to evaluate $g(\widehat{I})$ on $D' \setminus D$.
 

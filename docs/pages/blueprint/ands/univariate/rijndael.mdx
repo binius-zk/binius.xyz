@@ -63,7 +63,7 @@ $$
 The first three components of $r_x$ are now "deterministic". The parties can now sumcheck
 
 $$
-\begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+\begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
 $$
 
 This variant is also sound. In fact, its soundness error is bounded from above by just $\frac{\ell - 3}{2^{128}}$. Indeed, if we write
@@ -77,8 +77,8 @@ $$
 &= \sum_{v \in \mathcal{B}_{\ell - 3}} \overline{t}(v) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).
 \end{align*}
 $$
-Since the $\mathbb{F}_{2^{128}}$-elements $\left( \widetilde{\texttt{eq}}(\gamma, v) \right)_{v \in \mathcal{B}_3}$ are linearly independent over $\mathbb{F}_2$, if $t(X_0, \ldots , X_{\ell - 1})$ is _not_ identically zero over $\mathcal{B}_\ell$, then $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is likewise _not_ identically zero over $\mathcal{B}_{\ell - 3}$. Here, we use crucially the fact that $t(X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_\ell$ is $\mathbb{F}_2$-valued.
+Since the $\mathbb{F}_{2^{128}}$-elements $\left( \widetilde{\texttt{eq}}(\gamma, v) \right)_{v \in \mathcal{B}_3}$ are linearly independent over $\mathbb{F}_2$ (see [above](/blueprint/ands/univariate/rijndael#embedding)), if $t(X_0, \ldots , X_{\ell - 1})$ is _not_ identically zero over $\mathcal{B}_\ell$, then $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is likewise _not_ identically zero over $\mathcal{B}_{\ell - 3}$. Here, we use the fact that $t(X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_\ell$ is $\mathbb{F}_2$-valued.
 
 On the other hand, the right-hand sum above is exactly the evaluation of the multilinear extension of $\overline{t}(X_0, \ldots , X_{\ell - 4})$ at $\overline{r_x}$. Since we just argued that $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is not identically zero over $\mathcal{B}_{\ell - 3}$, the usual soundness analysis of the zerocheck imples that, except with probability at most $\frac{\ell - 3}{2^{128}}$ over the verifier's choice of $\overline{r_x}$, the above sum is nonzero.
 
-We will say more [later](/blueprint/ands/univariate/implementation#round-polynomial-computation) about how the prover can actually exploit the structure of this $r_x$ during its univariate skip.
+We will say more [later](/blueprint/ands/univariate/implementation#the-algorithm) about how the prover can actually exploit the structure of this $r_x$ during its univariate skip.
