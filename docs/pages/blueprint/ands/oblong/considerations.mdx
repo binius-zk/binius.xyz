@@ -32,7 +32,7 @@ So here is what the prover does, on input $r_{\widehat{i}}$, $r_x$:
 - initialize an empty array of $64$ $128$-bit field elements, say $\mathsf{h}'$, indexed by the set $D' \setminus D$.
 - **for** each $x \in \{0, \ldots , n_\text{words} - 1\}$ **do**:
   - interpret the three 64-bit words $a[x]$, $b[x]$ and $c[x]$ as the respective vectors of values that three different $\mathbb{F}_2$-valued univariate polynomials, say $a_x(\widehat{I})$, $b_x(\widehat{I})$, and $c_x(\widehat{I})$, each of degree less than $2^k$, take on $D \subset \mathbb{F}_{2^{128}}$. using the Lin–Chung–Han additive NTT [[LCH14](https://arxiv.org/abs/1404.3458)] or some lookup-based variant of it (see e.g. [[Hu+25](https://eprint.iacr.org/2025/717)]), extrapolate $a_x(\widehat{I})$, $b_x(\widehat{I})$, and $c_x(\widehat{I})$ to $D'$. concretely, this gives us three length-64 arrays, each of whose elements is a $\mathbb{F}_{2^{128}}$-element.
-  - **for** each $\widehat{i} \in D'$ **do**:
+  - **for** each $\widehat{i} \in D' \setminus D$ **do**:
     - $\mathsf{h}'[\widehat{i}] \mathrel{+}= \left[ a_x(\widehat{i}) \cdot b_x(\widehat{i}) - c_x(\widehat{i}) \right] \cdot \widetilde{\texttt{eq}}(r_x, x)$.
  - interpret $\mathsf{h}'$ as the vector of values that a polynomial $h'(\widehat{I})$, of degree less than $2 \cdot 2^k$, which also vanishes identically on $D$, takes on $D' \setminus D$. using a further variant of the additive NTT [[LCH14](https://arxiv.org/abs/1404.3458)] (this time dealing with a domain of size $3 \cdot 2^k$), extrapolate $h'(\widehat{I})$ onto $D''$.
  - for each $\widehat{i} \in D'' \setminus D$, set $h(\widehat{i}) \coloneqq \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot h'(\widehat{i})$.

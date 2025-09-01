@@ -98,14 +98,14 @@ At this point, we rename $\gamma_0 \coloneqq \alpha_{12}$. Rearranging the claim
 
 $$
 \begin{align*}\gamma_{0} &\stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \sum_{m \in \{a, b, c\}}\lambda_m \cdot g_{m, \text{op}}(r_j, r_s) \Big] \\
-&= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \Big( \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{\text{and}, \text{op}}(r'_x, y, r_s) \Big) \cdot \widetilde{w}(r_j, y) \Big] \\
-&= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{\text{and}, \text{op}}(r'_x, y, r_s) \right] \cdot \widetilde{w}(r_j, y).
+&= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \Big( \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, r_s) \Big) \cdot \widetilde{w}(r_j, y) \Big] \\
+&= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, r_s) \right] \cdot \widetilde{w}(r_j, y).
 \end{align*}
 $$
 
-Above, we use a typographical device where we write $m$ and $M$ for "one of" the symbols $a$, $b$ and $c$, $A$, $B$ and $C$ and so on.
+Above, we use a typographical space-saving device where we write $m$ for _either_ $a$, $b$ or $c$, and also write $\widetilde{M}_{a, \text{and}, \text{op}} \coloneqq \widetilde{A}_{\text{and}, \text{op}}$, $\widetilde{M}_{b, \text{and}, \text{op}} \coloneqq \widetilde{B}_{\text{and}, \text{op}}$ and $\widetilde{M}_{c, \text{and}, \text{op}} \coloneqq \widetilde{C}_{\text{and}, \text{op}}$.
 
-In any case, we can now view the _above_ expression as a further sumcheck, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/ands/reduction/implementation), we go into how the prover can tabulate the necessary values efficiently.
+We can now view the _above_ expression as a further sumcheck, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/ands/reduction/implementation), we go into how the prover can tabulate the necessary values efficiently.
 
 For now, we instruct the parties to run an $\ell_\text{words}$-round sumcheck on the above. After doing that, they wind up with a further claim of the form:
 
