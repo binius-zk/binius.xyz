@@ -304,21 +304,25 @@ export default defineConfig({
             link: "/blueprint/ands/mathematizing"
           },
           {
-            text: "Oblong Multilinears",
-            link: "/blueprint/ands/oblong",
+            text: "The Univariate Skip",
+            link: "/blueprint/ands/univariate",
             collapsed: true,
             items: [
               {
                 text: "Oblong-Multilinearization",
-                link: "/blueprint/ands/oblong/multilinearization"
+                link: "/blueprint/ands/univariate/multilinearization"
               },
               {
-                text: "The Univariate Skip",
-                link: "/blueprint/ands/oblong/univariate"
+                text: "The Rijndael Field",
+                link: "/blueprint/ands/univariate/rijndael"
+              },
+              {
+                text: "The Protocol",
+                link: "/blueprint/ands/univariate/protocol"
               },
               {
                 text: "Implementation Considerations",
-                link: "/blueprint/ands/oblong/considerations"
+                link: "/blueprint/ands/univariate/considerations"
               },
             ]
           },

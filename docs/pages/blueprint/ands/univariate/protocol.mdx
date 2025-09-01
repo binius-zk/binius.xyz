@@ -1,0 +1,129 @@
+# The Protocol [Our 64-bit univariate skip variant]
+
+We now describe our univariate skip variant. We recall that we have [already established](/blueprint/ands/mathematizing) an identity
+
+$$
+\begin{equation*}\widetilde{a}(i, x) \cdot \widetilde{b}(i, x) - \widetilde{c}(i, x) \stackrel{?}= 0\end{equation*}
+$$
+
+which, _if_ it holds identically over the domain $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{and}}$, implies that the prover's AND constraints hold. The polynomials $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ involved in that identity are explicit, already written down in that page.
+
+## Oblong-Multilinearization
+
+To run the univariate skip, we first need to [oblong-multilinearize](/blueprint/ands/univariate/multilinearization) the polynomials $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ involved in that identity. Applying the oblong-multilinearization transformation blindly to those polynomials (i.e., just substituting them in), we obtain:
+
+$$
+\begin{align*}
+\widehat{a}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{A}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\widehat{b}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{B}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
+\widehat{c}(\widehat{I}, X) &= \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \sum_\text{op} \sum_{s \in \mathcal{B}_6} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{j \in \mathcal{B}_6} \widetilde{C}_{\text{and}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).
+\end{align*}
+$$
+
+By construction, these polynomials take the same values on $D \times \mathcal{B}_{\ell_\text{and}}$ that $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$ respectively do on $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{and}}$.
+
+These polynomials are complicated, and we will deal with them much more [later](/blueprint/ands/reduction). For now,, we temporarily forget how they're constructed internally and view them as black boxes.
+
+We must show that
+
+$$
+\begin{equation*}\widehat{a}(\widehat{i}, x) \cdot \widehat{b}(\widehat{i}, x) - \widehat{c}(\widehat{i}, x) \stackrel{?}= 0\end{equation*}
+$$
+holds for each $\widehat{i} \in D$ and each $x \in \mathcal{B}_{\ell_\text{and}}$. For notation's sake, we write
+$$
+\begin{equation*}f(\widehat{I}, X) \coloneqq \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X).\end{equation*}
+$$
+
+Our goal is now to show that $f(\widehat{I}, X)$ vanishes identically on $D \times \mathcal{B}_{\ell_\text{and}}$. Note that $f(\widehat{I}, X)$ is multivariate in $1 + \ell_\text{and}$ variables; it is _not_ oblong-multilinear.
+
+
+## Protocol Description
+
+We now describe the protocol explicitly. Later, we explain soundness and implementation considerations.
+
+- the verifier samples a _partial_ challenge $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, as usual in the [deterministic zerocheck variant](/blueprint/ands/univariate/deterministic#deterministic-challenges). the verifier sends $\overline{r_x}$ to the prover.
+- the parties both define
+  $$
+  \begin{equation*} r_x \coloneqq (\beta_0, \beta_1, \beta_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}),\end{equation*}
+  $$
+  where the elements $\beta_0, \beta_1, \beta_2$ of $\mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$ are such that $\left( \widetilde{\texttt{eq}}(\beta, u) \right)_{u \in \mathcal{B}_3}$ is $\mathbb{F}_2$-linearly independent (again as in the [deterministic zerocheck](/blueprint/ands/univariate/deterministic#deterministic-challenges)).
+- the univariate polynomial
+  $$
+  \begin{equation*}g(\widehat{I}) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+  $$
+  is univariate, of degree at most $2 \cdot (2^k - 1)$, and vanishes on $D$ if the prover is honest. The prover sends this polynomial, by sending its values on at least $2^k - 1$ points outside of $D$ (we will be more precise about this [later](/blueprint/ands/univariate/considerations)).
+- the verifier checks that $g(\widehat{I})$ vanishes identically on $D$.
+- the verifier samples a single challenges $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and sends it to the prover.
+- both parties write $s_0 \coloneqq g(r_{\widehat{i}})$, and run an $\ell_\text{and}$-round sumcheck on the claim
+  $$
+  \begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
+  $$
+- at the end, the verifier needs to evaluate
+  $$
+  \begin{equation*}s_{\ell_\text{and}} \stackrel{?}= f(r_{\widehat{i}}, r'_x) \cdot \widetilde{\texttt{eq}}(r_x, r'_x),\end{equation*}
+  $$
+  where $s_{\ell_\text{and}}$ and $r'_x$ are values that arise during the sumcheck. The verifier can evaluate $\widetilde{\texttt{eq}}(r_x, r'_x)$ himself; he outputs the final evaluation claim on $f(r_{\widehat{i}}, r'_x)$.
+
+## Completeness and Soundness
+
+If the prover is honest—i.e., if $f(\widehat{i}, x) = 0$ for each $\widehat{i} \in D$ and each $x \in \mathcal{B}_{\ell_\text{and}}$, and if the prover carries out the above protocol as prescribed—then he will pass. First off, $f(\widehat{I}, X)$'s vanishing on $D \times \mathcal{B}_\ell$ implies $g(\widehat{I})$'s vanishing on $D$. Moreover, if the prover computes $g(\widehat{I})$ as prescribed, then
+
+$$
+\begin{equation*}s_0 = g(r_{\widehat{i}}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+will hold, by definition of $g(\widehat{I})$; this is exactly the claim that the parties will sumcheck.
+
+If the prover is _dishonest_, then there exists an $\widehat{i}^* \in D$ for which the set $\left( f(\widehat{i}^*, x) \right)_{x \in \mathcal{B}_{\ell_\text{and}}}$ of bits is not identically zero.
+
+By the soundness analysis of the [partially-deterministic zerocheck](/blueprint/ands/univariate/deterministic#deterministic-challenges), the chance, over the verifier's choice of $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, that
+$$
+\begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}^*, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+holds is at most $\frac{\ell - 3}{2^{128}}$. Assuming that this _doesn't_ happen, we conclude that 
+
+$$
+\begin{equation*}\overline{g}(\widehat{i}^*) \neq 0;\end{equation*}
+$$
+here, we write
+$$
+\begin{equation*}\overline{g}(\widehat{i}^*) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+for the univariate polynomial that the prover _should_ send in the first round.
+
+In light of the verifier's check that $\left. g \right|_D$ is identically zero, the inequality $\overline{g}(\widehat{i}^*) \neq 0$ above implies that the prover can pass that check _only_ by sending a round polynomial $g(\widehat{I}) \neq \overline{g}(\widehat{I})$ (as polynomials).
+
+By standard univariate Schwartz–Zippel, the probability, over the verifier's $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$, that $g(r_{\widehat{i}}) = \overline{g}(r_{\widehat{i}})$ is at most $\frac{2 \cdot (2^k - 1)}{2^{128}}$. If that equality _doesn't_ happen, then the parties' sumcheck claim
+$$
+\begin{equation*}s_0 \coloneqq g(r_{\widehat{i}}) \neq \overline{g}(r_{\widehat{i}}) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+will be false, which proves soundness.
+
+## The End
+
+At the very end of the $\ell_\text{and}$-round sumcheck, the verifier will need to evaluate
+
+$$
+\begin{align*}
+s_{\ell_\text{and}} &\stackrel{?}= f(r_{\widehat{i}}, r'_x) \cdot \widetilde{\texttt{eq}}(r_x, r'_x) \\
+&= \left[ \widehat{a}(r_{\widehat{i}}, r'_x) \cdot \widehat{b}(r_{\widehat{i}},  r'_x) - \widehat{c}(r_{\widehat{i}},  r'_x) \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x);
+\end{align*}
+$$
+
+here, $s_{\ell_\text{and}}$ and $r'_x$ are further quantities that will arise during the sumcheck. In the second equality, we unroll the definition of $f(r_{\widehat{i}}, r'_x)$, using our definition of $f(\widehat{I}, X)$ above.
+
+The verifier can locally evaluate $\widetilde{\texttt{eq}}(r_x, r'_x)$. The prover can nondeterministically send the verifier scalars $\alpha_a$, $\alpha_b$ and $\alpha_c$ which it claims satisfy:
+
+$$
+\begin{align*}
+\alpha_a &\stackrel{?}= \widehat{a}(r_{\widehat{i}},  r'_x), \\
+\alpha_b &\stackrel{?}= \widehat{b}(r_{\widehat{i}},  r'_x), \\
+\alpha_c &\stackrel{?}= \widehat{c}(r_{\widehat{i}},  r'_x),
+\end{align*}
+$$
+
+Then verifier can explicitly check whether
+$$
+\begin{equation*}s_{\ell_\text{and}} \stackrel{?}= \left[ \alpha_a \cdot \alpha_b - \alpha_c \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x).
+\end{equation*}
+$$
+If this equality passes, then the verifier will have closed out the univariate skip, pending the correctness of the three evaluation claims just given. We deal with those in the [shift reduction](/blueprint/ands/reduction).

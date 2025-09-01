@@ -1,0 +1,79 @@
+# The Determinsitic Zerocheck [A zerocheck enhancement for small-field polynomials]
+
+Here, we record a variant of an idea due to Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)], as well as some mathematical preliminaries.
+
+## The Rijndael Field
+
+The Rijndael field [[FIPS197](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf), § 4] is a small, 8-bit field used in AES, Grøstl and various other places. It's defined as the quotient ring
+
+$$
+\begin{equation*}K \coloneqq \mathbb{F}_2[X] \mathbin{/} \left( X^8 + X^4 + X^3 + X + 1 \right);\end{equation*}
+$$
+
+$K$ is isomorphic to $\mathbb{F}_{2^8}$. During the univariate skip, our goal will be to perform "as much work as possible" over $K$.
+
+For the purposes of this page, by $\mathbb{F}_{2^{128}}$ we will mean an extension field $L \mathbin{/} K$ of degree 16 over $K$. The resulting field $L$ is necessarily isomorphic to $\mathbb{F}_{2^{128}}$. We assume that we have an efficiently computable isomorphism from $L$ to the GHASH field. Concretely, that isomorphism looks like a precomputed, $128 \times 128$ $\mathbb{F}_2$-matrix.
+
+## Tensor Basis
+
+We now pick three elements $\beta_0, \beta_1, \beta_2$ of $K$ such that the elements of the tensor
+
+$$
+\begin{equation*}\left( \widetilde{\texttt{eq}}(\beta, u) \right)_{u \in \mathcal{B}_3}\end{equation*}
+$$
+
+are linearly independent over $\mathbb{F}_2$.
+
+The $K$-elements $\beta_0 \coloneqq X$, $\beta_1 \coloneqq X^2$, and $\beta_2 \coloneqq X^4$ satisfy this property. Indeed, taking all subproducts of $(X, X^2, X^4)$, we get the list $(1, X, X^2, \ldots , X^7)$, which is clearly linearly independent over $\mathbb{F}_2$. The actual tensor $\left( \widetilde{\texttt{eq}}(\beta, v) \right)_{v \in \mathcal{B}_3}$ contains
+
+$$
+\begin{equation*}\left( (1 - \beta_0) \cdot (1 - \beta_1) \cdot (1 - \beta_2), \beta_0 \cdot (1 - \beta_1) \cdot (1 - \beta_2), \ldots , \beta_0 \cdot \beta_1 \cdot \beta_2 \right),\end{equation*}
+$$
+
+as opposed to
+
+$$
+\begin{equation*}\left( 1, \beta_0, \beta_0 \cdot \beta_1 \cdot \beta_2 \right),\end{equation*}
+$$
+
+but these lists differ from each other by an invertible $\mathbb{F}_2$-linear transformation from $\mathbb{F}_{2^8} \to \mathbb{F}_{2^8}$, so the distinction doesn't affect linear independence.
+
+## Deterministic Challenges
+
+We now set up a zerocheck scenario. We fix an $\ell$-variate $\mathbb{F}_2$-polynomial $t(X_0, \ldots , X_{\ell - 1})$, which is claimed to vanish identically on $\mathcal{B}_\ell$.
+
+In the usual zerocheck, the verifier samples an $\ell$-dimensional fully random challenge $r_x \gets \mathbb{F}_{2^{128}}^\ell$; the parties then run a sumcheck on the claim
+
+$$
+\begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
+$$
+
+By a standard analysis, the soundness analysis of this maneuver is bounded from above by $\frac{\ell}{2^{128}}$.
+
+We now explain a variant approach, adapting Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)]. The verifier can instead sample an $\ell - 3$-dimensional random challenge $\overline{r_x}$, and let
+$$
+\begin{equation*} r_x \coloneqq (\beta_0, \beta_1, \beta_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}).\end{equation*}
+$$
+The first three components of $r_x$ are now "deterministic". The parties can now sumcheck
+
+$$
+\begin{equation*}0 \stackrel{?}= \sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
+$$
+in the usual way.
+
+This variant is also sound—in fact, its soundness error is bounded from above by just $\frac{\ell - 3}{2^{128}}$. Indeed, if we write
+$$
+\begin{equation*}\overline{t}(X_0, \ldots , X_{\ell - 4}) \coloneqq \sum_{u \in \mathcal{B}_3} t(u_0, u_1, u_2, X_0, \ldots , X_{\ell - 4}) \cdot \widetilde{\texttt{eq}}(\beta, u)\end{equation*}
+$$
+for the "bit-packing" of $t(X_0, \ldots , X_{\ell - 1})$ over $\left( \widetilde{\texttt{eq}}(\beta, v) \right)_{v \in \mathcal{B}_3}$, then
+$$
+\begin{align*}
+\sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x) &= \sum_{v \in \mathcal{B}_{\ell - 3}} \left[ \sum_{u \in \mathcal{B}_3} t(u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\beta, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \\
+&= \sum_{v \in \mathcal{B}_{\ell - 3}} \overline{t}(v) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).
+\end{align*}
+$$
+Since $\left( \widetilde{\texttt{eq}}(\beta, v) \right)_{v \in \mathcal{B}_3}$ is a basis over $\mathbb{F}_2$, if $t(X_0, \ldots , X_{\ell - 1})$ is _not_ identically zero over $\mathcal{B}_\ell$, then $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is likewise _not_ identically zero over $\mathcal{B}_{\ell - 3}$. Here, we use crucially the fact that $t(X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_\ell$ is $\mathbb{F}_2$-valued.
+
+On the other hand, the right-hand sum above is exactly the evaluation of the multilinear extension of $\overline{t}(X_0, \ldots , X_{\ell - 4})$ at $\overline{r_x}$. Since we just argued that $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is not identically zero over $\mathcal{B}_{\ell - 3}$, the usual soundness analysis of the zerocheck imples that, except with probability at most $\frac{\ell - 3}{2^{128}}$ over the verifier's choice of $\overline{r_x}$, the above sum is nonzero.
+
+The benefit of doing this is that the tensor-expansion $\left( \widetilde{\texttt{eq}}(r_x, x) \right)_{x \in \mathcal{B}_\ell}$ is more efficient for the prover to compute when $r_x$ takes the _special_ form given above (i.e., with the first three of its components deterministic). This fact is discussed in much more detail in Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038), § 8].

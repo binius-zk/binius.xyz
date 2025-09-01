@@ -1,6 +1,6 @@
 # Implementation Considerations [Implementing the univariate skip efficiently on 64-bit architectures]
 
-In [the previous page](/blueprint/ands/oblong/univariate), we explained the three oblong-multilinears $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ on which the prover needs to run his univariate skip. Before it can proceed, it must populate the tables of values of these polynomials. Each polynomial is represented by its values on $D \times \mathcal{B}_{\ell_\text{and}}$, which are moreover all bits (elements of $\mathbb{F}_2$). Thus, there will be $64 \times n_\text{and}$ such values. In practice, these will thus be stored as three length-$n_\text{and}$ arrays of 64-bit words.
+In [the previous page](/blueprint/ands/univariate/protocol), we explained the three oblong-multilinears $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ on which the prover needs to run his univariate skip. Before it can proceed, it must populate the tables of values of these polynomials. Each polynomial is represented by its values on $D \times \mathcal{B}_{\ell_\text{and}}$, which are moreover all bits (elements of $\mathbb{F}_2$). Thus, there will be $64 \times n_\text{and}$ such values. In practice, these will thus be stored as three length-$n_\text{and}$ arrays of 64-bit words.
 
 Thankfully, these arrays are not hard to come by. Indeed, we already saw them once: they are the arrays $a$, $b$ and $c$ [we defined](/blueprint/ands/mathematizing#sum-expressions) when we first mathematized the problem of the prover's constraint satisfaction.
 
@@ -51,11 +51,11 @@ s_0 &\stackrel{?}= \delta_D(r_{\widehat{i}}, r'_{\widehat{i}}) \cdot \sum_{x \in
 \end{align*}
 $$
 
-To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized, $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on the cube $\mathcal{B}_{\ell_\text{and}}$. We [recall](/blueprint/ands/oblong/univariate) that the polynomials $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$—i.e., pre-specialization—are _themselves_ [oblong-multilinearizations](/blueprint/ands/oblong/multilinearization) of [explicit](/blueprint/ands/mathematizing#using-shift-indicators) $6 + \ell_\text{and}$-variate multilinears $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$.
+To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized, $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on the cube $\mathcal{B}_{\ell_\text{and}}$. We [recall](/blueprint/ands/univariate/protocol) that the polynomials $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$—i.e., pre-specialization—are _themselves_ [oblong-multilinearizations](/blueprint/ands/univariate/multilinearization) of [explicit](/blueprint/ands/mathematizing#using-shift-indicators) $6 + \ell_\text{and}$-variate multilinears $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$.
 
 This brings us to our next question: how do the tables of values of the $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to the tables of values of $\widetilde{a}(I, X)$, $\widetilde{b}(I, X)$ and $\widetilde{c}(I, X)$, which we already know? These latter are just the [simple arrays](/blueprint/ands/mathematizing#sum-expressions) $a$, $b$ and $c$.
 
-We have already [answered this question](/blueprint/ands/oblong/multilinearization#partial-specialization) in the general context of oblong-multilinearization. In our context, we can say a bit more. Now, we have $k = 6$. Moreover, moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
+We have already [answered this question](/blueprint/ands/univariate/multilinearization#partial-specialization) in the general context of oblong-multilinearization. In our context, we can say a bit more. Now, we have $k = 6$. Moreover, moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
 
 $$
 \begin{gather*}
@@ -65,4 +65,4 @@ $$
 \end{gather*}
 $$
 
-are stored conveniently as the three 64-bit registers $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/ands/oblong/multilinearization#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{words} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients are $a[x]$, $b[x]$ and $c[x]$.
+are stored conveniently as the three 64-bit registers $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/ands/univariate/multilinearization#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{words} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients are $a[x]$, $b[x]$ and $c[x]$.

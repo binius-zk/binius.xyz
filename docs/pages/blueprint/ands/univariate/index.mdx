@@ -1,0 +1,11 @@
+# The Univariate Skip [Zerocheck variant optimized for 64-bit words]
+
+In the [previous page](/blueprint/ands/mathematizing#multilinearizing), we wrote down a vanishing identity involving $6 + \ell_\text{and}$-variate $\mathbb{F}_2$-polynomials, whose satisfaction captures the prover's satisfaction of the constraint system's AND constraints. In this site section, we reduce that vanishing identity to an _evaluation_ claim on those polynomials.
+
+The standard way to do this is the zerocheck (see e.g. [[CBBZ23](https://eprint.iacr.org/2022/1355.pdf), § 3.2]). On the other hand, our situation is special, since all polynomials involved in that identity have $\mathbb{F}_2$-coefficients. Thus we throw a few more subtle tools at this problem, mainly drawing from Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1] and Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)]. We adapt those works, and specialize them to our 64-bit situation.
+
+We break our treatment into a few steps, outlined below.
+- [**Oblong-Multilinearization.**](multilinearization) Here, we describe the _generic_ mathematical transformation that turns a standard, "cubular" multilinear into an oblong one, i.e. which takes prescribed values on a _rectangular_ domain.
+- [**The Deterministic Zerocheck.**](deterministic) Here, we isolate and explain an idea of Dao and Thaler [[DT24](https://eprint.iacr.org/2024/1038)], which we use a variant of in our protocol. We also explain the _Rijndael field_ $\mathbb{F}_{2^8}$.
+- [**The Protocol.**](protocol) Here, we record our univariate skip variant in detail.
+- [**Implementation Considerations.**](considerations) Here, we go into a few further technical details about our optimized implementation.
