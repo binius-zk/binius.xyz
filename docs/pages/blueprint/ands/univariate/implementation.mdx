@@ -39,7 +39,7 @@ $$
 
 Since $D' \subset \mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$ and $P(\widehat{I})$ is bit-valued on $D$, $P(\widehat{I})$'s values on $D'$ themselves live in $\mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$. I.e., the evaluations $P(\widehat{i})$ for $\widehat{i} \in D' \setminus D$ live in the image of $\iota$, and $\iota^{-1}(P(\widehat{i}))$ is well-defined. This means that each output $\text{Extrap}(p_0, \ldots , p_{63})$ is an element of $K^{64} \cong \mathbb{F}_{2^8}^{64}$.
 
-Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8, length-8 chunks. For each chunk, we precompute a length-256 table, containing all 256 evaluations of $\text{Extrap}$ on the input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
+Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8 length-8 chunks. For each chunk, we precompute a length-256 table containing all 256 evaluations of $\text{Extrap}$ on input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
 
 ## The Algorithm
 
@@ -54,8 +54,8 @@ We proceed with the prover's algorithm. The prover's inputs are the arrays $a$, 
   - **for** each $u \in \mathcal{B}_3$ **do**:
     - let $x \coloneqq u \mathbin{\Vert} v$.
     - define $\mathsf{a} \coloneqq \text{Extrap}(a[x])$, $\mathsf{b} \coloneqq \text{Extrap}(b[x])$ and $\mathsf{c} \coloneqq \text{Extrap}(c[x])$.
-    - **for** each $j \in \{0, \ldots , 63\}$, update $\mathsf{temp}[j] \mathrel{+}= \left( \mathsf{a}[j] \cdot \mathsf{b}[j] - \mathsf{c}[j] \right) \cdot \widetilde{\texttt{eq}}(\beta, u)$.
-  - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{g} \mathrel{+}= \iota(\mathsf{temp}[j]) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v)$.
+    - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{temp}[i] \mathrel{+}= \left( \mathsf{a}[i] \cdot \mathsf{b}[i] - \mathsf{c}[i] \right) \cdot \widetilde{\texttt{eq}}(\beta, u)$.
+  - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{g} \mathrel{+}= \iota(\mathsf{temp}[i]) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v)$.
 - return $\mathsf{g}$.
 
 We claim that the array $\mathsf{g}$ returned by this algorithm contains exactly the values of $g(\widehat{i})$ for $\widehat{i} \in D' \setminus D$, which is what we want.
