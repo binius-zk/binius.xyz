@@ -45,6 +45,8 @@ $$
 
 Since $D' \subset \mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$ and $P(\widehat{I})$ is bit-valued on $D$, $P(\widehat{I})$'s values on $D'$ themselves live in $\mathbb{F}_{2^{8}} \subset \mathbb{F}_{2^{128}}$. I.e., the evaluations $P(\widehat{i})$ for $\widehat{i} \in D' \setminus D$ live in the image of $\iota$, and $\iota^{-1}(P(\widehat{i}))$ is well-defined. This means that each output $\text{Extrap}(p_0, \ldots , p_{63})$ is an element of $K^{64} \cong \mathbb{F}_{2^8}^{64}$.
 
+By the way, it would have been equivalent if we had defined $\text{Extrap}$ as the function that extrapolates a bit-vector $(p_0, \ldots , p_{63})$ from $\iota^{-1}(D)$ to $\iota^{-1}(D')$ in $K$. Showing the equivalence of that definition with ours is a short exercise. The way we did it turns out to be easier to work with below.
+
 Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the following efficient way, using precomputation. We break the input $(p_0, \ldots , p_{63})$ into 8 length-8 chunks. For each chunk, we precompute a length-256 table containing all 256 evaluations of $\text{Extrap}$ on input strings that are nonzero just on that chunk. The total data size is thus $8 \cdot 256 \cdot 64 \cdot 8$ bits, or $128$ KiB. To evaluate $\text{Extrap}$ on some input $(p_0, \ldots , p_{63})$, we must do 8 lookups and 7 length-64 bytewise XORs.
 
 ## The Algorithm
@@ -66,6 +68,8 @@ We proceed with the prover's algorithm. The prover's inputs are the arrays $a$, 
 
 We claim that the array $\mathsf{g}$ returned by this algorithm contains exactly the values of $g(\widehat{i})$ for $\widehat{i} \in D' \setminus D$, which is what we want.
 
+The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ [embeddings](/blueprint/backend/ands/rijndael#embedding) and 64 multiplications in the GHASH field. "Between" iterations, we work entirely in $K$. The breakup of our sum into outer and inner loops above can be viewed as a variant of an idea of Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] (i.e., separate from the use of [determinstic challenges](/blueprint/backend/ands/rijndael#deterministic-zerocheck)).
+
 ## Correctness
 
 The correctness of the above algorithm is not completely obvious. It relies on the following nested sum expression (recall also the analysis done [here](/blueprint/backend/ands/rijndael#deterministic-zerocheck)). For each $\widehat{i} \in D' \setminus D$,
@@ -85,10 +89,6 @@ $$
 \begin{equation*}\left( \Big( \sum_{u \in \mathcal{B}_3} \left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\gamma, u) \Big) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{\widehat{i} \in D' \setminus D},\end{equation*}
 $$
 which is exactly the $v$<sup>th</sup> summand of the sum expression above.
-
-## Efficiency
-
-The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ embeddings and 64 multiplications in the GHASH field. "Between" iterations, we work entirely in $K$.
 
 ## The Univariate Specialization
 

@@ -30,7 +30,7 @@ $$
 
 simply by multilinear-extending $\textsf{shift}_{\text{op}}(w)(y, s)$. Note that we again need to pick up 6 new variables—which we now call $I_0, \ldots , I_5$—that control the bit index within the word. Our defining property is that for each $i \in \mathcal{B}_6$, $y \in \mathcal{B}_{\ell_\text{words}}$ and $s \in \mathcal{B}_6$ in the cube, $\widetilde{\textsf{shift}}_{\text{op}}(w)(i, y, s) = \textsf{shift}_{\text{op}}(w)(y, s)_i = \text{op}(w[y], s)_i$ (we again take the "$i$<sup>th</sup> bit").
 
-Here is the problem: how do we efficiently relate an evaluation claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S)$ to an evaluation claim on $\widetilde{w}(J, Y)$? The most naïve possible approach would read $w$'s entire table of values, shift them all, and compute a multilinear evaluation on $6 + \ell_\text{words} + 6$ variables. This is obviously unacceptable.
+How do we efficiently relate an evaluation claim on $\widetilde{\textsf{shift}}_{\text{op}}(w)(I, Y, S)$ to an evaluation claim on $\widetilde{w}(J, Y)$? The most naïve possible approach would read $w$'s entire table of values, shift them all, and compute a multilinear evaluation on $6 + \ell_\text{words} + 6$ variables. This is obviously unacceptable.
 
 ## The Shift Indicators
 
