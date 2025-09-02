@@ -66,11 +66,9 @@ The computation of $\left( \delta_D(r_{\widehat{i}}, \widehat{i}) \right)_{i \in
 
 ## Evaluation
 
-[Soon](/blueprint/ands/univariate/protocol), we will run a sumcheck-like reduction on oblong-multilinears. At the end of that sumcheck, the verifier will need to evaluate these multilinears.
+We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{i}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$. We discuss how to compute the evaluation $\widehat{t}(r_{\widehat{i}}, r_x)$.
 
-We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{i}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$.
-
-Unwinding what $\widehat{t}(r_{\widehat{i}}, r_x)$ means, we get:
+Unwinding what that evaluation means, we get:
 
 $$
 \begin{equation*}\widehat{t}(r_{\widehat{i}}, r_x) = \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot t(i, r_x).\end{equation*}

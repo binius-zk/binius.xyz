@@ -1,0 +1,9 @@
+# The Shift Reduction [The technical core of Binius64]
+
+The shift reduction is a key internal routine in Binius64. It is a common reduction target of both the [AND](/blueprint/backend/ands) and [MUL](/blueprint/backend/muls) reductions.
+
+The shift reduction takes, as input, evaluation claims on oblong-multilinearizations of polynomials related to the prover's data. To assess claims of that specific form, we engage in a complex, multi-phase sumcheck. Making that sumcheck efficient for our prover will take work, as we explain below.
+
+We carry out this program in the following sub-pages.
+- [**The Sumchecks.**](sumchecks) Here, we show that the sumcheck the parties need to run can be naturally broken up into two phases. The idea is very vaguely Spartan-like [[Set20](https://eprint.iacr.org/2019/550)], but more complicated.
+- [**Prover Implementation.**](implementation) Here, we precisely explain our _prover implementation_ of the above protocol. It's far from obvious how that protocol's prover should be implemented efficiently—and in particular, in a way that appropriately leverages the constraint system's sparsity.

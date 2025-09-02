@@ -31,17 +31,9 @@ The constraint system we get out is predictable and simple, but much more useful
 
 <Callout type="note">
 <Collapsible>
-[**AND Constraints.**](ands) To check whether the prover's data satisfies the constraint system's AND constraints, we need to do a few steps.
+[**The Backend.**](backend) Here, we explain our entire cryptographic backend. We record separate protocols for checking the prover's [AND](constraints/ands) and [MUL](constraints/muls) constraints. These two are very different; the first uses a variant of Gruen's univariate skip, while the second uses GKR. Internally, both protocols reduce to a common internal reduction target, called the _[shift reduction](backend/reduction)_.
 
-We first arithmetize the problem of AND-constraint satisfaction, by representing that problem as one about [multilinear polynomials](math/multilinears). We actually use [oblong](ands/univariate) multilinears, an idea that comes from Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1]'s _univariate skip_. That technique ends up working especially nicely for us, since we natively use the _64-bit word_ dataype. After running the univariate skip, we wind up with a complicated, Spartan-like sumcheck, called the [shift reduction](ands/reduction), which we also treat in detail.
-</Collapsible>
-</Callout>
-
-<Callout type="note">
-<Collapsible>
-[**MUL Constraints.**](multiplication) To check whether the prover's data satisfies the constraint system's MUL constraints, we use a totally different technique, this time based on GKR.
-
-Because exponentiating a fixed base by the product of two values is equivalent to exponentiating that base by the two values separately in succession, we can express multiplication in terms of exponentiation. This lets us work "in the exponent", and make use of a GKR-based trick.
+Along the way, we need to develop a key technical idea, called _[shift indicators](backend/shifts)_. These let us capture bitshifts in an algebraically meaningful way.
 </Collapsible>
 </Callout>
 
