@@ -286,6 +286,10 @@ export default defineConfig({
             text: "The Sumcheck",
             link: "/blueprint/math/sumcheck",
           },
+          {
+            text: "Oblong-Multilinearization",
+            link: "/blueprint/math/oblong"
+          },
         ],
       },
       {
@@ -309,79 +313,78 @@ export default defineConfig({
             text: "MUL Constraints",
             link: "/blueprint/constraints/muls",
           },
-          {
-            text: "Completeness",
-            link: "/blueprint/constraints/completeness",
-          },
         ],
       },
       {
-        text: "AND Constraints",
-        link: "/blueprint/ands",
+        text: 'The Backend',
+        link: '/blueprint/backend/',
         collapsed: false,
         items: [
           {
             text: "The Shift Indicators",
-            link: "/blueprint/ands/indicators",
+            link: "/blueprint/backend/shifts",
             collapsed: true,
             items: [
               {
                 text: "Shifted Witness Polynomials",
-                link: "/blueprint/ands/indicators/polynomials",
+                link: "/blueprint/backend/shifts/polynomials"
               },
               {
                 text: "Logical Shifts",
-                link: "/blueprint/ands/indicators/logical",
+                link: "/blueprint/backend/shifts/logical"
               },
               {
                 text: "Arithmetic Shifts",
-                link: "/blueprint/ands/indicators/arithmetic",
+                link: "/blueprint/backend/shifts/arithmetic"
               },
             ],
           },
           {
-            text: "Mathematizing the Problem",
-            link: "/blueprint/ands/mathematizing",
+            text: "Mathematizing Constraint Arrays",
+            link: "/blueprint/backend/mathematizing"
           },
           {
-            text: "Oblong Multilinears",
-            link: "/blueprint/ands/oblong",
-            collapsed: true,
+            text: "The AND Reduction",
+            link: "/blueprint/backend/ands",
+            collapsed: false,
             items: [
               {
-                text: "Oblong-Multilinearization",
-                link: "/blueprint/ands/oblong/multilinearization",
+                text: "The Rijndael Field",
+                link: "/blueprint/backend/ands/rijndael"
               },
               {
                 text: "The Univariate Skip",
-                link: "/blueprint/ands/oblong/univariate",
+                link: "/blueprint/backend/ands/univariate"
               },
               {
-                text: "Implementation Considerations",
-                link: "/blueprint/ands/oblong/considerations",
+                text: "The Rijndael Zerocheck",
+                link: "/blueprint/backend/ands/implementation"
               },
             ],
           },
           {
+            text: 'The MUL Reduction',
+            link: '/blueprint/backend/muls',
+            collapsed: false,
+            items: [
+            ]
+          },
+          {
             text: "The Shift Reduction",
-            link: "/blueprint/ands/reduction",
-            collapsed: true,
+            link: "/blueprint/backend/reduction",
+            collapsed: false,
             items: [
               {
                 text: "The Sumchecks",
-                link: "/blueprint/ands/reduction/sumchecks",
+                link: "/blueprint/backend/reduction/sumchecks"
               },
               {
                 text: "Prover Implementation",
-                link: "/blueprint/ands/reduction/implementation",
-              },
-            ],
+                link: "/blueprint/backend/reduction/implementation"
+              }
+            ]
           },
-        ],
-      },
-      {
-        text: "MUL Constraints",
-        link: "/blueprint/multiplication/",
+            ]
       },
       {
         text: "Polynomial Commitment",

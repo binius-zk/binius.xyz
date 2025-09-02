@@ -17,13 +17,13 @@ In the example below, the pair $(T, U)$ satisfy the lookup relation.
 We note that each of $U$'s entries reside in $T$—somewhere, that is. If we were to change one of $U$'s entries to a 4, let's say, then the lookup condition would no longer be satisfied.
 :::
 
-As it turns out, lookups allow us to "bootstrap" many flexible sorts of operations. For example, they let us achieve efficient _unsigned integer multplication_ even in Binius's tower setting; this fact is explained at length in [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 5.3].
+As it turns out, lookups allow us to "bootstrap" many flexible sorts of operations. For example, they let us achieve efficient _unsigned integer multplication_ even in Binius's tower setting; this fact is explained at length in [[DP23](https://eprint.iacr.org/2024/1038.pdf), § 5.3].
 
 Here, we explain how to express Lasso naturally as an M3 instance.
 
 ## Background
 
-Binius achieves lookups in the binary tower setting using _Lasso_, a technique developed by Setty, Thaler and Wahby [[STW23](https://eprint.iacr.org/2023/1216)]. Under the hood, the essential idea here is _offline memory checking_, a technique which originates with Blum et al. [[Blu+91](https://ieeexplore.ieee.org/document/185352)]. In [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 4.4], we describe how to adapt Lasso's offline-memory-checking argument to the binary setting. Our treatment here follows that latter work.
+Binius achieves lookups in the binary tower setting using _Lasso_, a technique developed by Setty, Thaler and Wahby [[STW23](https://eprint.iacr.org/2023/1216)]. Under the hood, the essential idea here is _offline memory checking_, a technique which originates with Blum et al. [[Blu+91](https://ieeexplore.ieee.org/document/185352)]. In [[DP23](https://eprint.iacr.org/2024/1038.pdf), § 4.4], we describe how to adapt Lasso's offline-memory-checking argument to the binary setting. Our treatment here follows that latter work.
 
 We note that that work's Lasso rendition doesn't _explicitly_ mention M3, tables, channels, or anything like that, but _was_ nonetheless essentially those things. I.e., it's not much work to recast that treatment as an M3 instance.
 
@@ -31,7 +31,7 @@ We note that that work's Lasso rendition doesn't _explicitly_ mention M3, tables
 
 We begin by describing the instance specification. For background, we fix a ground field $\mathcal{T}_\iota$ and a length parameter $\ell$. We are going to treat tables $T$ and looked-up columns $U$ both with values in $\mathcal{T}_\iota$, and _both_ of length $2^\ell$. (The requirement whereby these columns' lengths are equal can be relaxed.)
 
-For technical reasons, we are moreover going to choose a further tower field $\mathcal{T}_\zeta$; we are going to choose the tower height $\zeta \coloneqq \lceil \text{log}(\ell + 1) \rceil$ (this is explained in [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 4.4]). Finally, we fix an element $\alpha \in \mathcal{T}_\zeta$ which generates the multiplicative group of units $\mathcal{T}_\zeta^*$.
+For technical reasons, we are moreover going to choose a further tower field $\mathcal{T}_\zeta$; we are going to choose the tower height $\zeta \coloneqq \lceil \text{log}(\ell + 1) \rceil$ (this is explained in [[DP23](https://eprint.iacr.org/2024/1038.pdf), § 4.4]). Finally, we fix an element $\alpha \in \mathcal{T}_\zeta$ which generates the multiplicative group of units $\mathcal{T}_\zeta^*$.
 
 ### Channels
 
@@ -64,7 +64,7 @@ The claim is that _if_ $(T, U)$ satisfies the lookup table relation (that is, if
 
 Conversely, if $(T, U)$ does _not_ satisfy the relation (i.e., some element of $U$ appears nowhere in $T$), then this will be unsatisfiable, in that _no possible_ population of the table $(R, F)$ will cause the channel to balance.
 
-Proving this rigorously turns out to be fairly tricky; this gets done in [[DP23](https://eprint.iacr.org/2023/1784.pdf), Thm. 4.28]. Below, we are going to give some intuition for why this is true.
+Proving this rigorously turns out to be fairly tricky; this gets done in [[DP23](https://eprint.iacr.org/2024/1038.pdf), Thm. 4.28]. Below, we are going to give some intuition for why this is true.
 
 ## Worked Example
 

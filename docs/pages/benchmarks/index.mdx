@@ -1,14 +1,13 @@
-import BenchmarkTable from "../../components/BenchmarkTable";
-
 # Benchmarks [How Binius measures up in key real-world tasks]
 
 We report benchmark results times below in the following form:
-- `aws_instance` (e.g. `c7i.16xlarge`, `c8g.16xlarge`, `G6.2xlarge`)
-- `arch` (e.g. `GPU/x86/ARM`) Note: For `x86/ARM` we report `ST/MT` to indicate single vs multi-threaded operation
-- `Witness generation time [ms]`
-- `Proof generation time [ms]`
-- `Proof verification time [ms]`
-- `Proof size [KiB]`
+* `aws_instance` (e.g. `C7i.16xlarge`, `C8g.16xlarge`, `G6.2xlarge`)
+* `arch` (e.g. `GPU/x86/aarch64`)
+  * Note: For `x86/aarch64` we report `ST/MT` to indicate single- vs multi-threaded operation
+* `Witness generation time [ms]`
+* `Proof generation time [ms]`
+* `Proof verification time [ms]`
+* `Proof size [KiB]`
 
 In order to reproduce our benchmarks in AWS, you can check out this [user guide](/benchmarks/aws_guide.mdx)
 
@@ -16,32 +15,28 @@ For continuous monitoring of our benchmark performance, you can visit our [dashb
 
 ## Ethereum ECDSA Signature Aggregation (ethsign)
 
-We compare our `ethsign` (one signature, 67-byte message) performance against Succinct's SP1 and RiscZero's R0VM zkVMs running with the GPU acceleration:
+We compare our `ethsign` (one signature, 67-byte message) performance against Succinct's `SP1` and RiscZero's `R0VM` zkVMs running with the GPU acceleration:
 
-| Prover | AWS Instance | Architecture | Witness generation [ms] | Proof generation [ms] | Proof verification [ms] | Proof size [KiB] |
-|--------|--------------|--------------|-------------------------|----------------------|-------------------------|------------------|
-| SP1 (1 sig) | G6.2xlarge | GPU | 79.60 | 1997.70 | 1092.00 | 48.00 |
-| Risc0 (1 sig) | G6.2xlarge | GPU | 15.69 | 1802.14 | 11.24 | 217.45 |
-| Binius64 (1 sig) | C7i.16xlarge | x86-mt | 10.00 | 387.89 | 64.02 | 261.19 |
-| Binius64 (1 sig) | C7i.16xlarge | x86-st | 8.90 | 302.20 | 46.92 | 261.19 |
-| Binius64 (1 sig) | C8g.16xlarge | aarch64-mt | 12.77 | 323.85 | 41.75 | 261.19 |
-| Binius64 (1 sig) | C8g.16xlarge | aarch64-st | 11.55 | 421.15 | 35.13 | 261.19 |
-| Binius64 (10 sig) | C7i.16xlarge | x86-mt | 104.31 | 1181.50 | 635.45 | 409.20 |
-| Binius64 (10 sig) | C7i.16xlarge | x86-st | 93.94 | 3308.20 | 557.35 | 409.20 |
-| Binius64 (10 sig) | C8g.16xlarge | aarch64-mt | 128.12 | 959.53 | 401.01 | 409.20 |
-| Binius64 (10 sig) | C8g.16xlarge | aarch64-st | 115.99 | 4344.30 | 417.50 | 409.20 |
+| Prover   | AWS Instance | Architecture | Witness generation [ms] | Proof generation [ms] | Proof verification [ms] | Proof size [KiB] |
+|:--------:|:------------:|:------------:|------------------------:|----------------------:|------------------------:|-----------------:|
+| Binius64 | C7i.16xlarge | x86-mt       | 10.00                   | 387.89                | 64.02                   | 261.19           |
+| Binius64 | C7i.16xlarge | x86-st       | 8.90                    | 302.20                | 46.92                   | 261.19           |
+| Binius64 | C8g.16xlarge | aarch64-mt   | 12.77                   | 323.85                | 41.75                   | 261.19           |
+| Binius64 | C8g.16xlarge | aarch64-st   | 11.55                   | 421.15                | 35.13                   | 261.19           |
+| SP1      | G6.2xlarge   | GPU          | 79.60                   | 1,997.70              | 1,092.00                | 48.00            |
+| R0VM     | G6.2xlarge   | GPU          | 15.69                   | 1,802.14              | 11.24                   | 217.45           |
 
 ### Git Information
 
-**SP1** (commit: 0462e3fec)
-- Repository: https://github.com/succinctlabs/sp1.git
-- Branch: dev
-- Commit: 0462e3fecdd39c687f0c8ded6fcfee4a1d9c9d83
+**SP1**
+* Repository: https://github.com/succinctlabs/sp1.git
+* Branch: `dev`
+* Commit: `0462e3fecdd39c687f0c8ded6fcfee4a1d9c9d83`
 
-**Risc0** (commit: c1ea88f36)
-- Repository: https://github.com/risc0/risc0.git
-- Branch: main
-- Commit: c1ea88f36839b889a15de419e1190ae34c2e0932
+**Risc0**
+* Repository: https://github.com/risc0/risc0.git
+* Branch: `main`
+* Commit: `c1ea88f36839b889a15de419e1190ae34c2e0932`
 
 ## Hash-based Signature Aggregation
 
@@ -49,35 +44,51 @@ We compare our `ethsign` (one signature, 67-byte message) performance against Su
 
 ## Hashing
 
-We compare our `keccak-f` and `blake2b` performance against Polygon Zero's `plonky3` and StarkWare's `Stwo` provers, respectively.
+We compare our `keccak-f` and `blake2s` performance against Polygon Zero's `Plonky3` and StarkWare's `Stwo` provers, respectively.
 
 ### Keccak-f
 
-We're testing 1,365 Keccak permutations (matching `plonky3` benchmark):
+We are testing 1,365 Keccak permutations (matching `Plonky3` benchmark):
 
-| Prover | AWS Instance | Architecture | Witness generation [ms] | Proof generation [ms] | Proof verification [ms] | Proof size [KiB] |
-|--------|--------------|--------------|-------------------------|----------------------|-------------------------|------------------|
-| Binius64 | C7i.16xlarge | x86-mt | 41.96 | 572.82 | 561.89 | 398.27 |
-| Binius64 | C7i.16xlarge | x86-st | 42.22 | 2043.80 | 560.31 | 398.27 |
-| Binius64 | C8g.16xlarge | aarch64-mt | 47.18 | 340.75 | 282.31 | 398.27 |
-| Binius64 | C8g.16xlarge | aarch64-st | 47.19 | 2700.70 | 319.71 | 398.27 |
-| Plonky3 | C7i.16xlarge | x86-mt | 16.56 | 261.20 | 16.77 | 1861.32 |
-| Plonky3 | C7i.16xlarge | x86-st | 118.50 | 3779.00 | 15.39 | 1861.08 |
-| Plonky3 | C8g.16xlarge | aarch64-mt | 15.36 | 259.80 | 38.23 | 1861.25 |
-| Plonky3 | C8g.16xlarge | aarch64-st | 115.20 | 6134.00 | 34.92 | 1861.08 |
+| Prover   | AWS Instance | Architecture | Witness generation [ms] | Proof generation [ms] | Proof verification [ms] | Proof size [KiB] |
+|:--------:|:------------:|:------------:|------------------------:|----------------------:|------------------------:|-----------------:|
+| Binius64 | C7i.16xlarge | x86-mt       | 41.96                   | 572.82                | 561.89                  | 398.27           |
+| Binius64 | C7i.16xlarge | x86-st       | 42.22                   | 2,043.80              | 560.31                  | 398.27           |
+| Binius64 | C8g.16xlarge | aarch64-mt   | 47.18                   | 340.75                | 282.31                  | 398.27           |
+| Binius64 | C8g.16xlarge | aarch64-st   | 47.19                   | 2,700.70              | 319.71                  | 398.27           |
+| Plonky3  | C7i.16xlarge | x86-mt       | 16.56                   | 261.20                | 16.77                   | 1,861.32         |
+| Plonky3  | C7i.16xlarge | x86-st       | 118.50                  | 3,779.00              | 15.39                   | 1,861.08         |
+| Plonky3  | C8g.16xlarge | aarch64-mt   | 15.36                   | 259.80                | 38.23                   | 1,861.25         |
+| Plonky3  | C8g.16xlarge | aarch64-st   | 115.20                  | 6,134.00              | 34.92                   | 1,861.08         |
 
 ### Git Information
 
-**Plonky3** (commit: 80803612)
-- Repository: https://github.com/Plonky3/Plonky3.git
-- Branch: main
-- Commit: 80803612ff4b6634519e12fa4bf075f679afcc1c
+**Plonky3**
+* Repository: https://github.com/Plonky3/Plonky3.git
+* Branch: `main`
+* Commit: `80803612ff4b6634519e12fa4bf075f679afcc1c`
 
 ### Blake2s
 
-> TODO
+We are testing 2,048 Blake2s compressions (matching `Stwo` benchmark):
 
+| Prover   | AWS Instance | Architecture | Witness generation [ms] | Proof generation [ms] | Proof verification [ms] | Proof size [KiB] |
+|:--------:|:------------:|:------------:|------------------------:|----------------------:|------------------------:|-----------------:|
+| Binius64 | C7i.16xlarge | x86-mt       | 27.93                   | 530.32                | 549.58                  | 398.23           |
+| Binius64 | C7i.16xlarge | x86-st       | 29.41                   | 1,610.90              | 541.35                  | 398.23           |
+| Binius64 | C8g.16xlarge | aarch64-mt   | 34.63                   | 298.16                | 246.28                  | 398.23           |
+| Binius64 | C8g.16xlarge | aarch64-st   | 34.61                   | 2,219.10              | 268.57                  | 398.23           |
+| Stwo     | C7i.16xlarge | x86-mt       | 910.60                  | 422.20                | 2.70                    | 92.50            |
+| Stwo     | C7i.16xlarge | x86-st       | 1,154.40                | 1,688.40              | 2.50                    | 92.50            |
+| Stwo     | C8g.16xlarge | aarch64-mt   | 1,760.80                | 532.10                | 3.30                    | 92.50            |
+| Stwo     | C8g.16xlarge | aarch64-st   | 2,428.10                | 3,182.50              | 3.20                    | 92.50            |
+
+**Stwo**
+* Repository: https://github.com/starkware-libs/stwo.git
+* Branch: `dev`
+* Commit: `d9176e6e22319370a8501f799829b920c0db2eac`
 
 ## Integer Operations
 
-<BenchmarkTable benchmarksExpected={['BinaryField32b mul', 'u32 add', 'u32 mul', 'XOR (32-bit)', 'AND (32-bit)', 'OR (32-bit)']} />
+> TODO
+
