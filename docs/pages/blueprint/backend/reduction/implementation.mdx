@@ -29,9 +29,9 @@ Putting everything together, we get the following algorithm. We write $\mathsf{d
 - allocate empty, $64 \times 64$, all-zero arrays $\mathsf{h}_{\mathsf{sll}}$, $\mathsf{h}_{\mathsf{sra}}$ and $\mathsf{h}_{\mathsf{sra}}$, containing $\mathbb{F}_{2^{128}}$-elements.
 - **for** $j \in \{0, \ldots , 63\}$ **do**:
   - **for** $s \in \{0, \ldots , 63 - j\}$ **do**: set $\mathsf{h}_{\mathsf{sll}}[j][s] \coloneqq \mathsf{delta}[j + s]$
-  - **for** $s \in \{0, \ldots , j\}$ **do** set $\mathsf{h}_{\mathsf{srl}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
-  - **for** $s \in \{0, \ldots , j\}$ **do** set $\mathsf{h}_{\mathsf{sra}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
-- **for** $s \in \{1, \ldots , 63\}$ **do** update $\mathsf{h}_{\mathsf{sra}}[63][s] \mathrel{+}= \mathsf{h}_{\mathsf{sra}}[63][s - 1]$.
+  - **for** $s \in \{0, \ldots , j\}$ **do**: set $\mathsf{h}_{\mathsf{srl}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
+  - **for** $s \in \{0, \ldots , j\}$ **do**: set $\mathsf{h}_{\mathsf{sra}}[j][s] \coloneqq \mathsf{delta}[j - s]$.
+- **for** $s \in \{1, \ldots , 63\}$ **do**: update $\mathsf{h}_{\mathsf{sra}}[63][s] \mathrel{+}= \mathsf{h}_{\mathsf{sra}}[63][s - 1]$.
 - return $\mathsf{h}_{\mathsf{sll}}$, $\mathsf{h}_{\mathsf{sra}}$ and $\mathsf{h}_{\mathsf{sra}}$.
 
 In the last line of the algorithm above, we do a "running prefix sum" trick. This completes our description of the prover's computation of the polynomials $h_\text{op}(J, S)$.
@@ -46,7 +46,7 @@ $$
 
 Our prover's first goal will be to compute the all of the values $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ used above. Now across all possible $y \in \mathcal{B}_{\ell_\text{words}}$, all three $\text{op}$, and all 64 $s \in \mathcal{B}_6$, these three quantities represent $n_\text{words} \cdot 3 \cdot 64$ values, which is 192 times as large as the witness, and so too much to compute and store naïvely. When we are assessing claims on multiple constraint arrays $z$ at once—as we are in practice—this problem becomes worse (linearly in the number of constraint arrays).
 
-On the other hand, very few of these combinations will actually have nonzero values, because of sparsity. Our goal is to compute store only the ones that we need. We will compute and store $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ _only_ for those triples $(y, \text{op}, s)$ for which that value is nonzero.
+On the other hand, very few of these combinations will actually have nonzero values, because of sparsity. Our goal is to compute and store only the ones that we need. We will compute and store $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ _only_ for those triples $(y, \text{op}, s)$ for which that value is nonzero.
 
 To do this, we will create a kind of dictionary datastructure. We will keep a list, indexed by $y \in \{0, \ldots , n_\text{words} - 1\}$, called $\textsf{index}$. For each $y \in \{0, \ldots , n_\text{words} - 1\}$, $\textsf{index}[y]$ will itself be a dictionary, whose keys will be triples $(\text{op}, s)$, and whose values will be $\mathbb{F}_{2^{128}}$-elements. For each $y$, the keys of $\textsf{index}[y]$ will be precisely those triples $(\text{op}, s)$ for which the column $\widetilde{Z}_{\text{cons}, \text{op}}(X, y, s)$ is _not_ identically zero; for each such key, the value $\textsf{index}[y][(\text{op}, s)]$ will be $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$. (In the case of many constraint arrays, the keys of $\textsf{index}[y]$ will be not pairs but triples, containing also an index into the list of constraint arrays.)
 
@@ -113,6 +113,6 @@ The correctness of the following algorithm essentially follows from the standard
   - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
   - **for** each $(y, \text{op}, s) \in L^z_x$ **do**:
     - update $\mathsf{m}_\text{op} \mathrel{+}= \widetilde{\texttt{eq}}(r'_x, x) \cdot \widetilde{\texttt{eq}}(r_y, y) \cdot \widetilde{\texttt{eq}}(r_s, s)$.
-- return $\mathsf{m}_{m, \text{op}}$ for all $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
+- return $\mathsf{m}_\text{op}$ for all $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
 
 This completes our treatment of the shift reduction.

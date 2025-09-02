@@ -6,9 +6,9 @@ $$
 \begin{equation*}z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^z_x} \text{op}(w[y], s),\end{equation*}
 $$
 
-for $x \in \{0, \ldots , n_\text{cons} - 1\}$. Here, $n_\text{cons}$ is the total number of constraints (either AND or MUL), and each $L^z_x$ is a list of shifted value indices. We recall that, by definition, each $(y, \text{op}, s) \in \{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
+for $x \in \{0, \ldots , n_\text{cons} - 1\}$. Here, $n_\text{cons}$ is the total number of constraints (either AND or MUL), and each $L^z_x$ is a list of shifted value indices. We recall that, by definition, each shifted value index $(y, \text{op}, s) \in L^z_x$ is an element of the set $\{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
 
-In this page, we factor out an essential mathematical construction that we will use repeatedly throughout the [AND](/blueprint/backend/ands), [MUL](/blueprint/backend/muls) and [shift](/blueprint/backend/reduction) reductions. Our goal is to define [oblong-multilinear](/blueprint/math/oblong) polynomial
+In this page, we factor out an essential mathematical construction that we will use repeatedly throughout the [AND](/blueprint/backend/ands), [MUL](/blueprint/backend/muls) and [shift](/blueprint/backend/reduction) reductions. Our goal is to define an [oblong-multilinear](/blueprint/math/oblong) polynomial
 
 $$
 \begin{equation*}\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell - 1})\end{equation*}
@@ -31,7 +31,8 @@ There is a straightforward efficient algorithm that computes the array $z$, give
 - allocate the array $\mathsf{z}$, containing $n_\text{cons}$ 64-bit words, initially all 0.
 - **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
   - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
-  - **for** each shifted value index $(y, \text{op}, s) \in L^z_x$ **do**: update $\mathsf{z}[x] \mathrel{+}= \text{op}(w[y], s)$.
+  - **for** each shifted value index $(y, \text{op}, s) \in L^z_x$ **do**:
+    - update $\mathsf{z}[x] \mathrel{+}= \text{op}(w[y], s)$.
 - return $\mathsf{z}$.
 
 The array $\mathsf{z}$ returned by that algorithm equals the constraint array $z$.

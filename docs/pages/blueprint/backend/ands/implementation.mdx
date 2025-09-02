@@ -14,7 +14,7 @@ $$
 
 on at least $2^k - 1$ points outside of $D$.
 
-In this page, we describe a highly optimized implementation, which strategically uses the [Rijndael field](/blueprint/backend/ands/rijndael#the-rijndael-field) "where possible".
+In this page, we describe a highly optimized implementation, which strategically uses the [Rijndael field](/blueprint/backend/ands/rijndael#the-rijndael-field) "where possible". We call our algorithm the _Rijndael zerocheck_.
 
 ## The Underlying Arrays
 
@@ -53,7 +53,7 @@ Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the follo
 
 We have [already seen](/blueprint/backend/ands/univariate#protocol-description) that the prover must evaluate $g(\widehat{I})$ on $2^k - 1$ points outside of $D$. Thus it's enough for the prover to evaluate $g(\widehat{I})$ on $D' \setminus D$.
 
-We proceed with the prover's algorithm. The prover's inputs are the arrays $a$, $b$ and $c$ above and the verifier's partially-deterministic challenge $\overline{r_x} = (\gamma_0, \gamma_1, \gamma_2, \ldots , \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell_\text{and} - 4}})$, as well as the global basis elements $\beta_0$, $\beta_1$, $\beta_2$, and the precomputed mapping $\text{Extrap}$ above.
+We proceed with the prover's algorithm. The prover's inputs are the constraint arrays $a$, $b$ and $c$ and the verifier's partially-deterministic challenge $\overline{r_x} = (\sigma_0, \sigma_1, \sigma_2, \ldots , \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell_\text{and} - 4}})$, as well as the fixed Rijndael field [elements](/blueprint/backend/ands/rijndael#tensor-basis) $\rho_0$, $\rho_1$, $\rho_2$, and the precomputed mapping $\text{Extrap}$ above.
 
 - initialize an empty accumulator array of $64$ $\mathbb{F}_{2^{128}}$-elements, say $\mathsf{g}$.
 - tensor-expand $\overline{r_x}$; i.e., compute the array $\left( \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{v \in \mathcal{B}_{\ell_\text{and}} - 3}$.
@@ -62,7 +62,7 @@ We proceed with the prover's algorithm. The prover's inputs are the arrays $a$, 
   - **for** each $u \in \mathcal{B}_3$ **do**:
     - let $x \coloneqq u \mathbin{\Vert} v$.
     - define $\mathsf{a} \coloneqq \text{Extrap}(a[x])$, $\mathsf{b} \coloneqq \text{Extrap}(b[x])$ and $\mathsf{c} \coloneqq \text{Extrap}(c[x])$.
-    - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{temp}[i] \mathrel{+}= \left( \mathsf{a}[i] \cdot \mathsf{b}[i] - \mathsf{c}[i] \right) \cdot \widetilde{\texttt{eq}}(\beta, u)$.
+    - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{temp}[i] \mathrel{+}= \left( \mathsf{a}[i] \cdot \mathsf{b}[i] - \mathsf{c}[i] \right) \cdot \widetilde{\texttt{eq}}(\rho, u)$.
   - **for** each $i \in \{0, \ldots , 63\}$, update $\mathsf{g} \mathrel{+}= \iota(\mathsf{temp}[i]) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v)$.
 - return $\mathsf{g}$.
 
@@ -75,18 +75,18 @@ The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to
 The correctness of the above algorithm is not completely obvious. It relies on the following nested sum expression (recall also the analysis done [here](/blueprint/backend/ands/rijndael#deterministic-zerocheck)). For each $\widehat{i} \in D' \setminus D$,
 
 $$
-\begin{equation*}\sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{v \in \mathcal{B}_{\ell_\text{and}} - 3} \left[ \sum_{u \in \mathcal{B}_3} f(\widehat{i}, u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\gamma, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).\end{equation*}
+\begin{equation*}\sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{i}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{v \in \mathcal{B}_{\ell_\text{and}} - 3} \left[ \sum_{u \in \mathcal{B}_3} f(\widehat{i}, u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\sigma, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).\end{equation*}
 $$
 
 For each pair of outer and inner loop indices $v \in \mathcal{B}_{\ell_\text{and} - 3}$ and $u \in \mathcal{B}_3$, the arrays $\mathsf{a}$, $\mathsf{b}$ and $\mathsf{c}$ contain the isomorphic inverses under $\iota$ of $\widehat{a}(\widehat{i}, x)$, $\widehat{b}(\widehat{i}, x)$ and $\widehat{c}(\widehat{i}, x)$, respectively, for $\widehat{i} \in D' \setminus D$, by definition of $\text{Extrap}$. As of the end of the inner loop, then, the accumulator $\mathsf{temp}$ will contain:
 
 $$
-\begin{equation*}\left( \sum_{u \in \mathcal{B}_3} \iota^{-1}\left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\beta, u) \right)_{\widehat{i} \in D' \setminus D}.\end{equation*}
+\begin{equation*}\left( \sum_{u \in \mathcal{B}_3} \iota^{-1}\left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\rho, u) \right)_{\widehat{i} \in D' \setminus D}.\end{equation*}
 $$
 Here, we use the fact that $\iota^{-1} : \mathbb{F}_{2^8} \to K$ is a ring homomorphism. Upon applying $\iota$ (in the forward direction) componentwise to this vector and then multiplying ${\texttt{eq}}(\overline{r_x}, v)$ componentwise, we get:
 
 $$
-\begin{equation*}\left( \Big( \sum_{u \in \mathcal{B}_3} \left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\gamma, u) \Big) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{\widehat{i} \in D' \setminus D},\end{equation*}
+\begin{equation*}\left( \Big( \sum_{u \in \mathcal{B}_3} \left( \widehat{a}(\widehat{i}, u \mathbin{\Vert} v) \cdot \widehat{b}(\widehat{i}, u \mathbin{\Vert} v) - \widehat{c}(\widehat{i}, u \mathbin{\Vert} v) \right) \cdot \widetilde{\texttt{eq}}(\sigma, u) \Big) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{\widehat{i} \in D' \setminus D},\end{equation*}
 $$
 which is exactly the $v$<sup>th</sup> summand of the sum expression above.
 

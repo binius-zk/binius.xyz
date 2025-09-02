@@ -14,21 +14,21 @@ $K$ is isomorphic to $\mathbb{F}_{2^8}$. During the univariate skip, our goal wi
 
 ## Tensor Basis
 
-We now pick three elements $\beta_0, \beta_1, \beta_2$ of $K$ such that the elements of the tensor
+We now pick three elements $\rho_0, \rho_1, \rho_2$ of $K$ such that the elements of the tensor
 
 $$
-\begin{equation*}\left( \widetilde{\texttt{eq}}(\beta, u) \right)_{u \in \mathcal{B}_3}\end{equation*}
+\begin{equation*}\left( \widetilde{\texttt{eq}}(\rho, u) \right)_{u \in \mathcal{B}_3}\end{equation*}
 $$
 
 yield an $\mathbb{F}_2$-basis of $K$.
 
-The $K$-elements $\beta_0 \coloneqq X$, $\beta_1 \coloneqq X^2$, and $\beta_2 \coloneqq X^4$ satisfy this property. Indeed, taking all subproducts of $(X, X^2, X^4)$, we get the list $(1, X, X^2, \ldots , X^7)$, which is clearly linearly independent over $\mathbb{F}_2$. The actual tensor $\left( \widetilde{\texttt{eq}}(\beta, v) \right)_{v \in \mathcal{B}_3}$ contains not
+The $K$-elements $\rho_0 \coloneqq X$, $\rho_1 \coloneqq X^2$, and $\rho_2 \coloneqq X^4$ satisfy this property. Indeed, taking all subproducts of $(X, X^2, X^4)$, we get the list $(1, X, X^2, \ldots , X^7)$, which is clearly linearly independent over $\mathbb{F}_2$. The actual tensor $\left( \widetilde{\texttt{eq}}(\rho, v) \right)_{v \in \mathcal{B}_3}$ contains not
 $$
-\begin{equation*}\left( 1, \beta_0, \ldots , \beta_0 \cdot \beta_1 \cdot \beta_2 \right),\end{equation*}
+\begin{equation*}\left( 1, \rho_0, \ldots , \rho_0 \cdot \rho_1 \cdot \rho_2 \right),\end{equation*}
 $$
 but rather
 $$
-\begin{equation*}\left( (1 - \beta_0) \cdot (1 - \beta_1) \cdot (1 - \beta_2), \beta_0 \cdot (1 - \beta_1) \cdot (1 - \beta_2), \ldots , \beta_0 \cdot \beta_1 \cdot \beta_2 \right);\end{equation*}
+\begin{equation*}\left( (1 - \rho_0) \cdot (1 - \rho_1) \cdot (1 - \rho_2), \rho_0 \cdot (1 - \rho_1) \cdot (1 - \rho_2), \ldots , \rho_0 \cdot \rho_1 \cdot \rho_2 \right);\end{equation*}
 $$
 on the other hand, these two lists differ from each other by an invertible $\mathbb{F}_2$-linear transformation from $\mathbb{F}_{2^8}^8 \to \mathbb{F}_{2^8}^8$, so the distinction doesn't affect linear independence.
 
@@ -38,9 +38,9 @@ We moreover assume that we have a precomputed, efficient field embedding from $\
 
 Mathematically, the embedding $\iota$ is not unique; it amounts to choosing a root of the Rijndael polynomial $X^8 + X^4 + X^3 + X + 1$ in the GHASH field. There are 8 choices.
 
-We write $\gamma_0$, $\gamma_1$, and $\gamma_2$ for the images under $\iota$ of $\beta_0$, $\beta_1$ and $\beta_2$. We note that the elements $\left( \widetilde{\texttt{eq}}(\gamma, u) \right)_{u \in \mathcal{B}_3}$ are also linearly independent over $\mathbb{F}_2$. Indeed,
+We write $\sigma_0$, $\sigma_1$, and $\sigma_2$ for the images under $\iota$ of $\rho_0$, $\rho_1$ and $\rho_2$. We note that the elements $\left( \widetilde{\texttt{eq}}(\sigma, u) \right)_{u \in \mathcal{B}_3}$ are also linearly independent over $\mathbb{F}_2$. Indeed,
 $$
-\begin{equation*}\widetilde{\texttt{eq}}(\gamma, u) = \widetilde{\texttt{eq}}(\iota(\beta), u) = \iota\left( \widetilde{\texttt{eq}}(\beta, u)\right)\end{equation*}
+\begin{equation*}\widetilde{\texttt{eq}}(\sigma, u) = \widetilde{\texttt{eq}}(\iota(\rho), u) = \iota\left( \widetilde{\texttt{eq}}(\rho, u)\right)\end{equation*}
 $$
 holds for each $u \in \mathcal{B}_3$, since $\iota$ is a field embedding (and "commutes" with the equality indicator). Moreover, $\iota$ takes $\mathbb{F}_2$-linearly independent lists to $\mathbb{F}_2$-linearly independent lists, since it's injective and $\mathbb{F}_2$-linear.
 
@@ -58,7 +58,7 @@ By a standard analysis, the soundness analysis of this maneuver is bounded from 
 
 Instead, we instruct the verifier to sample an $\ell - 3$-dimensional random challenge $\overline{r_x}$, and let
 $$
-\begin{equation*} r_x \coloneqq (\gamma_0, \gamma_1, \gamma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}).\end{equation*}
+\begin{equation*} r_x \coloneqq (\sigma_0, \sigma_1, \sigma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}).\end{equation*}
 $$
 The first three components of $r_x$ are now "deterministic". The parties can now sumcheck
 
@@ -68,16 +68,16 @@ $$
 
 This variant is also sound. In fact, its soundness error is bounded from above by just $\frac{\ell - 3}{2^{128}}$. Indeed, if we write
 $$
-\begin{equation*}\overline{t}(X_0, \ldots , X_{\ell - 4}) \coloneqq \sum_{u \in \mathcal{B}_3} t(u_0, u_1, u_2, X_0, \ldots , X_{\ell - 4}) \cdot \widetilde{\texttt{eq}}(\gamma, u)\end{equation*}
+\begin{equation*}\overline{t}(X_0, \ldots , X_{\ell - 4}) \coloneqq \sum_{u \in \mathcal{B}_3} t(u_0, u_1, u_2, X_0, \ldots , X_{\ell - 4}) \cdot \widetilde{\texttt{eq}}(\sigma, u)\end{equation*}
 $$
-for the "bit-packing" of $t(X_0, \ldots , X_{\ell - 1})$ over $\left( \widetilde{\texttt{eq}}(\gamma, v) \right)_{v \in \mathcal{B}_3}$, then
+for the "bit-packing" of $t(X_0, \ldots , X_{\ell - 1})$ over $\left( \widetilde{\texttt{eq}}(\sigma, v) \right)_{v \in \mathcal{B}_3}$, then
 $$
 \begin{align*}
-\sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x) &= \sum_{v \in \mathcal{B}_{\ell - 3}} \left[ \sum_{u \in \mathcal{B}_3} t(u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\gamma, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \\
+\sum_{x \in \mathcal{B}_\ell} t(x) \cdot \widetilde{\texttt{eq}}(r_x, x) &= \sum_{v \in \mathcal{B}_{\ell - 3}} \left[ \sum_{u \in \mathcal{B}_3} t(u \mathbin{\Vert} v) \cdot \widetilde{\texttt{eq}}(\sigma, u) \right] \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v) \\
 &= \sum_{v \in \mathcal{B}_{\ell - 3}} \overline{t}(v) \cdot \widetilde{\texttt{eq}}(\overline{r_x}, v).
 \end{align*}
 $$
-Since the $\mathbb{F}_{2^{128}}$-elements $\left( \widetilde{\texttt{eq}}(\gamma, v) \right)_{v \in \mathcal{B}_3}$ are linearly independent over $\mathbb{F}_2$ (see [above](/blueprint/backend/ands/rijndael#embedding)), if $t(X_0, \ldots , X_{\ell - 1})$ is _not_ identically zero over $\mathcal{B}_\ell$, then $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is likewise _not_ identically zero over $\mathcal{B}_{\ell - 3}$. Here, we use the fact that $t(X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_\ell$ is $\mathbb{F}_2$-valued.
+Since the $\mathbb{F}_{2^{128}}$-elements $\left( \widetilde{\texttt{eq}}(\sigma, v) \right)_{v \in \mathcal{B}_3}$ are linearly independent over $\mathbb{F}_2$ (see [above](/blueprint/backend/ands/rijndael#embedding)), if $t(X_0, \ldots , X_{\ell - 1})$ is _not_ identically zero over $\mathcal{B}_\ell$, then $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is likewise _not_ identically zero over $\mathcal{B}_{\ell - 3}$. Here, we use the fact that $t(X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_\ell$ is $\mathbb{F}_2$-valued.
 
 On the other hand, the right-hand sum above is exactly the evaluation of the multilinear extension of $\overline{t}(X_0, \ldots , X_{\ell - 4})$ at $\overline{r_x}$. Since we just argued that $\overline{t}(X_0, \ldots , X_{\ell - 4})$ is not identically zero over $\mathcal{B}_{\ell - 3}$, the usual soundness analysis of the zerocheck imples that, except with probability at most $\frac{\ell - 3}{2^{128}}$ over the verifier's choice of $\overline{r_x}$, the above sum is nonzero.
 
