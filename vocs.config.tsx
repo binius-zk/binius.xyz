@@ -273,10 +273,6 @@ export default defineConfig({
             text: "MUL Constraints",
             link: "/blueprint/constraints/muls"
           },
-          {
-            text: "Completeness",
-            link: "/blueprint/constraints/completeness"
-          }
         ],
       },
       {
@@ -304,14 +300,14 @@ export default defineConfig({
             ]
           },
           {
+            text: "Mathematizing Constraint Arrays",
+            link: "/blueprint/backend/mathematizing"
+          },    
+          {
             text: "The AND Reduction",
             link: "/blueprint/backend/ands",
             collapsed: false,
             items: [
-              {
-                text: "Mathematizing the Problem",
-                link: "/blueprint/backend/ands/mathematizing"
-              },
               {
                 text: "The Rijndael Field",
                 link: "/blueprint/backend/ands/rijndael"

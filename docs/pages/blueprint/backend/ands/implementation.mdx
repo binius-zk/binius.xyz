@@ -18,7 +18,7 @@ In this page, we describe a highly optimized implementation, which strategically
 
 ## The Underlying Arrays
 
-The polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and $\widehat{c}(\widehat{I}, x)$ above are [defined](/blueprint/backend/ands/univariate#oblong-multilinearization) to be the [oblong-multilinearizations](/blueprint/math/oblong) of [explicit polynomials](/blueprint/backend/ands/mathematizing#multilinearizing) that depend on the prover's data. Unwinding what everything means, we see that $\widehat{a}(\widehat{I}, x)$'s, $\widehat{b}(\widehat{I}, x)$'s and $\widehat{c}(\widehat{I}, x)$'s respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are nothing more than the length-$n_\text{and}$, 64-bit-word-valued [arrays](/blueprint/backend/ands/mathematizing#sum-expressions) $a$, $b$ and $c$ we've already seen. The prover can prepare these tables of values [efficiently](/blueprint/backend/ands/mathematizing#sum-expressions).
+We [recall](/blueprint/backend/ands/univariate) that we defined the polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and $\widehat{c}(\widehat{I}, x)$ above to be the [oblong-multilinearizations](/blueprint/backend/mathematizing) of the prover's constraint arrays. By construction, these oblong-multilinears' respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are simply the prover's constraint arrays $a$, $b$ and $c$. The prover can prepare these arrays [efficiently](/blueprint/backend/mathematizing#computing-them).
 
 ## Efficient Lookup-Based Extrapolation
 
@@ -98,7 +98,7 @@ $$
 \begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(r_{\widehat{i}}, x) \cdot \widehat{b}(r_{\widehat{i}}, x) - \widehat{c}(r_{\widehat{i}}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
 $$
 
-To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r_{\widehat{i}}, X)$, $\widehat{b}(r_{\widehat{i}}, X)$ and $\widehat{c}(r_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$. As we [saw above](/blueprint/backend/ands/implementation#the-underlying-arrays), the tables of values of these latter oblong-multilinears are just the [simple arrays](/blueprint/backend/ands/mathematizing#sum-expressions) $a$, $b$ and $c$. How do the tables of values of $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to $a$, $b$ and $c$?
+To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r_{\widehat{i}}, X)$, $\widehat{b}(r_{\widehat{i}}, X)$ and $\widehat{c}(r_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$. As we [saw above](/blueprint/backend/ands/implementation#the-underlying-arrays), the tables of values of these latter oblong-multilinears are just the constraint arrays $a$, $b$ and $c$. How do the tables of values of $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to $a$, $b$ and $c$?
 
 We have already [answered this question](/blueprint/math/oblong#partial-specialization) in the general context of oblong-multilinearization. In our context, we have $k = 6$. Moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
 
@@ -110,4 +110,4 @@ $$
 \end{gather*}
 $$
 
-are stored as $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/math/oblong#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{words} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients come from $a[x]$, $b[x]$ and $c[x]$.
+are stored as $a[x]$, $b[x]$ and $c[x]$. To run the [specialization algorithm](/blueprint/math/oblong#partial-specialization) on $a$, $b$ and $c$, the prover just needs to do, for each $x \in \{0, \ldots , n_\text{and} - 1\}$ (in parallel), three size-64 subset sums of $\left( \delta_D(r'_{\widehat{i}}, \widehat{i}) \right)_{i \in \mathcal{B}_6}$, where the respective bit-coefficients come from $a[x]$, $b[x]$ and $c[x]$.

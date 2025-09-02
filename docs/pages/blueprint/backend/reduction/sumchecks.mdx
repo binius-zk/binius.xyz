@@ -1,26 +1,22 @@
 # The Sumchecks [The two phases of the shift reduction]
 
-We recall that at [the end](/blueprint/backend/ands/univariate#the-end) of the univariate skip, we left off with three evaluation claims made by the prover: TODO: add link to end of mul
+Both the [AND](/blueprint/backend/ands) and [MUL](/blueprint/backend/muls) reductions, at their very conclusions, close out by outputting evaluation claims on [oblong-multilinearizations of constraint arrays](/blueprint/backend/mathematizing), i.e. claims of the form
 
 $$
-\begin{align*}
-\alpha_a &\stackrel{?}= \widehat{a}(r_{\widehat{i}},  r'_x), \\
-\alpha_b &\stackrel{?}= \widehat{b}(r_{\widehat{i}},  r'_x), \\
-\alpha_c &\stackrel{?}= \widehat{c}(r_{\widehat{i}},  r'_x),
-\end{align*}
+\begin{equation*}\alpha_z \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x).\end{equation*}
 $$
 
-As of this point, the verifier has reduced the prover's AND-constraint satisfaction to these three equalities, to which we turn now.
+Here, $z$ is a _constraint array_, an object that arises naturally in the definitions of our [AND](/blueprint/constraints/ands#the-constraint-arrays) and [MUL](/blueprint/constraints/muls#the-constraint-arrays) constraints; $\widehat{z}(\widehat{I},  X)$ is its [oblong-multilinearization](/blueprint/backend/mathematizing#oblong-multilinearizing). Finally, $\alpha_z$, $r_{\widehat{i}}$ and $r'_x$ are values known to both the prover and the verifier. In each case, the evaluation points $r_{\widehat{i}}$ and $r'_x$ will be identical across all claims, whereas the claimed evaluations $\alpha_z$ of course won't be.
 
-Unrolling the right-hand sides using the definitions of those quantities [already given](/blueprint/backend/ands/univariate#oblong-multilinearization), and also rearranging a few sums, we get the following three claims:
+In this page, we explain how to reduce a plurality of evaluation claims of this form to a single evaluation claim on the multilinearization $\widetilde{w}(J, Y)$ of the witness. For expository reasons, we explain the case in which there is just one claim. The case in which there are more than one is similar, and we explain inline where it needs to be accommodated. This choice lets us abstract away how many claims there are (there will be 3 at the end of the AND reduction and 4 at the end of the MUL reduction).
+
+Unwinding the [definition](/blueprint/backend/mathematizing#oblong-multilinearizing) of the oblong-multilinearization $\widehat{z}(\widehat{I},  X)$, and inserting $r_{\widehat{i}}$ and $r'_x$, we obtain the claim:
 
 $$
-\begin{align*}
-\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
-\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y), \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).
-\end{align*}
+\begin{equation*}\alpha_z \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
+
+As usual, $\widetilde{Z}_{\text{cons}, \text{op}}$ is the [multilinearized](/blueprint/backend/mathematizing#multilinearizing) [constraint matrix](/blueprint/backend/mathematizing#the-constraint-matrices) associated to the constraint array $z$.
 
 ## A Factorization
 
@@ -28,91 +24,74 @@ At this point, it would be correct to just tell the prover to "run the sumcheck 
 
 The essential point for us is that that not all variables appear in all functions. If they did, we'd have no choice but to run the standard algorithm. As it happens, though, each function has only some of the variables $I$, $J$, $S$, and $Y$. Moreover, the way that these variables are "distributed" allows some very interesting things to happen.
 
-First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the first and third contain $i$ but not $y$, while the second and fourth contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we get the following factorizations:
+First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, while $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$ contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we factor the above sum expression as follows:
 
 $$
-\begin{align*}
-\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
-\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg], \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].
-\end{align*}
+\begin{equation*}
+\sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].\end{equation*}
 $$
 
 This wouldn't do us much good, if it weren't for the following further observation. In each of the three expressions above, both bracketed quantities are _multilinear_ in both $J$ and $S$.
 
-Indeed, in each left-hand bracketed quantity, each summand is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and not in $\delta_D(r_{\widehat{i}}, \widehat{i})$; thus, the entire sum is also multilinear in $j$ and $s$. Similarly, in each right-hand bracketed expression, each summand is again multilinear in $j$ and $s$, $\widetilde{w}(j, y)$ depends on $j$ but _not_ on $s$, while $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s)$ and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s)$ depend on $s$ but _not_ on $j$. Thus all bracketed sums are themselves multilinear in $j$ and $s$, and we can treat each expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of just three products of multilinears (i.e., over varying $\text{op}$).
+Indeed, in the left-hand bracketed sum, each summand is multilinear in $j$ and $s$, since those variables appear only in $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ and _not_ in $\delta_D(r_{\widehat{i}}, \widehat{i})$; thus, the entire sum is also multilinear in $j$ and $s$. Similarly, in the right-hand bracketed sum, each summand is again multilinear in $j$ and $s$, since $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ depends on $s$ but _not_ on $j$, while $\widetilde{w}(j, y)$ depends on $j$ but _not_ on $s$. Thus each summand, and hence the entire sum, is again multilinear in $j$ and $s$. We conclude that both bracketed sums are themselves multilinear in $j$ and $s$, and we can treat the entire expression above as a sum, over the cube $\mathcal{B}_6 \times \mathcal{B}_6$, of a multivariate polynomial in $J$ and $S$ expressible as the sum of just three products of multilinears (i.e., over varying $\text{op}$).
 
-If this weren't true, then the above multivariates in $J$ and $S$ would not be expressible as compositions of multilinears in $J$ and $S$ with _reasonable_ composition functions. Rather, the composition functions would be enormous—with $3 \times 64$, $3 \times n_\text{words}$, or even $3 \times 64 \times n_\text{words}$ summands—as opposed to just $3$.
+If this weren't true, then the above multivariate in $J$ and $S$ would not be expressible as a composition of multilinears in $J$ and $S$ with _reasonable_ composition functions. Rather, the composition function would be enormous—with $3 \times 64$, $3 \times n_\text{words}$, or even $3 \times 64 \times n_\text{words}$ summands—as opposed to just $3$.
 
 ## The First Phase
 
-The above remarks suggest the following first step. As a purely notational matter, we introduce some abbreviations. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, we define the following 12-variate multilinears on $J$ and $S$:
+The above remarks suggest the following first step. As a purely notational matter, we introduce some abbreviations. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, we define two 12-variate multilinears in $J$ and $S$:
 
 $$
 \begin{equation*}h_\text{op}(J, S) \coloneqq \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, J, S);\end{equation*}
 $$
-
-similarly, for each $\text{op}$, we define:
-
+and
 $$
 \begin{align*}
-g_{a, \text{op}}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, S) \cdot \widetilde{w}(J, y), \\
-g_{b, \text{op}}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, S) \cdot \widetilde{w}(J, y), \\
-g_{c, \text{op}}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, S) \cdot \widetilde{w}(J, y),
+g_\text{op}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, S) \cdot \widetilde{w}(J, y), \\
 \end{align*}
 $$
 
-Crucially, everything above is multilinear in $J$ and $S$. By definition, our claims amount to:
+Crucially, both polynomials above are multilinear in $J$ and $S$. By definition, our claim amounts to:
 
 $$
-\begin{align*}
-\alpha_a \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot g_{a, \text{op}}(j, s), \\
-\alpha_b \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot  g_{b, \text{op}}(j, s), \\
-\alpha_c \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot g_{c, \text{op}}(j, s).
-\end{align*}
+\begin{equation*}\alpha_z \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot g_\text{op}(j, s).\end{equation*}
 $$
 
-At this point, the verifier can freely sample three random scalars, say $\lambda_a$, $\lambda_b$, and $\lambda_c$, and send them to the prover. Up to tiny soundness error, it thus suffices for the parties to define $\alpha_0 \coloneqq \lambda_a \cdot \alpha_a + \lambda_b \cdot \alpha_b + \lambda_c \cdot \alpha_c$, and assess the sum claim:
+Thus, the prover can begin by tabulating the $2^6 \times 2^6$ tables of values of all six functions $h_\text{op}(J, S)$ and $g_\text{op}(J, S)$, i.e. for all three $\text{op}$. The total resulting data here is of size $2^6 \cdot 2^6 \cdot 6$ field elements, or 384 KiB total. In the [next page](/blueprint/backend/reduction/implementation), we talk about how the prover can prepare these tables of values efficiently, exploiting the sparsity of the constraint system.
+
+Pending that problem, we can tell the parties to run the sumcheck above. In the case in which there are multiple constraint arrays at play, there will be one $g_\text{op}(J, S)$ for _each_ array; at this point, the verifier will sample batching scalars for these.
+
+The sumcheck is 12-dimensional, over a sum of three products of multilinears (i.e., taken over $\text{op}$). After 12 rounds, the parties will have reduced the prover's claim to a further claim, say:
 
 $$
-\begin{equation*}\alpha_0 \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot \Big[ \lambda_a \cdot g_{a, \text{op}}(j, s) + \lambda_b \cdot g_{b, \text{op}}(j, s) + \lambda_c \cdot g_{c, \text{op}}(j, s) \Big].\end{equation*}
-$$
-
-Thus, the prover can begin by tabulating the $2^6 \times 2^6$ tables of values of all three functions $h_\text{op}(J, S)$, and all three functions $\lambda_a \cdot g_{a, \text{op}}(J, S) + \lambda_b + g_{b, \text{op}}(J, S) + \lambda_c \cdot g_{c, \text{op}}(J, S)$, so 6 functions total (i.e., we are letting $\text{op}$ vary). The total resulting data here is of size $2^6 \cdot 2^6 \cdot 6$ field elements, or 384 KiB total. In the [next page](/blueprint/backend/reduction/implementation), we talk about how the prover can prepare these tables of values efficiently, exploiting the sparsity of the constraint system.
-
-In any case, skipping that for now, we can tell the parties to run the sumcheck above. The sumcheck is 12-dimensional, over a sum of three products of multilinears (i.e., taken over $\text{op}$). After 12 rounds, the parties will have reduced the prover's claim to the further claim:
-
-$$
-\begin{equation*}\alpha_{12} \stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \lambda_a \cdot g_{a, \text{op}}(r_j, r_s) + \lambda_b \cdot g_{b, \text{op}}(r_j, r_s) + \lambda_c \cdot g_{c, \text{op}}(r_j, r_s) \Big],\end{equation*}
+\begin{equation*}\gamma \stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s),\end{equation*}
 $$
 
 for 6-dimensional random scalars $r_j$ and $r_s$ sampled during the sumcheck.
 
 ## The Second Phase
 
-At this point, we rename $\gamma_0 \coloneqq \alpha_{12}$. Rearranging the claim we left off with above, by unwinding what the evaluations $g_{a, \text{op}}(r_j, r_s)$, $g_{b, \text{op}}(r_j, r_s)$ and $g_{c, \text{op}}(r_j, r_s)$ mean, we get:
+Rearranging the claim we left off with above, by unwinding what the evaluations $g_\text{op}(r_j, r_s)$ mean, we get the identical claim:
 
 $$
-\begin{align*}\gamma_{0} &\stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \sum_{m \in \{a, b, c\}}\lambda_m \cdot g_{m, \text{op}}(r_j, r_s) \Big] \\
-&= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Big[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \Big( \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, r_s) \Big) \cdot \widetilde{w}(r_j, y) \Big] \\
-&= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, r_s) \right] \cdot \widetilde{w}(r_j, y).
+\begin{align*}\gamma &\stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s) \\
+&= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, r_s) \cdot \widetilde{w}(r_j, y) \Bigg] \\
+&= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, r_s) \right] \cdot \widetilde{w}(r_j, y).
 \end{align*}
 $$
 
-Above, we use a typographical space-saving device where we write $m$ for _either_ $a$, $b$ or $c$, and also write $\widetilde{M}_{a, \text{and}, \text{op}} \coloneqq \widetilde{A}_{\text{and}, \text{op}}$, $\widetilde{M}_{b, \text{and}, \text{op}} \coloneqq \widetilde{B}_{\text{and}, \text{op}}$ and $\widetilde{M}_{c, \text{and}, \text{op}} \coloneqq \widetilde{C}_{\text{and}, \text{op}}$.
+We can now view the above expression as a further sumcheckeckable claim, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/backend/reduction/implementation), we go into how the prover can tabulate the necessary values efficiently.
 
-We can now view the _above_ expression as a further sumcheck, now over the single $\ell_\text{words}$-dimensional variable $y$. The entire bracketed expression can be viewed as a single multilinear in $Y$; the partial specialization $\widetilde{w}(r_j, Y)$ is of course also multilinear in $Y$. Again [in the next page](/blueprint/backend/reduction/implementation), we go into how the prover can tabulate the necessary values efficiently.
-
-For now, we instruct the parties to run an $\ell_\text{words}$-round sumcheck on the above. After doing that, they wind up with a further claim of the form:
+For now, we instruct the parties to run an $\ell_\text{words}$-round sumcheck on the above. After doing that, they wind up with a final claim of the form:
 
 $$
-\begin{equation*}\gamma_{\ell_\text{words}} \stackrel{?}= \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{\text{and}, \text{op}}(r'_x, r_y, r_s) \right] \cdot \widetilde{w}(r_j, r_y),\end{equation*}
+\begin{equation*}\delta \stackrel{?}= \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s) \right] \cdot \widetilde{w}(r_j, r_y),\end{equation*}
 $$
 
 where $r_y$ is a further value sampled during the sumcheck.
 
-We work under the assumption that the verifier can evaluate the entire bracketed quantity himself. We have already [talked at great length](/blueprint/backend/shifts) about how the verifier can efficiently, locally, compute the evaluations $h_\text{op}(r_j, r_s)$ himself. Our case is a bit different than what we previously covered, since the verifier will need to evaluate $\textsf{shift-ind}_\text{op}(i, r_j, r_s)$ for _each_ $i \in \mathcal{B}_6$, as opposed to just at a single point. But the idea is similar. The verifier can carry out this computation in a way whose cost grows linearly in the size of $\mathcal{B}_6$ (64 for us, obviously), and with small constants. The concrete cost is very low.
+We work under the assumption that the verifier can evaluate the entire bracketed quantity himself. We have already [talked at great length](/blueprint/backend/shifts) about how the verifier can efficiently, locally, compute the evaluations $h_\text{op}(r_j, r_s)$ himself. Our case is a bit different than what we previously covered, since the verifier will need to evaluate $\textsf{shift-ind}_\text{op}(i, r_j, r_s)$ for _each_ $i \in \mathcal{B}_6$, as opposed to just at a single point. But the idea is similar. The verifier can carry out this computation in a way whose cost grows linearly in the size of $\mathcal{B}_6$, and with small constants. The concrete cost is very low.
 
-It remains for the verifier to evaluate $\widetilde{A}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$ for each $\text{op}$. This is a bit trickier. There is a straightforward way for the verifier to do this that takes $O(n_\text{words}) + O(n_\text{and}) + O(\text{circuit size})$ work, which we again cover in the [next page](/blueprint/backend/reduction/implementation). This cost is practically tolerable for us. If this had to be improved—and in particular made fully succinct—the Spark compiler [[Set20](https://eprint.iacr.org/2019/550)] is suitable for this kind of thing.
+It remains for the verifier to evaluate $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s)$ for each $\text{op}$. This is a bit trickier. There is a straightforward way for the verifier to do this that takes $O(n_\text{words}) + O(n_\text{and}) + O(\text{circuit size})$ work, which we again cover in the [next page](/blueprint/backend/reduction/implementation#constraint-matrices). This cost is practically tolerable for us. If this had to be improved—and in particular made fully succinct—the Spark compiler [[Set20](https://eprint.iacr.org/2019/550)] is suitable for this kind of thing.
 
-In any case, it remains for the verifier to output the single evaluation claim on $\widetilde{w}(r_j, r_y)$. This is exactly the kind of thing that our [PCS](/blueprint/commitment) is designed to treat, so this completes our treatment of the AND reduction, at least from the verifier's point of view.
+In any case, it remains for the verifier to output the single evaluation claim on $\widetilde{w}(r_j, r_y)$. This is exactly the kind of thing that our [PCS](/blueprint/commitment) is designed to treat, so this completes our treatment of the shift reduction, at least from the verifier's point of view.

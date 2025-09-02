@@ -1,25 +1,25 @@
 # MUL Constraints [Enforcing unsigned-integer-multiplication relations]
 
-Each MUL constraint is tuple $(L_a, L_b, I_\text{hi}, I_\text{lo})$ of _four_ lists of shifted value indices. Now, we define $a$ and $b$ as before; that is, we let
+Multiplication constraints let us capture the unsigned integer multiplication of 64-bit words. We now fix a total number of MUL constraints, $n_\text{mul}$. For each $x \in \{0, \ldots , n_\text{mul} - 1\}$, the $x$<sup>th</sup> MUL constraint is a tuple $(L^p, L^q, L^\text{hi}, L^\text{lo})$ of four lists of [shifted value indices](/blueprint/constraints/indices).
+
+## The Constraint Arrays
+
+Immediately adopting the [array-theoretic viewpoint](/blueprint/constraints/ands#the-constraint-arrays), we now define length-$n_\text{mul}$ arrays $p$, $q$, $\text{lo}$, $\text{hi}$ of 64-bit words, by setting, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$:
 
 $$
-\begin{equation*}a \coloneqq \bigoplus_{(y, \text{op}, s) \in L_a} \text{op}(w[y], s) \text{ and } b \coloneqq \bigoplus_{(y, \text{op}, s) \in L_b} \text{op}(w[y], s);\end{equation*}
+\begin{align*}
+p[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^p_x} \text{op}(w[y], s), \\
+q[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^q_x} \text{op}(w[y], s), \\
+\text{lo}[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^\text{lo}_x} \text{op}(w[y], s), \\
+\text{hi}[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^\text{hi}_x} \text{op}(w[y], s). \\
+\end{align*}
 $$
 
-moreover, we similarly define
+Now, we can say that the prover data $w$ fulfills the constraint system's MUL constraints if, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$,
 
 $$
-\begin{equation*}\text{hi} \coloneqq \bigoplus_{(y, \text{op}, s) \in I_\text{hi}} \text{op}(w[y], s) \text{ and } \text{lo} \coloneqq \bigoplus_{(y, \text{op}, s) \in I_\text{lo}} \text{op}(w[y], s).\end{equation*}
+\begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x].\end{equation*}
 $$
 
-We say that the MUL constraint $(L_a, L_b, I_\text{hi}, I_\text{lo})$ holds over $w$ if:
+To make sense of the equality above, we interpret the words $p[x]$, $q[x]$, $\text{hi}[x]$ and $\text{lo}[x]$ as as elements of $\{0, \ldots , 2^{64} - 1\}$, and interpret the $\cdot$ symbol as integer multiplication. In other words, the product $p[x] \cdot q[x]$ is double-width; its high and low halves are given by $\text{hi}[x]$ and $\text{lo}[x]$.
 
-$$
-\begin{equation*}a \cdot b \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}.\end{equation*}
-$$
-
-Above, the quantities $a$, $b$, $\text{hi}$ and $\text{lo}$ are all understood as elements of $\{0, \ldots , 2^{64} - 1\}$; all multiplications take place in _the integers_.
-
-That is, we're asserting that if we use the shifted value indices in $L_a$ $L_b$ to cook up integers $a$ and $b$ in $\{0, \ldots , 2^{64} - 1\}$, and if we multiply these things _as integers_, then we end up with a double-width product in $\{0, \ldots , 2^{128} - 1\}$ whose high and low halves, respectively, are $\text{hi}$ and $\text{lo}$.
-
-Each of our constraint systems will specify a total number $n_\text{mul}$ of MUL constraints $(L_a, L_b, I_\text{hi}, I_\text{lo})$. We will say that the witness data $w$ fulfills our constraint system's MUL constraints if _all_ of the equalities of the above form (i.e., one for each MUL constraint) hold over $w$.

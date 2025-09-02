@@ -8,7 +8,7 @@ There are actually a few ways to do this, which are essentially similar in spiri
 
 ## The First Phase
 
-We now describe the prover's implementation of the [first phase](/blueprint/backend/reduction/sumchecks#the-first-phase) of the shift reduction. The prover's inputs are the challenges $r_{\widehat{i}}$, $r'_x$ sampled during the univariate skip, the mixing challenges $\lambda_a$, $\lambda_b$ and $\lambda_c$ sampled by the verifier at the beginning of the shift reduction, the witness $w$, and of course the constraint system.
+We now describe the prover's implementation of the [first phase](/blueprint/backend/reduction/sumchecks#the-first-phase) of the shift reduction. The prover's inputs are the challenges $r_{\widehat{i}}$, $r'_x$ sampled during the univariate skip, the witness $w$, and the constraint array $z$.
 
 ### Computation of h polynomials
 
@@ -38,54 +38,41 @@ In the last line of the algorithm above, we do a "running prefix sum" trick. Thi
 
 ### Computation of g polynomials
 
-We now turn to the polynomials $g_{a, \text{op}}(J, S)$, $g_{b, \text{op}}(J, S)$ and $g_{c, \text{op}}(J, S)$. We reproduce their definitions here. For each $j \in \mathcal{B}_6$ and $s \in \mathcal{B}_6$:
+We now turn to the polynomials $g_\text{op}(J, S)$, for $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. We reproduce their definitions here. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, $j \in \mathcal{B}_6$ and $s \in \mathcal{B}_6$:
 
 $$
-\begin{align*}
-g_{a, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y), \\
-g_{b, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y), \\
-g_{c, \text{op}}(j, s) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y).
-\end{align*}
+\begin{equation*}g_\text{op}(j, s) \coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
 
-Our prover's next goal will be to compute the values $\widetilde{A}_{\text{and}, \text{op}}(r'_x, y, s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, y, s)$ and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, y, s)$. Now across all possible $y \in \mathcal{B}_{\ell_\text{words}}$, all three $\text{op}$, and $s \in \mathcal{B}_6$, these three quantities represent $3 \cdot n_\text{words} \cdot 3 \cdot 64$ values, which is 576 times as large as the witness, and thus too much to compute and store naïvely. On the other hand, very few of these combinations will actually have nonzero values, because of sparsity. Our goal is to compute store only the ones that we need.
+Our prover's first goal will be to compute the all of the values $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ used above. Now across all possible $y \in \mathcal{B}_{\ell_\text{words}}$, all three $\text{op}$, and all 64 $s \in \mathcal{B}_6$, these three quantities represent $n_\text{words} \cdot 3 \cdot 64$ values, which is 192 times as large as the witness, and so too much to compute and store naïvely. When we are assessing claims on multiple constraint arrays $z$ at once—as we are in practice—this problem becomes worse (linearly in the number of constraint arrays).
 
-We will again write $m \in \{a, b, c\}$ and $\widetilde{M}_{a, \text{and}, \text{op}} \coloneqq \widetilde{A}_{\text{and}, \text{op}}$, $\widetilde{M}_{b, \text{and}, \text{op}} \coloneqq \widetilde{B}_{\text{and}, \text{op}}$ and $\widetilde{M}_{c, \text{and}, \text{op}} \coloneqq \widetilde{C}_{\text{and}, \text{op}}$. Our goal will be to compute and store $\widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, s)$ _only_ for those quadruples $(y, m, \text{op}, s)$ for which that thing is nonzero.
+On the other hand, very few of these combinations will actually have nonzero values, because of sparsity. Our goal is to compute store only the ones that we need. We will compute and store $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ _only_ for those triples $(y, \text{op}, s)$ for which that value is nonzero.
 
-To do this, we will create a kind of dictionary datastructure. We will keep a list, indexed by $y \in \{0, \ldots , n_\text{words} - 1\}$, called $\textsf{index}$. For each $y \in \{0, \ldots , n_\text{words} - 1\}$, $\textsf{index}[y]$ will itself be a dictionary, whose keys will be triples $(m, \text{op}, s)$, and whose values will be $\mathbb{F}_{2^{128}}$-elements. For each $y$, the keys of $\textsf{index}[y]$ will be precisely those triples $(m, \text{op}, s)$ for which the column $\widetilde{M}_{m, \text{and}, \text{op}}(X, y, s)$ is _not_ identically zero; for each such key, the value $\textsf{index}[y][(m, \text{op}, s)]$ will be $\widetilde{M}_{m, \text{and}, \text{op}}(r'_x, y, s)$.
+To do this, we will create a kind of dictionary datastructure. We will keep a list, indexed by $y \in \{0, \ldots , n_\text{words} - 1\}$, called $\textsf{index}$. For each $y \in \{0, \ldots , n_\text{words} - 1\}$, $\textsf{index}[y]$ will itself be a dictionary, whose keys will be triples $(\text{op}, s)$, and whose values will be $\mathbb{F}_{2^{128}}$-elements. For each $y$, the keys of $\textsf{index}[y]$ will be precisely those triples $(\text{op}, s)$ for which the column $\widetilde{Z}_{\text{cons}, \text{op}}(X, y, s)$ is _not_ identically zero; for each such key, the value $\textsf{index}[y][(\text{op}, s)]$ will be $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$. (In the case of many constraint arrays, the keys of $\textsf{index}[y]$ will be not pairs but triples, containing also an index into the list of constraint arrays.)
 
 The following algorithm populates this datastructure:
 
 - precompute $\mathsf{tensor} \coloneqq \left( \widetilde{\texttt{eq}}(r'_x, x) \right)_{x \in \mathcal{B}_{\ell_\text{and}}}$, the tensor expansion of $r'_x$.
 - let $\textsf{index}$ be a length-$n_\text{words}$ array, whose elements are dictionaries, initialized to empty.
-- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
-  - load the $x$<sup>th</sup> triple $(L_a, L_b, L_c)$ from the constraint system.
-  - **for** each $(y, \text{op}, s) \in L_a$ **do**: update $\mathsf{index}[y][(a, \text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$.
-  - **for** each $(y, \text{op}, s) \in L_b$ **do**: update $\mathsf{index}[y][(b, \text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$.
-  - **for** each $(y, \text{op}, s) \in L_c$ **do**: update $\mathsf{index}[y][(c, \text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$.
+- **for** each $x \in \{0, \ldots , n_\text{cons} - 1\}$ **do**:
+  - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
+  - **for** each $(y, \text{op}, s) \in L^z_x$ **do**:
+    - update $\mathsf{index}[y][(\text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$.
 - return $\mathsf{index}$.
 
-For each $y$, we understand the dictionary $\textsf{index}[y]$ as a [`defaultdict`](https://docs.python.org/3/library/collections.html#collections.defaultdict), in the sense that if the key $(m, \text{op}, s)$ is not yet present in $\textsf{index}[y]$, the operation $\mathsf{index}[y][(m, \text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$ will implicitly create the key—with value 0—before executing.
+For each $y$, we understand the dictionary $\textsf{index}[y]$ as a [`defaultdict`](https://docs.python.org/3/library/collections.html#collections.defaultdict), in the sense that if the key $(\text{op}, s)$ is not yet present in $\textsf{index}[y]$, the operation $\mathsf{index}[y][(\text{op}, s)] \mathrel{+}= \mathsf{tensor}[x]$ will implicitly create the key—with value 0—before executing.
 
-With these in hand, we're ready to compute the polynomials $g_{m, \text{op}}(J, S)$. To compute these, we run the following algorithm:
+With these in hand, we're ready to compute the polynomials $g_\text{op}(J, S)$. To compute these, we run the following algorithm:
 
-- for each $m \in \{a, b, c\}$ and $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, initialize $\mathsf{g}_{m, \text{op}}$ to be an empty, $2^6 \times 2^6$ array of field elements.
+- for each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, initialize $\mathsf{g}_\text{op}$ to be an empty, $2^6 \times 2^6$ array of field elements.
 - **for** each $y \in \{0, \ldots , n_\text{words} - 1\}$ **do**:
-  - **for** each key–value pair $\left( (m, \text{op}, s), \textsf{value} \right)$ **in** $\textsf{index}[y]$ **do**:
+  - **for** each key–value pair $\left( (\text{op}, s), \textsf{value} \right)$ **in** $\textsf{index}[y]$ **do**:
     - **for** each $j \in \{0, \ldots , 63\}$ **do**:
       - **if** $w[y]_j \stackrel{?}= 1$ **do**:
-        - $\mathsf{g}_{m, \text{op}}[j][s] \mathrel{+}= \textsf{value}$.
-- return $\mathsf{g}_{m, \text{op}}$ for all three $m \in \{a, b, c\}$ and all three $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
+        - $\mathsf{g}_\text{op}[j][s] \mathrel{+}= \textsf{value}$.
+- return $\mathsf{g}_\text{op}$ for all three $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
 
-We claim that for each $m \in \{a, b, c\}$ and $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, the resulting array $\mathsf{g}_{m, \text{op}}$ contains precisely the table of values of $g_{m, \text{op}}(J, S)$ on $\mathcal{B}_6 \times \mathcal{B}_6$.
-
-For each of the three $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, the prover can now combine the tables of values of $g_{a, \text{op}}$, $g_{b, \text{op}}$, and $g_{c, \text{op}}$ over $\lambda_a$, $\lambda_b$, and $\lambda_c$. In this way, the prover can obtain the tables of values of
-
-$$
-\begin{equation*}\lambda_a \cdot g_{a, \text{op}}(J, S) + \lambda_b \cdot g_{b, \text{op}}(J, S) + \lambda_c \cdot g_{c, \text{op}}(J, S)\end{equation*}
-$$
-
-for all three $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$. These give the last 3 out of the 6 12-variate polynomials that the prover needs to run the first phase. This completes our description of the first phase.
+We claim that for each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, the resulting array $\mathsf{g}_\text{op}$ contains precisely the table of values of $g_\text{op}(J, S)$ on $\mathcal{B}_6 \times \mathcal{B}_6$. This completes our description of the first phase.
 
 ## The Second Phase
 
@@ -98,35 +85,34 @@ $$
 and
 
 $$
-\begin{equation*}\sum_\text{op} h_\text{op}(r_j, r_s) \cdot \sum_{m \in \{a, b, c\}} \lambda_m \cdot \widetilde{M}_{m, \text{and}, \text{op}}(r'_x, Y, r_s).\end{equation*}
+\begin{equation*}\sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, Y, r_s).\end{equation*}
 $$
 
 The first is just a standard partial specialization. The prover just needs to tensor-expand the 6-dimensional challenge $r_j$, and then, for each $y \in \{0, \ldots , n_\text{words} - 1\}$, take the subset sum $\sum_{j = 0}^{63} w[y]_j \cdot \widetilde{\texttt{eq}}(r_j, j)$.
 
 For the second, we can again use our $\mathsf{index}$. We claim that the following algorithm computes the required table of values:
 
-- initialize $\mathsf{M}$, an all-zero, length-$n_\text{words}$ array of $\mathbb{F}_{2^{128}}$-elements.
+- initialize $\mathsf{Z}$, an all-zero, length-$n_\text{words}$ array of $\mathbb{F}_{2^{128}}$-elements.
 - compute in advance the tensor-expansion $\left( \widetilde{\texttt{eq}}(r_s, s) \right)_{s \in \mathcal{B}_6}$.
 - **for** $y \in \{0, \ldots , n_\text{words} - 1\}$ **do**:
-  - **for** each key–value pair $\left( (m, \text{op}, s), \textsf{value} \right)$ **in** $\textsf{index}[y]$ **do**:
-    - update $\mathsf{M}[y] \mathrel{+}= h_\text{op}(r_j, r_s) \cdot \lambda_m \cdot \mathsf{value} \cdot \widetilde{\texttt{eq}}(r_s, s)$.
-- return $\mathsf{M}$.
+  - **for** each key–value pair $\left( (\text{op}, s), \textsf{value} \right)$ **in** $\textsf{index}[y]$ **do**:
+    - update $\mathsf{Z}[y] \mathrel{+}= h_\text{op}(r_j, r_s) \cdot \mathsf{value} \cdot \widetilde{\texttt{eq}}(r_s, s)$.
+- return $\mathsf{Z}$.
 
-This completes the precomputation; $\mathsf{M}$ yields the table of values of the second multilinear in $Y$ above. The prover can at this point proceed with the second phase of the sumcheck.
+This completes the precomputation; $\mathsf{Z}$ yields the table of values of the second multilinear in $Y$ above. The prover can at this point proceed with the second phase of the sumcheck.
 
 ## Constraint Matrices
 
-We touch on one final topic, which is how the verifier can evaluate $\widetilde{A}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, $\widetilde{B}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, and $\widetilde{C}_{\text{and}, \text{op}}(r'_x, r_y, r_s)$, for all three $\text{op}$, himself. As we [said](/blueprint/backend/reduction/sumchecks#the-second-phase), this is the last unexplained thing that the verifier needs to do at the very end.
+We touch on one final topic, which is how the verifier can evaluate $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s)$, for all three $\text{op}$, himself. As we [saw earlier](/blueprint/backend/reduction/sumchecks#the-second-phase), this is the last unexplained thing that the verifier needs to do at the very end.
 
 The correctness of the following algorithm essentially follows from the standard properties of multilinear evaluation. The point is to do everything in a way that exploits sparsity.
 
-- for each $m \in \{a, b, c\}$ and $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, initialize a single scalar $\mathsf{m}_{m, \text{op}}$, starting at 0.
+- for each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, initialize a single scalar $\mathsf{m}_\text{op}$, starting at 0.
 - precompute the tensor expansions $\left( \widetilde{\texttt{eq}}(r'_x, x) \right)_{x \in \mathcal{B}_{\ell_\text{and}}}$, $\left( \widetilde{\texttt{eq}}(r_y, y) \right)_{y \in \mathcal{B}_{\ell_\text{words}}}$ and $\left( \widetilde{\texttt{eq}}(r_s, s) \right)_{s \in \mathcal{B}_6}$.
-- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
-  - load the $x$<sup>th</sup> triple $(L_a, L_b, L_c)$ from the constraint system.
-  - **for** each $(y, \text{op}, s) \in L_a$ **do**: update $\mathsf{m}_{a, \text{op}} \mathrel{+}= \widetilde{\texttt{eq}}(r'_x, x) \cdot \widetilde{\texttt{eq}}(r_y, y) \cdot \widetilde{\texttt{eq}}(r_s, s)$.
-  - **for** each $(y, \text{op}, s) \in L_b$ **do**: update $\mathsf{m}_{b, \text{op}} \mathrel{+}= \widetilde{\texttt{eq}}(r'_x, x) \cdot \widetilde{\texttt{eq}}(r_y, y) \cdot \widetilde{\texttt{eq}}(r_s, s)$.
-  - **for** each $(y, \text{op}, s) \in L_c$ **do**: update $\mathsf{m}_{c, \text{op}} \mathrel{+}= \widetilde{\texttt{eq}}(r'_x, x) \cdot \widetilde{\texttt{eq}}(r_y, y) \cdot \widetilde{\texttt{eq}}(r_s, s)$.
-- return $\mathsf{m}_{m, \text{op}}$ for all $m \in \{a, b, c\}$ and $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
+- **for** each $x \in \{0, \ldots , n_\text{cons} - 1\}$ **do**:
+  - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
+  - **for** each $(y, \text{op}, s) \in L^z_x$ **do**:
+    - update $\mathsf{m}_\text{op} \mathrel{+}= \widetilde{\texttt{eq}}(r'_x, x) \cdot \widetilde{\texttt{eq}}(r_y, y) \cdot \widetilde{\texttt{eq}}(r_s, s)$.
+- return $\mathsf{m}_{m, \text{op}}$ for all $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$.
 
 This completes our treatment of the shift reduction.

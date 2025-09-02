@@ -2,12 +2,57 @@
 
 As usual, we write $w$ for the full list of prover data (a concatenation of constant, input–output, and witness data). Each component of $w$ is a 64-bit word. We [saw already](/blueprint/constraints/indices) that _shifted value indices_ are tuple $(y, \text{op}, s) \in W \times \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$ consisting of an index $y$ into the prover's runtime-dependent data, a _shift type_ $\text{op}$, and a _shift amount_ $s$.
 
-An _AND constraint_, by definition, is three lists of shifted value indices, say $(L_a, L_b, L_c)$. We say that the AND constraint $(L_a, L_b, L_c)$ holds with respect to candidate prover data $w$ if and only if:
+An _AND constraint_, by definition, is three lists of shifted value indices, say $(L^a, L^b, L^c)$. We say that the AND constraint $(L^a, L^b, L^c)$ holds with respect to candidate prover data $w$ if and only if:
 
 $$
-\begin{equation*}\left( \bigoplus_{(y, \text{op}, s) \in L_a} \text{op}(w[y], s) \right) \& \left( \bigoplus_{(y, \text{op}, s) \in L_b} \text{op}(w[y], s) \right) \stackrel{?}= \left( \bigoplus_{(y, \text{op}, s) \in L_c} \text{op}(w[y], s) \right).\end{equation*}
+\begin{equation*}\left( \bigoplus_{(y, \text{op}, s) \in L^a} \text{op}(w[y], s) \right) \& \left( \bigoplus_{(y, \text{op}, s) \in L^b} \text{op}(w[y], s) \right) \stackrel{?}= \left( \bigoplus_{(y, \text{op}, s) \in L^c} \text{op}(w[y], s) \right).\end{equation*}
 $$
 
 Note that both sides of this equality are 64-bit words; the symbol $\&$ is a bitwise AND of 64-bit words.
 
-Each given constraint system will specify, first, the total number $n_\text{and}$ of AND constraints; it will moreover supply $n_\text{and}$ triples $(L_a, L_b, L_c)$ of the form already given above. We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for _each_ among the $n_\text{and}$ triples $(L_a, L_b, L_c)$ baked into the constraint system, the above equality holds over $w$.
+Each given constraint system will specify, first, the total number $n_\text{and}$ of AND constraints; it will moreover supply $n_\text{and}$ triples $(L^a_x, L^b_x, L^c_x)$ of the form already given above, for $x \in \{0, \ldots , n_\text{and} - 1\}$. We will say that the prover data $w$ fulfills the constraint system's AND constraints if and only if for each $x \in \{0, \ldots , n_\text{and} - 1\}$, the above equality holds over $w$ with respect to the $x$<sup>th</sup> triple $(L^a_x, L^b_x, L^c_x)$.
+
+## The Constraint Arrays
+
+There's a useful array-based reformulation of this condition. We can define arrays $a$, $b$ and $c$, containing $n_\text{and}$ 64-bit words, by setting, for each $x \in \{0, \ldots , n_\text{and} - 1\}$:
+
+$$
+\begin{align*}
+a[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^a_x} \text{op}(w[y], s), \\
+b[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^b_x} \text{op}(w[y], s), \\
+c[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^c_x} \text{op}(w[y], s).
+\end{align*}
+$$
+
+Having defined these arrays, we can say that the constraint system is fulfilled if and only if
+
+$$
+\begin{equation*}a[x] \mathbin{\&} b[x] = c[x]\end{equation*}
+$$
+
+holds for each $x \in \{0, \ldots , n_\text{and} - 1\}$.
+
+## Completeness
+
+We pause here to argue that our constraint system is at least as powerful as a complete system of boolean circuits on 64-bit words (in fact, it's much more powerful, in concrete terms).
+
+Bitwise AND is supported at the native level. Note that, technically, we can _only_ act on values that have been shifted "somehow"; in order to get non-shifts, we can just use $\text{op} = \textsf{sll}$ and $s = 0$.
+
+In order to constrain that a wire $z$ equals the bitwise XOR of wires $x$ and $y$, we can add a constraint to the effect of
+
+```
+x ⊕ y & 0xFFFFFFFFFFFFFFFF = z.
+```
+Bitwise NOT is similar; to obtain a wire $y = \overline{x}$, we can constrain
+```
+x & 0xFFFFFFFFFFFFFFFF = y ⊕ 0xFFFFFFFFFFFFFFFF.
+```
+Since $z = x \vee y$ is equivalent to $\overline{z} = \overline{x} \mathrel{\&} \overline{y}$, we can use
+```
+x ⊕ 0xFFFFFFFFFFFFFFFF & y ⊕ 0xFFFFFFFFFFFFFFFF = z ⊕ 0xFFFFFFFFFFFFFFFF
+```
+to get bitwise OR. Alternatively, the expression
+```
+x & y = x ⊕ y ⊕ z
+```
+also works.
