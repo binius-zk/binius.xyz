@@ -120,6 +120,18 @@ h2 {
   border: 1px solid #ffffff33;
 }
 
+.dark :not(.vocs_Pre) > .vocs_Code {
+  background-color: #323035;
+}
+
+.dark .vocs_Pre {
+  background-color: #2b292d !important;
+}
+
+.vocs_Callout p.vocs_Paragraph:last-of-type {
+  margin-bottom: 0;
+}
+
 .lp-footer {
   padding-left: calc(
     var(--vocs_DocsLayout_leftGutterWidth) - var(--vocs-sidebar_width)
