@@ -42,6 +42,32 @@ p {
   margin-bottom: 16px;
 }
 
+.dark .vocs_Sidebar a[data-active="true"] {
+  color: #b1a9ff !important;
+}
+
+.dark .vocs_Anchor.vocs_Link.vocs_Link_accent,
+.dark .vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"] {
+  color: #b1a9ff !important;
+}
+
+.vocs_Anchor.vocs_Link.vocs_Link_accent,
+.vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"] {
+  color: #5753c6;
+}
+
+.vocs_Sidebar_sectionTitle.vocs_Sidebar_sectionTitleLink {
+  font-weight: bold;
+}
+
+.dark .vocs_Sidebar_item.vocs_Link {
+  color: #a7a7a8;
+}
+
+.dark .vocs_Sidebar a[data-active="true"] {
+  color: #b1a9ff !important;
+}
+
 h1 {
   font-family: "Newsreader", serif;
   font-weight: 400;
@@ -214,9 +240,7 @@ h2 {
 .vocs_Callout_danger,
 .vocs_Callout_tip,
 .vocs_Callout_success {
-  padding-top: 24px !important;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
+  padding: 16px 24px;
 }
 
 /* Theme toggle button styling */
@@ -239,9 +263,10 @@ h2 {
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Hide the entire sidebar footer */
-.vocs_Sidebar_footer {
-  display: none !important;
+/* Remove sidebar footer background */
+.vocs_Sidebar_footer,
+.vocs_Sidebar_footerCurtain {
+  background: none !important;
 }
 
 /* Make content area wider */
