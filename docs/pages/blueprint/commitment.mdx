@@ -1,0 +1,9 @@
+# Polynomial Commitment [Explanation of our multilinear polynomial commitment scheme]
+
+A _polynomial commitment scheme_ is a protocol by the means of which the parties can commit, and later evaluate, a multilinear polynomial. For our purposes in these pages, we think of a PCS as a kind of secure dropbox. The prover can "drop in" a multilinear polynomial, at which point the verifier is notified, and after which point the prover can no longer change his polynomial. Later, the verifier can ask the dropbox for the polynomial's evaluation at a point.
+
+This kind of dropbox doesn't exist in real life, but a PCS lets us act as if one did.
+
+At the [very beginning](/blueprint/backend/) of our entire protocol, the prover "drops in" the multilinearization of his witness, $w$. At its [very end](/blueprint/backend/reduction/sumchecks#the-end), the verifier makes just a single query to $w$. Our protocol is secure under the assumption that the PCS it uses is secure.
+
+Constructing a PCS is difficult. We will say next to nothing about this task in these docs. Instead, we refer out to the paper _Polylogarithmic Proofs for Multilinears over Binary Towers_ [[DP24](https://eprint.iacr.org/2024/504)], written by members of the Irreducible team. Binius64 uses the polynomial commitment scheme developed in that work.
