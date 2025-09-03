@@ -42,30 +42,71 @@ p {
   margin-bottom: 16px;
 }
 
-.dark .vocs_Sidebar a[data-active="true"] {
-  color: #b1a9ff !important;
+.vocs_Sidebar_items {
+  font-weight: 400;
 }
 
+.dark .vocs_Sidebar a[data-active="true"],
 .dark .vocs_Anchor.vocs_Link.vocs_Link_accent,
-.dark .vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"] {
-  color: #b1a9ff !important;
+.dark .vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"],
+.dark .vocs_Outline_link[data-active="true"],
+.dark .vocs_Link,
+.dark .vocs_NavigationMenu_link[data-active="false"]:hover {
+  color: #b1a9ff;
 }
 
 .vocs_Anchor.vocs_Link.vocs_Link_accent,
-.vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"] {
+.vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"],
+.vocs_Outline_link[data-active="true"],
+.vocs_Sidebar_item[data-active="true"],
+.vocs_Link,
+.vocs_NavigationMenu_link[data-active="false"]:hover,
+.vocs_Sidebar_sectionTitleLink[data-active="true"] {
   color: #5753c6;
+}
+
+.vocs_Sidebar_item[data-active="false"]:hover,
+.vocs_Sidebar_sectionTitleLink[data-active="false"]:hover {
+  color: #4c4c4c;
 }
 
 .vocs_Sidebar_sectionTitle.vocs_Sidebar_sectionTitleLink {
   font-weight: bold;
 }
 
-.dark .vocs_Sidebar_item.vocs_Link {
+.dark .vocs_Sidebar_item.vocs_Link,
+.dark .vocs_Outline_link,
+.dark .vocs_Sidebar_item[data-active="false"] {
   color: #a7a7a8;
 }
 
-.dark .vocs_Sidebar a[data-active="true"] {
-  color: #b1a9ff !important;
+.vocs_Sidebar_item[data-active="false"] {
+  color: #838383;
+}
+
+.vocs_Sidebar_sectionTitle[data-active="false"] {
+  color: #202020;
+}
+
+.vocs_NavigationMenu_link[data-active="false"] {
+  color: #1d272a;
+}
+
+.dark .vocs_Sidebar_item[data-active="false"]:hover,
+.dark .vocs_Outline_link[data-active="false"]:hover {
+  color: #cfcfcf;
+}
+
+.dark .vocs_Sidebar_sectionTitle[data-active="false"] {
+  color: #fff;
+}
+
+.dark .vocs_Sidebar_sectionTitle[data-active="false"]:hover {
+  color: #cfcfcf;
+}
+
+.dark .vocs_NavigationMenu_link[data-active="false"] {
+  color: #fff;
 }
 
 h1 {
@@ -90,7 +131,11 @@ h2 {
 .vocs_DocsLayout_content,
 .vocs_Content,
 .vocs_DocsLayout_gutterTop,
-.vocs_MobileTopNav {
+.vocs_MobileTopNav,
+.vocs_DocsLayout_gutterLeft,
+.vocs_Sidebar_logoWrapper,
+.vocs_Popover,
+.vocs_Callout_info {
   background-color: #f7f6ec;
   border: none;
 }
@@ -98,7 +143,12 @@ h2 {
 .dark .vocs_DocsLayout_content,
 .dark .vocs_Content,
 .dark .vocs_DocsLayout_gutterTop,
-.dark .vocs_MobileTopNav {
+.dark .vocs_MobileTopNav,
+.dark .lp-footer,
+.dark .vocs_DocsLayout_content_withSidebar,
+.dark .vocs_DocsLayout_content_withSidebar .vocs_Content,
+.dark .vocs_DocsLayout_gutterRight,
+.dark .vocs_DocsLayout_gutterTop_offsetLeftGutter {
   background-color: #1d272a;
 }
 
@@ -141,15 +191,6 @@ h2 {
   );
 }
 
-.dark .lp-footer {
-  background-color: #1d272a;
-}
-
-.vocs_DocsLayout_gutterLeft,
-.vocs_Sidebar_logoWrapper {
-  background-color: #f7f6ec;
-}
-
 .vocs_Sidebar_logo {
   margin: 0 0 40px 0;
 }
@@ -163,13 +204,6 @@ h2 {
 .vocs_DocsLayout_gutterRight,
 .vocs_DocsLayout_gutterTop_offsetLeftGutter {
   background: #fff;
-}
-
-.dark .vocs_DocsLayout_content_withSidebar,
-.dark .vocs_DocsLayout_content_withSidebar .vocs_Content,
-.dark .vocs_DocsLayout_gutterRight,
-.dark .vocs_DocsLayout_gutterTop_offsetLeftGutter {
-  background: #1d272a;
 }
 
 .dark .vocs_DocsLayout_gutterLeft,
@@ -204,10 +238,6 @@ h2 {
   background-color: #161d20;
 }
 
-.vocs_Popover {
-  background-color: #f7f6ec;
-}
-
 .shape-grid {
   display: grid;
   grid-template-columns: repeat(18, 1fr);
@@ -229,7 +259,6 @@ h2 {
 }
 
 .vocs_Callout_info {
-  background-color: #f7f6ec;
   color: #000;
   border-color: #1d272a0a;
 }
@@ -302,6 +331,14 @@ h2 {
   font-size: 1.3em;
 }
 
+/* Horizontal scroll for KaTeX math blocks on mobile */
+@media (max-width: 768px) {
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
 .vocs_DesktopTopNav_withLogo {
   padding-left: calc(((100% - var(--vocs-content_width)) / 2) + 3rem);
 }
@@ -334,10 +371,6 @@ h2 {
 
   .dark .vocs_MobileTopNav_curtain {
     background-color: #161d20;
-  }
-
-  .vocs_MobileTopNav_curtain {
-    background-color: #f7f6ec;
   }
 
   .vocs_DocsLayout_gutterTopCurtain {

@@ -13,7 +13,7 @@ export default function Card({ children }: { children: React.ReactNode }) {
       {isOpen && bodyContent}
 
       <div
-        className="flex justify-center hover:cursor-pointer hover:bg-highlight py-3 transition-colors duration-300"
+        className="flex justify-center hover:cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-sm py-3 transition-colors duration-300"
         onClick={() => {
           setIsOpen((isOpen) => !isOpen);
         }}
