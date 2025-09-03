@@ -51,6 +51,7 @@ p {
 .dark .vocs_DesktopTopNav_item.vocs_NavigationMenu_link[data-active="true"],
 .dark .vocs_Outline_link[data-active="true"],
 .dark .vocs_Link,
+.dark a.vocs_Anchor,
 .dark .vocs_NavigationMenu_link[data-active="false"]:hover {
   color: #b1a9ff;
 }
@@ -60,6 +61,7 @@ p {
 .vocs_Outline_link[data-active="true"],
 .vocs_Sidebar_item[data-active="true"],
 .vocs_Link,
+a.vocs_Anchor,
 .vocs_NavigationMenu_link[data-active="false"]:hover,
 .vocs_Sidebar_sectionTitleLink[data-active="true"] {
   color: #5753c6;
