@@ -2,8 +2,39 @@
 
 Here, we put the previous two pages together. Indeed, we've [already seen](/blueprint/backend/muls/multiplying) that $p[x] \cdot q[x] = 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds as integers if and only if $\big(g^{p[x]}\big)^{q[x]} \stackrel{?}= \big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}$, where $g \in \mathbb{F}_{2^{128}}^*$ is a multiplicative generator (up to an exceptional case that we can manually rule out). Moreover, we've [seen](/blueprint/backend/muls/exponentiating) how to multilinearize the exponentiation operation. It thus remains just to put these parts together.
 
-Our goal will be to reduce the question of the satisfaction of the prover's MUL constraints to _evaluation claims_ on the [oblong-multilinearizations](/blueprint/math/oblong) of the prover's [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays). Evaluation claims of this form are exactly what our [shift reduction](/blueprint/backend/reduction) is designed to assess.
+We write $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ for the oblong-multilinearizations of the prover's [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays) $p$, $q$, $\text{lo}$ and $\text{hi}$. Our goal will be to _reduce_ the question of the satisfaction of the prover's MUL constraints to _evaluation claims_ these oblong-multilinearized constraint arrays. Evaluation claims of this latter form are exactly what our [shift reduction](/blueprint/backend/reduction) is designed to assess.
+
+## Some Preparation
+
+We write $G(X_0, \ldots , X_{\ell_\text{mul} - 1})$ for the constant multilinear that equals $g$ everywhere, and $G_{64}(X_0, \ldots , X_{\ell_\text{mul} - 1})$ for the constant multilinear that equals $g^{2^{64}}$ everywhere.
+
+For each pair consisting of a base multilinear $\widetilde{V}(X)$ and an exponent oblong-multilinear $\widehat{z}(\widehat{I}, X)$, the [exponent protocol](/blueprint/backend/muls/exponentiating) yields "query access" to the virtual multilinear $\widetilde{W}(X)$, defined pointwise on the cube as $V(x)^{z[x]}$ for each $x \in \mathcal{B}_{\ell_\text{mul}}$. The prover prepares for four executions of that protocol, preparing four virtual multilinears:
+- using the base $G$ and the exponent $\widehat{p}(\widehat{I}, X)$, obtain the exponentiation $\widetilde{P}(X)$.
+- using the base $\widetilde{P}(X)$ and the exponent $\widehat{q}(\widehat{I}, X)$, obtain the exponentiation $\widetilde{Q}(X)$.
+- using the base $G$ and the exponent $\widehat{\text{lo}}(\widehat{I}, X)$, obtain the exponentiation $\widetilde{\text{LO}}(X)$.
+- using the base $G_{64}$ and the exponent $\widehat{\text{hi}}(\widehat{I}, X)$, obtain the exponentiation $\widetilde{\text{HI}}(X)$.
+
+We note first that for each $x \in \mathcal{B}_{\ell_\text{mul}}$,
+$$
+\begin{equation*}\big(g^{p[x]}\big)^{q[x]} = \widetilde{P}(x)^{q[x]} = \widetilde{Q}(x)\end{equation*}
+$$
+and
+$$
+\begin{equation*}\big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]} = G_{64}^{\text{hi}[x]} \cdot G^{\text{lo}[x]} = \widetilde{\text{HI}}(x) \cdot \widetilde{\text{LO}}(x)\end{equation*}
+$$
+both hold. For this reason, our claim of interest, whereby $\big(g^{p[x]}\big)^{q[x]} \stackrel{?}= \big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}$ holds for each $x \in \mathcal{B}_{\ell_\text{mul}}$, is equivalent to that whereby
+$$
+\begin{equation*}\widetilde{Q}(x) \stackrel{?}= \widetilde{\text{LO}}(x) \cdot \widetilde{\text{HI}}(x)\end{equation*}
+$$
+does. Except with low probability over a random point $r_0$, this condition in turn holds if and only if
+$$
+\begin{equation*}\widetilde{Q}(r_0) \stackrel{?}= \widetilde{\text{LO} \cdot \text{HI}}(r_0).\end{equation*}
+$$
+Here, we write $\widetilde{\text{LO} \cdot \text{HI}}$ for the MLE of the _pointwise product_ of $\widetilde{\text{LO}}(x)$ and $\widetilde{\text{HI}}(x)$ on the cube.
 
 ## The Protocol
 
-We write $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ for the oblong-multilinearizations at issue.
+Here is the protocol.
+- verifier samples $r_0 \gets \mathbb{F}_{2^{128}}^{\ell_\text{mul}}$ and sends it to the prover.
+- the prover sends a value $s_0$, claimed to be the joint common value of both $\widetilde{Q}(r_0)$ and $\widetilde{\text{LO} \cdot \text{HI}}(r_0)$.
+- by running an $\ell_\text{mul}$-round sumcheck, the parties reduce this claim to further individual evaluation claims $s_\text{lo} \stackrel{?}= \widetilde{\text{HI}}(r_1)$ and $s_\text{hi} \stackrel{?}= \widetilde{\text{LO}}(r_1)$, say.

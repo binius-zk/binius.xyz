@@ -2,14 +2,15 @@
 
 In this page, we explain a generic mathematical technique that exponentiates a variable base by a variable exponent pointwise on the cube. That is, we explain how to algebraically relate the multilinear extension of this exponentiation to the multilinear extensions of the base and the exponent. This protocol is the technical core of our multiplication protocol. In the [next page](/blueprint/backend/muls/combined), we apply this protocol to our situation.
 
-We fix an $\ell_\text{mul}$-variate multilinear $\widetilde{V}(X)$ with values in $\mathbb{F}_{2^{128}}$, and an $\mathbb{F}_2$-valued, [oblong-multilinear](/blueprint/math/oblong) exponent function $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$. As a notational device, we write $z_i(x) \coloneqq \widehat{z}(\widehat{i}, x)$ for each $i \in \{0, \ldots , 63\}$ and each $x \in \mathcal{B}_{\ell_\text{mul}}$. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we define the _exponent_ $Z(x) \in \{0, \ldots , 2^{64} - 1\}$ by combining $\widehat{z}(\widehat{I}, x)$'s bits on $D$:
+We fix an $\ell_\text{mul}$-variate multilinear $\widetilde{V}(X)$ with values in $\mathbb{F}_{2^{128}}$, and an $\mathbb{F}_2$-valued, [oblong-multilinear](/blueprint/math/oblong) exponent function $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$. As a notational device, we write $z_i(x) \coloneqq \widehat{z}(\widehat{i}, x)$ for each $i \in \{0, \ldots , 63\}$ and each $x \in \mathcal{B}_{\ell_\text{mul}}$. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we define $z[x] \in \{0, \ldots , 2^{64} - 1\}$ by combining $\widehat{z}(\widehat{I}, x)$'s bits on $D$:
 $$
-\begin{equation*}Z(x) \coloneqq \sum_{i = 0}^{63} 2^i \cdot \widehat{z}(\widehat{i}, x).\end{equation*}
+\begin{equation*}z[x] \coloneqq \sum_{i = 0}^{63} 2^i \cdot \widehat{z}(\widehat{i}, x).\end{equation*}
 $$
+When $z$ is a [constraint array](/blueprint/constraints/arrays) and $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$ its oblong-multilinearization, this condition indeed holds.
 
 We define the _exponentiated multilinear_ $\widetilde{W}(X_0, \ldots , X_{\ell_\text{mul} - 1})$ by specifying its values on the cube. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we set:
 $$
-\begin{equation*}W(x) \coloneqq \widetilde{V}(x)^{Z(x)}.\end{equation*}
+\begin{equation*}W(x) \coloneqq \widetilde{V}(x)^{z[x]}.\end{equation*}
 $$
 
 In this page, our goal will be to efficiently reduce an evaluation claim on $\widetilde{W}(X)$ to evaluation claims on $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$. This problem is tricky, since $\widetilde{W}(X)$ doesn't depend algebraically on $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$ (the exponentiation operation is not algebraic).
@@ -18,7 +19,7 @@ In this page, our goal will be to efficiently reduce an evaluation claim on $\wi
 
 We first express $\widetilde{W}(X)$ pointwise on the cube as a product of 64 individual multilinears. Indeed, for each $x \in \mathcal{B}_{\ell_\text{mul}}$,
 $$
-\begin{equation*}W(x) = \widetilde{V}(x)^{Z(x)} = \widetilde{V}(x)^{\sum_{i = 0}^{63} 2^i \cdot z_i(x)} = \prod_{i = 0}^{63} \left( \widetilde{V}(x)^{2^i} \right)^{z_i(x)}.\end{equation*}
+\begin{equation*}W(x) = \widetilde{V}(x)^{z[x]} = \widetilde{V}(x)^{\sum_{i = 0}^{63} 2^i \cdot z_i(x)} = \prod_{i = 0}^{63} \left( \widetilde{V}(x)^{2^i} \right)^{z_i(x)}.\end{equation*}
 $$
 We thus define
 $$
