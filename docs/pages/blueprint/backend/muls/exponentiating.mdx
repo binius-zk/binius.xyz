@@ -126,11 +126,11 @@ $$
 $$
 I.e., it outputs the claim $\alpha_z \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x)$, where $\alpha_z \coloneqq \sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(r_{\widehat{i}}, \widehat{i})$.
 
-To see why this is correct, we note that the equality of polynomials
+To see why this is correct, we note that the equality of degree-63, univariate polynomials
 $$
-\begin{equation*}\widehat{z}(\widehat{I}, X) = \sum_{i = 0}^{63} \delta_D(\widehat{I}, \widehat{i}) \cdot \widehat{z}(\widehat{i}, X)\end{equation*}
+\begin{equation*}\widehat{z}(\widehat{I}, r'_x) = \sum_{i = 0}^{63} \delta_D(\widehat{I}, \widehat{i}) \cdot \widehat{z}(\widehat{i}, r'_x)\end{equation*}
 $$
-holds, since $\widehat{z}(\widehat{I}, X)$ is oblong-multilinear. Specializing both sides to $r_{\widehat{i}}$ and $r'_x$, we get the correctness of this step. As for soundness, if $\alpha_{z, i^*} \neq \widehat{z}(\widehat{i}^*, r'_x)$ holds for some $i^* \in \{0, \ldots , 63\}$, then the degree-63 univariate polynomials
+holds, since $\widehat{z}(\widehat{I}, X)$ is oblong-multilinear. Specializing both sides to $r_{\widehat{i}}$, we get the correctness of this step. Conversely, if $\alpha_{z, i^*} \neq \widehat{z}(\widehat{i}^*, r'_x)$ holds for some $i^* \in \{0, \ldots , 63\}$, then the degree-63 univariate polynomials
 
 $$
 \begin{equation*}P(\widehat{I}) \coloneqq \sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(\widehat{I}, \widehat{i})\end{equation*}

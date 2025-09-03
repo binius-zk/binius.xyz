@@ -368,7 +368,7 @@ export default defineConfig({
             collapsed: false,
             items: [
               {
-                text: "The Exponent Idea",
+                text: "Multiplying in the Exponent",
                 link: "/blueprint/backend/muls/exponent"
               },
               {

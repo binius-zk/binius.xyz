@@ -1,9 +1,58 @@
-# The Exponent Idea [Achiving unsigned integer multiplication by working in the exponent]
+# Multiplying in the Exponent [From repeated exponentiation to multiplication]
 
 Here, we explain a fairly simple mathematical idea that underlies our multiplication technique.
 
 We fix integers $p$ and $q$, in the range $\{0, \ldots , 2^{64} - 1\}$. We're interested in $p \cdot q$. Recall that we work throughout with binary fields. This means that we can't use typical prime-field ideas—say, that of breaking $p$ and $q$ into limbs so small that their products don't overflow the characteristic.
 
-## Multiplication in the Exponent
+## The Exponentiation Identity
 
-We [recall](/blueprint/math/fields#binary-fields) that [the multiplicative group of units of a finite field is cyclic](https://groupprops.subwiki.org/wiki/Multiplicative_group_of_a_finite_field_is_cyclic). We fix a generator $g \in \mathbb{F}_{2^{128}}^*$.
+The idea is to use the basic identity $(g^p)^q = g^{p \cdot q}$. This is true in all rings, but we have to be careful about reduction in the exponent. 
+
+We [recall](/blueprint/math/fields#binary-fields) that the multiplicative group of units $\mathbb{F}_{2^{128}}^*$ is cyclic; we fix a generator $g \in \mathbb{F}_{2^{128}}^*$. Thus, the multiplicative order of $g$ in $\mathbb{F}_{2^{128}}$ is $2^{128} - 1$.
+
+We fix 4 integers, $p$, $q$, $\text{lo}$ and $\text{hi}$, all in $\{0, \ldots , 2^{64} - 1\}$. Our goal is to check whether
+
+$$
+\begin{equation*}p \cdot q \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}\end{equation*}
+$$
+_as integers_ (we recall how we defined [MUL constraints](http://localhost:5173/blueprint/constraints/muls)).
+
+By the basic properties of rings, we know that
+
+$$
+\begin{equation*}g^r = g^s\end{equation*}
+$$
+holds if and only if $r \equiv s \pmod{\text{ord}(g)}$; in our case, we conclude that
+
+$$
+\begin{equation*}(g^p)^q = g^{p \cdot q} \stackrel{?}= g^{2^{64} \cdot \text{hi} + \text{lo}} = \left( g^{2^{64}} \right)^\text{hi} \cdot g^\text{lo}\end{equation*}
+$$
+holds in in $\mathbb{F}_{2^{128}}$ if and only if
+$$
+\begin{equation*}p \cdot q \equiv 2^{64} \cdot \text{hi} + \text{lo} \pmod{2^{128} - 1}.\end{equation*}
+$$
+
+## Controlling Wraparound
+
+If $p \cdot q \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}$ holds as integers, then it definitely also holds modulo $2^{128} - 1$. The converse is not quite true, as we now explain. Since
+$$
+\begin{equation*}p \cdot q \leq (2^{64} - 1)^2 = 2^{128} - 2 \cdot 2^{64} + 1 < 2^{128} - 1,\end{equation*}
+$$
+$p \cdot q$ can't wrap around modulo $2^{128} - 1$. On the other hand, since
+$$
+\begin{equation*}2^{64} \cdot \text{hi} + \text{lo} \leq 2^{64} \cdot (2^{64} - 1) + 2^{64} - 1 = 2^{128} - 1,\end{equation*}
+$$
+$2^{64} \cdot \text{hi} + \text{lo}$ can wrap around _only_ in the case of a direct equality $2^{64} \cdot \text{hi} + \text{lo} = 2^{128} - 1$. This equality happens if and only if $\text{lo}$ and $\text{hi}$ are both $2^{64} - 1$; and indeed, by choosing at least one of $p$ and $q$ to be zero, we can get a case in which $p \cdot q \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}$ holds modulo $2^{128} - 1$ but not over the integers. In this latter case, $p \cdot q$ is even, while $2^{64} \cdot \text{hi} + \text{lo}$; to eliminate it, it suffices to ensure to boot that $p \cdot q \equiv 2^{64} \cdot \text{hi} + \text{lo} \pmod{2}$. This latter equality is easy to check, since it only depends on the least-significant bits of $p$, $q$ and $\text{lo}$, and we deal with it in a separate protocol.
+
+## Putting it Together
+
+By combining the above remarks, we conclude that
+
+$$
+\begin{equation*}p \cdot q \stackrel{?}= 2^{64} \cdot \text{hi} + \text{lo}\end{equation*}
+$$
+holds _as integers_ if and only if
+$$
+\begin{equation*}(g^p)^q \stackrel{?}= \left( g^{2^{64}} \right)^\text{hi} \cdot g^\text{lo}\end{equation*}
+$$
+holds in $\mathbb{F}_{2^{128}}$ _and_ $p \cdot q \equiv 2^{64} \cdot \text{hi} + \text{lo} \pmod{2}$ both hold. We explain the rest of this site section explaining how to check the exponent condition above.
