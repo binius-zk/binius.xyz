@@ -6,7 +6,7 @@ $$
 \begin{equation*}z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^z_x} \text{op}(w[y], s),\end{equation*}
 $$
 
-for $x \in \{0, \ldots , n_\text{cons} - 1\}$. Here, $n_\text{cons}$ is the total number of constraints (either AND or MUL), and each $L^z_x$ is a list of shifted value indices. We recall that, by definition, each shifted value index $(y, \text{op}, s) \in L^z_x$ is an element of the set $\{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
+for $x \in \{0, \ldots , n_\text{cons} - 1\}$. Here, $n_\text{cons}$ is the total number of constraints (either AND or MUL), and each $L^z_x$ is a list of [shifted value indices](/blueprint/constraints/indices). We recall that, by definition, each shifted value index $(y, \text{op}, s) \in L^z_x$ is an element of the set $\{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
 
 In this page, we factor out an essential mathematical construction that we will use repeatedly throughout the [AND](/blueprint/backend/ands), [MUL](/blueprint/backend/muls) and [shift](/blueprint/backend/reduction) reductions. Our goal is to define an [oblong-multilinear](/blueprint/math/oblong) polynomial
 

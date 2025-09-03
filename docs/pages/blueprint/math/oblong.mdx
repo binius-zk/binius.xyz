@@ -2,7 +2,13 @@
 
 We've already discussed [multilinear](/blueprint/math/multilinears) polynomials. Here, we discuss a variant of that idea.
 
-We fix nonnegative integer parameters $k$ and $\ell$. We fix a $k$-dimensional $\mathbb{F}_2$-linear subspace $D \subset \mathbb{F}_{2^{128}}$. If we pick an $\mathbb{F}_2$-basis $(\zeta_0, \ldots , \zeta_{k - 1})$ of $D$, then we can identify $\mathcal{B}_k \cong D$; indeed, it's enough to send $i \mapsto i_0 \cdot \zeta_0 + \cdots + i_{k - 1} \cdot \zeta_{k - 1}$. We will write $\widehat{i} \in D$ for the latter thing. Similarly, for each $\ell$, we get in this way an identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$.
+We fix nonnegative integer parameters $k$ and $\ell$. We fix a $k$-dimensional $\mathbb{F}_2$-linear subspace $D \subset \mathbb{F}_{2^{128}}$. If we pick an $\mathbb{F}_2$-basis $(\zeta_0, \ldots , \zeta_{k - 1})$ of $D$, then we can identify $\mathcal{B}_k \cong D$; indeed, it's enough to send
+
+$$
+\begin{equation*}i \mapsto i_0 \cdot \zeta_0 + \cdots + i_{k - 1} \cdot \zeta_{k - 1}.\end{equation*}
+$$
+
+We will write $\widehat{i} \in D$ for this latter element.
 
 We now fix a $k + \ell$-variate multilinear:
 $$
@@ -14,25 +20,16 @@ $$
 $$
 in $1 + \ell$ variables, such that:
 
-- $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$'s restriction to $D \times \mathcal{B}_\ell$ equals $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_k \times \mathcal{B}_\ell$, provided we identify those sets under the identification $\mathcal{B}_k \times \mathcal{B}_\ell \cong D \times \mathcal{B}_\ell$ above; i.e., for each $i \in \mathcal{B}_k$ and $x \in \mathcal{B}_\ell$,
-  $$
-  \begin{equation*}t(i, x) = \widehat{t}(\widehat{i}, x),\end{equation*}
-  $$
+- $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$'s restriction to $D \times \mathcal{B}_\ell$ equals $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$'s restriction to $\mathcal{B}_k \times \mathcal{B}_\ell$; i.e., for each $i \in \mathcal{B}_k$ and $x \in \mathcal{B}_\ell$, $t(i, x) = \widehat{t}(\widehat{i}, x)$.
 - $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ is "low-degree"; that is, it's of degree less than $2^k$ in $\widehat{I}$ and of degree less than or equal to 1 in each further variable.
 
-We will call $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ the _oblong-multilinearization_ of $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$. In general, we will use "hats" to refer to variables that take values along the "long" axis of the domain.
+We will call $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ the _oblong-multilinearization_ of $t(I_0, \ldots , I_{k - 1}, X_0, \ldots , X_{\ell - 1})$. In general, we will use "hats" to signify variables that take values along the "long" axis of the domain.
 
 ## Existence and Uniqueness
 
-The oblong-multilinearization $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ exists and is unique, essentially for reasons similar to [ones we've already seen](/blueprint/math/multilinears). As before, it's enough to prove existence.
+The oblong-multilinearization $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$ exists and is unique, essentially for reasons similar to [ones we've already seen](/blueprint/math/multilinears). As before, it's enough to prove existence, by a dimension count.
 
-We write $\delta_D$ for the _bivariate_ polynomial, of individual degree less than $2^k$ in both variables, whose restriction to $D \times D$ is the equality indicator function. We claim without proof that this thing exists and is unique. Note that $\delta_D$'s partial specializations within $D$ recover the usual univariate Lagrange interpolation polynomials. That is, for each $\widehat{z} \in D$,
-
-$$
-\begin{equation*}\delta_D(\widehat{I}, \widehat{i}) = \delta_D(\widehat{i}, \widehat{I}) = L_{D, \widehat{i}}(\widehat{I}),\end{equation*}
-$$
-
-the unique univariate Lagrange polynomial of degree less than $2^k$ whose restriction to $D$ equals 1 exactly at $\widehat{i}$, and is 0 everywhere else.
+We write $\delta_D$ for the _bivariate_ polynomial, of individual degree less than $2^k$ in both variables, whose restriction to $D \times D$ is the equality indicator function. We claim without proof that this thing exists and is unique. Note that $\delta_D$'s partial specializations within $D$ recover the usual univariate Lagrange interpolation polynomials. That is, for each $\widehat{i} \in D$, $\delta_D(\widehat{I}, \widehat{i})$ is the unique univariate Lagrange polynomial of degree less than $2^k$ whose restriction to $D$ equals 1 exactly at $\widehat{i}$ 0 elsewhere on $D$.
 
 To construct $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$, we use $\delta_D$. We claim that the construction:
 
@@ -66,7 +63,7 @@ The computation of $\left( \delta_D(r_{\widehat{i}}, \widehat{i}) \right)_{i \in
 
 ## Evaluation
 
-We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{i}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$. We discuss how to compute the evaluation $\widehat{t}(r_{\widehat{i}}, r_x)$.
+We pick an extension field, say $\mathbb{F}_{2^{128}}$, and write $(r_{\widehat{i}}, r_x)$ for an arbitrary element of $\mathbb{F}_{2^{128}} \times \mathbb{F}_{2^{128}}^\ell$. We discuss how to compute the full evaluation $\widehat{t}(r_{\widehat{i}}, r_x)$, given query access to $\widehat{t}(\widehat{I}, X_0, \ldots , X_{\ell - 1})$.
 
 Unwinding what that evaluation means, we get:
 
