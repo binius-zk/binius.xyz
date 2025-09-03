@@ -1,8 +1,8 @@
 # Combined Protocol [Our full protocol for MUL constraints]
 
-Here, we put the previous two pages together. Indeed, we've [already seen](/blueprint/backend/muls/multiplying) that $p[x] \cdot q[x] = 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds as integers if and only if $\big(g^{p[x]}\big)^{q[x]} \stackrel{?}= \big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}$, where $g \in \mathbb{F}_{2^{128}}^*$ is a multiplicative generator (up to an exceptional case that we can manually rule out). Moreover, we've [seen](/blueprint/backend/muls/exponentiating) how to multilinearize the exponentiation operation. It thus remains just to put these parts together.
+Here, we put the previous two pages together. Indeed, we've [already seen](/blueprint/backend/muls/multiplying) that $p[x] \cdot q[x] = 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds as integers if and only if $\big(g^{p[x]}\big)^{q[x]} \stackrel{?}= \big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}$, where $g \in \mathbb{F}_{2^{128}}^*$ is a multiplicative generator (up to an exceptional case that we can manually rule out). Moreover, we've [seen](/blueprint/backend/muls/exponentiating) how to multilinearize the exponentiation operation. It remains just to put these parts together.
 
-We write $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ for the oblong-multilinearizations of the prover's [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays) $p$, $q$, $\text{lo}$ and $\text{hi}$. Our goal will be to _reduce_ the question of the satisfaction of the prover's MUL constraints to _evaluation claims_ these oblong-multilinearized constraint arrays. Evaluation claims of this latter form are exactly what our [shift reduction](/blueprint/backend/reduction) is designed to assess.
+We write $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ for the oblong-multilinearizations of the prover's [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays) $p$, $q$, $\text{lo}$ and $\text{hi}$. Our goal will be to _reduce_ the question of the satisfaction of the prover's MUL constraints to _evaluation claims_ these oblong-multilinearized constraint arrays. Evaluation claims of this latter form are exactly what our [shift reduction](/blueprint/backend/reduction) is designed to assess. In fact, we moreover need all of the evaluation claims to pertain to the _same_ evaluation point. This requirement will make things a bit tricky below.
 
 ## Some Preparation
 
@@ -26,15 +26,20 @@ both hold. For this reason, our claim of interest, whereby $\big(g^{p[x]}\big)^{
 $$
 \begin{equation*}\widetilde{Q}(x) \stackrel{?}= \widetilde{\text{LO}}(x) \cdot \widetilde{\text{HI}}(x)\end{equation*}
 $$
-does. Except with low probability over a random point $r_0$, this condition in turn holds if and only if
-$$
-\begin{equation*}\widetilde{Q}(r_0) \stackrel{?}= \widetilde{\text{LO} \cdot \text{HI}}(r_0).\end{equation*}
-$$
-Here, we write $\widetilde{\text{LO} \cdot \text{HI}}$ for the MLE of the _pointwise product_ of $\widetilde{\text{LO}}(x)$ and $\widetilde{\text{HI}}(x)$ on the cube.
+does.
 
 ## The Protocol
 
-Here is the protocol.
-- verifier samples $r_0 \gets \mathbb{F}_{2^{128}}^{\ell_\text{mul}}$ and sends it to the prover.
-- the prover sends a value $s_0$, claimed to be the joint common value of both $\widetilde{Q}(r_0)$ and $\widetilde{\text{LO} \cdot \text{HI}}(r_0)$.
-- by running an $\ell_\text{mul}$-round sumcheck, the parties reduce this claim to further individual evaluation claims $s_\text{lo} \stackrel{?}= \widetilde{\text{HI}}(r_1)$ and $s_\text{hi} \stackrel{?}= \widetilde{\text{LO}}(r_1)$, say.
+Here is the protocol. The basic idea is to start with the vanishing identity above, run a zerocheck on it, and then unroll everything. But since we need the final evaluation claims on $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ to pertain to the _same_ evaluation point, we need to be a bit tricky. What follows is more like a sketch.
+
+- by running a standard zerocheck on the virtual multivariate $\widetilde{\text{LO}}(X) \cdot \widetilde{\text{HI}}(X) - \widetilde{Q}(X)$, the parties reduce the initial claim above to evaluation claims, say $s_\text{LO} \stackrel{?}= \widetilde{\text{LO}}(r_0)$, $s_\text{HI} \stackrel{?}= \widetilde{\text{HI}}(r_0)$ and $s_Q \stackrel{?}= \widetilde{Q}(r_0)$.
+- on the root claim $s_Q \stackrel{?}= \widetilde{Q}(r_0)$, the parties run _just_ the [GKR](/blueprint/backend/muls/exponentiating#the-gkr-step) and [Frobenius](/blueprint/backend/muls/exponentiating#the-frobenius-step) steps of the exponentiation protocol. In this way, they reduce that claim to further claims, now of the form $s_P \stackrel{?}= \widetilde{P}(r_1)$ and $s_{q, i} \stackrel{?}= \widehat{q}(\widehat{i}, r_1)$ for $i \in \{0, \ldots , 63\}$, say.
+- now, in a batched way, the parties simultaneously run _just_ the respective [GKR phases](/blueprint/backend/muls/exponentiating#the-gkr-step) associated with the three root claims $s_P \stackrel{?}= \widetilde{P}(r_1)$, $s_\text{LO} \stackrel{?}= \widetilde{\text{LO}}(r_0)$, and $s_\text{HI} \stackrel{?}= \widetilde{\text{HI}}(r_0)$. In this way, they get further intermediate claims, pertaining to $\widehat{p}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$ and $\widehat{\text{hi}}(\widehat{I}, X)$.
+- in a batched way, the parties now run four $\ell_\text{round}$ sumchecks:
+  - the respective [Frobenius phases](/blueprint/backend/muls/exponentiating#the-frobenius-step) associated with $\widehat{p}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$ and $\widehat{\text{hi}}(\widehat{I}, X)$, and
+  - a separate, MLE-rerandomization sumcheck that reduces the evaluation claims $s_{q, i} \stackrel{?}= \widehat{q}(\widehat{i}, r_1)$ for $i \in \{0, \ldots , 63\}$ above to similar claims at a completely fresh point.
+
+  <br/>in this way, the parties obtain evaluation claims of the form $\widehat{p}(\widehat{i}, r'_x)$, $\widehat{q}(\widehat{i}, r'_x)$, $\widehat{\text{lo}}(\widehat{i}, r'_x)$, and $\widehat{\text{hi}}(\widehat{i}, r'_x)$, for all $i \in \{0, \ldots, 63\}$, i.e. for which the point $r'_x$ is the same everywhere.
+- the parties now run the [oblong-multilinearization](/blueprint/backend/muls/exponentiating#oblong-multilinearizing) step _just once_ across all four oblong-multilinears. In this way, the parties obtain evaluation claims of the form $\widehat{p}(r_{\widehat{i}}, r'_x)$, $\widehat{q}(r_{\widehat{i}}, r'_x)$, $\widehat{\text{lo}}(r_{\widehat{i}}, r'_x)$, and $\widehat{\text{hi}}(r_{\widehat{i}}, r'_x)$, i.e. for which the values $r_{\widehat{i}}$ and $r'_x$ are the same in all four claims.
+
+This completes our treatment of the MUL reduction.
