@@ -18,8 +18,6 @@ $$
 Now, we can say that the prover data $w$ fulfills the constraint system's MUL constraints if, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$,
 
 $$
-\begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x].\end{equation*}
+\begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]\end{equation*}
 $$
-
-To make sense of the equality above, we interpret the words $p[x]$, $q[x]$, $\text{hi}[x]$ and $\text{lo}[x]$ as as elements of $\{0, \ldots , 2^{64} - 1\}$, and interpret the $\cdot$ symbol as integer multiplication. In other words, the product $p[x] \cdot q[x]$ is double-width; its high and low halves are given by $\text{hi}[x]$ and $\text{lo}[x]$.
-
+holds over the integers. We interpret all of the words $p[x]$, $q[x]$, $\text{hi}[x]$ and $\text{lo}[x]$ as as elements of $\{0, \ldots , 2^{64} - 1\}$, and interpret the $\cdot$ symbol as integer multiplication. That is, the product $p[x] \cdot q[x]$ is double-width; its high and low halves are given by $\text{hi}[x]$ and $\text{lo}[x]$.

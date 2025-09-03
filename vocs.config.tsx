@@ -374,6 +374,10 @@ export default defineConfig({
               {
                 text: "Exponentiating Multilinears",
                 link: "/blueprint/backend/muls/exponentiating"
+              },
+              {
+                text: "Combined Protocol",
+                link: "/blueprint/backend/muls/combined"
               }
             ]
           },

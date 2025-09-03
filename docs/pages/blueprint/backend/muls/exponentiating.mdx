@@ -1,8 +1,8 @@
 # Exponentiating Multilinears [Using GKR to multiply "twisted" multilinears]
 
-In this page, we explain how to exponentiate a variable base by a variable exponent pointwise on the cube. That is, we explain how to algebraically relate the multilinear extension of this exponentiation to the multilinear extensions of the base and the exponent. This protocol is the technical core of our multiplication protocol.
+In this page, we explain a generic mathematical technique that exponentiates a variable base by a variable exponent pointwise on the cube. That is, we explain how to algebraically relate the multilinear extension of this exponentiation to the multilinear extensions of the base and the exponent. This protocol is the technical core of our multiplication protocol. In the [next page](/blueprint/backend/muls/combined), we apply this protocol to our situation.
 
-We fix an $\ell_\text{mul}$-variate multilinear $\widetilde{V}(X)$ with values in $\mathbb{F}_{2^{128}}$, and an $\mathbb{F}_2$-valued, [oblong-multilinear](/blueprint/math/oblong) exponent function $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$. As a notational device, we write $z_i(x) \coloneqq \widehat{z}(\widehat{i}, x)$ for each $i \in \{0, \ldots , 63\}$ and $x \in \mathcal{B}_{\ell_\text{mul}}$. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we define the _exponent_ $Z(x)$ by combining $\widehat{z}(\widehat{I}, x)$'s bits on $D$:
+We fix an $\ell_\text{mul}$-variate multilinear $\widetilde{V}(X)$ with values in $\mathbb{F}_{2^{128}}$, and an $\mathbb{F}_2$-valued, [oblong-multilinear](/blueprint/math/oblong) exponent function $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$. As a notational device, we write $z_i(x) \coloneqq \widehat{z}(\widehat{i}, x)$ for each $i \in \{0, \ldots , 63\}$ and each $x \in \mathcal{B}_{\ell_\text{mul}}$. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we define the _exponent_ $Z(x) \in \{0, \ldots , 2^{64} - 1\}$ by combining $\widehat{z}(\widehat{I}, x)$'s bits on $D$:
 $$
 \begin{equation*}Z(x) \coloneqq \sum_{i = 0}^{63} 2^i \cdot \widehat{z}(\widehat{i}, x).\end{equation*}
 $$
