@@ -2,7 +2,7 @@
 
 Here, we explain our optimized _prover implementation_ of our [univariate skip](/blueprint/backend/ands/univariate) variant. Essentially, the problem is to combine Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1] and both Dao–Thaler works [[DT24a](https://eprint.iacr.org/2024/1038), [DT24b](https://eprint.iacr.org/2024/1210)] in a way that lets the prover do as much work as possible in the small [Rijndael field](/blueprint/backend/ands/rijndael). We also use a lookup-based NTT like Hu et al. [[Hu+25](https://eprint.iacr.org/2025/717)]'s.
 
-As we've [already seen](/blueprint/backend/ands/rijndael#tensor-basis), we use deterministic Rijndael elements as the verifier's first three challenges. These "saturate" the Rijndael field. We further use an "uneven" variant of [[DT24b](https://eprint.iacr.org/2024/1210)], in which the inner loop—of size just 8—operates entirely over the Rijndael field. Every 8 cube points, the prover embeds into GHASH and accumulates.
+As we've [already seen](/blueprint/backend/ands/rijndael#tensor-basis), we use deterministic Rijndael elements as the verifier's first three challenges. These "saturate" the Rijndael field. We further use an "uneven" variant of [[DT24b](https://eprint.iacr.org/2024/1210)], in which the inner loop—of size just 8—operates entirely over the Rijndael field. Every 8 cube points, the prover embeds into $\mathbb{F}_{2^{128}}$ and accumulates.
 
 ## The Problem
 
@@ -68,7 +68,7 @@ We proceed with the prover's algorithm. The prover's inputs are the constraint a
 
 We claim that the array $\mathsf{g}$ returned by this algorithm contains exactly the values of $g(\widehat{i})$ for $\widehat{i} \in D' \setminus D$, which is what we want.
 
-The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ [embeddings](/blueprint/backend/ands/rijndael#embedding) and 64 multiplications in the GHASH field. "Between" iterations, we work entirely in $K$. The breakup of our sum into outer and inner loops above can be viewed as a variant of an idea of Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] (i.e., separate from the use of [determinstic challenges](/blueprint/backend/ands/rijndael#deterministic-zerocheck)).
+The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ [embeddings](/blueprint/backend/ands/rijndael#embedding) and 64 multiplications in $\mathbb{F}_{2^{128}}$. "Between" iterations, we work entirely in $K$. The breakup of our sum into outer and inner loops above can be viewed as a variant of an idea of Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] (i.e., separate from the use of [determinstic challenges](/blueprint/backend/ands/rijndael#deterministic-zerocheck)).
 
 ## Correctness
 

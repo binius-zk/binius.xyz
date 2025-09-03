@@ -4,7 +4,7 @@ In this page, we lay some mathematical groundwork, necessary to explain our [Rij
 
 ## The Rijndael Field
 
-The Rijndael field [[FIPS197](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf), § 4] is a small, 8-bit field used in AES, Grøstl and various other places. It's defined as the quotient ring
+The Rijndael [field](/blueprint/math/fields#construction) [[FIPS197](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf), § 4] is a small, 8-bit field used in AES, Grøstl and various other places. It's defined as the quotient ring
 
 $$
 \begin{equation*}K \coloneqq \mathbb{F}_2[X] \mathbin{/} \left( X^8 + X^4 + X^3 + X + 1 \right);\end{equation*}
@@ -34,9 +34,9 @@ on the other hand, these two lists differ from each other by an invertible $\mat
 
 ## Embedding
 
-We moreover assume that we have a precomputed, efficient field embedding from $\iota : K \to \mathbb{F}_{2^{128}}$. In practice, this can be represented as a fixed, $128 \times 8$ $\mathbb{F}_2$-matrix. Embedding looks like taking a subset sum of that matrix's $8$ columns. Actually, it turns out to be more efficient to implement the entire transformation as a single lookup table. In this case, we precompute and store all 256 images in $\mathbb{F}_{2^{128}}$ of the various $K$-elements.
+We moreover assume that we have a fixed field embedding from $\iota : K \to \mathbb{F}_{2^{128}}$. Since we have fixed $\mathbb{F}_2$-bases for both fields, $\iota$ can be represented in practice as an $128 \times 8$ $\mathbb{F}_2$-matrix. Embedding looks like taking a subset sum of that matrix's $8$ columns. In practice, it turns out to be more efficient to implement the entire transformation as a single lookup table. In this case, we precompute and store all 256 images in $\mathbb{F}_{2^{128}}$ of the various $K$-elements.
 
-Mathematically, the embedding $\iota$ is not unique; it amounts to choosing a root of the Rijndael polynomial $X^8 + X^4 + X^3 + X + 1$ in the GHASH field. There are 8 choices.
+Mathematically, the embedding $\iota$ is not unique; it amounts to choosing a root of the Rijndael polynomial $X^8 + X^4 + X^3 + X + 1$ within $\mathbb{F}_{2^{128}}$. There are 8 choices.
 
 We write $\sigma_0$, $\sigma_1$, and $\sigma_2$ for the images under $\iota$ of $\rho_0$, $\rho_1$ and $\rho_2$. We note that the elements $\left( \widetilde{\texttt{eq}}(\sigma, u) \right)_{u \in \mathcal{B}_3}$ are also linearly independent over $\mathbb{F}_2$. Indeed,
 $$

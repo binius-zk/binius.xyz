@@ -367,6 +367,14 @@ export default defineConfig({
             link: '/blueprint/backend/muls',
             collapsed: false,
             items: [
+              {
+                text: "The Exponent Idea",
+                link: "/blueprint/backend/muls/exponent"
+              },
+              {
+                text: "Exponentiating Multilinears",
+                link: "/blueprint/backend/muls/exponentiating"
+              }
             ]
           },
           {

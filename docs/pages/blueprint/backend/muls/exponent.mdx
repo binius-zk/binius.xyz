@@ -1,0 +1,9 @@
+# The Exponent Idea [Achiving unsigned integer multiplication by working in the exponent]
+
+Here, we explain a fairly simple mathematical idea that underlies our multiplication technique.
+
+We fix integers $p$ and $q$, in the range $\{0, \ldots , 2^{64} - 1\}$. We're interested in $p \cdot q$. Recall that we work throughout with binary fields. This means that we can't use typical prime-field ideas—say, that of breaking $p$ and $q$ into limbs so small that their products don't overflow the characteristic.
+
+## Multiplication in the Exponent
+
+We [recall](/blueprint/math/fields#binary-fields) that [the multiplicative group of units of a finite field is cyclic](https://groupprops.subwiki.org/wiki/Multiplicative_group_of_a_finite_field_is_cyclic). We fix a generator $g \in \mathbb{F}_{2^{128}}^*$.
