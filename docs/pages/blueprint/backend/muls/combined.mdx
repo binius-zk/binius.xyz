@@ -1,0 +1,9 @@
+# Combined Protocol [Our full protocol for MUL constraints]
+
+Here, we put the previous two pages together. Indeed, we've [already seen](/blueprint/backend/muls/multiplying) that $p[x] \cdot q[x] = 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds as integers if and only if $\big(g^{p[x]}\big)^{q[x]} \stackrel{?}= \big( g^{2^{64}} \big)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}$, where $g \in \mathbb{F}_{2^{128}}^*$ is a multiplicative generator (up to an exceptional case that we can manually rule out). Moreover, we've [seen](/blueprint/backend/muls/exponentiating) how to multilinearize the exponentiation operation. It thus remains just to put these parts together.
+
+Our goal will be to reduce the question of the satisfaction of the prover's MUL constraints to _evaluation claims_ on the [oblong-multilinearizations](/blueprint/math/oblong) of the prover's [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays). Evaluation claims of this form are exactly what our [shift reduction](/blueprint/backend/reduction) is designed to assess.
+
+## The Protocol
+
+We write $\widehat{p}(\widehat{I}, X)$, $\widehat{q}(\widehat{I}, X)$, $\widehat{\text{lo}}(\widehat{I}, X)$, and $\widehat{\text{hi}}(\widehat{I}, X)$ for the oblong-multilinearizations at issue.

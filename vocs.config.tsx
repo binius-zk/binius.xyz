@@ -306,6 +306,10 @@ export default defineConfig({
             link: "/blueprint/constraints/indices",
           },
           {
+            text: "Constraint Arrays",
+            link: "/blueprint/constraints/arrays",
+          },
+          {
             text: "AND Constraints",
             link: "/blueprint/constraints/ands",
           },
@@ -340,10 +344,6 @@ export default defineConfig({
             ],
           },
           {
-            text: "Mathematizing Constraint Arrays",
-            link: "/blueprint/backend/mathematizing"
-          },
-          {
             text: "The AND Reduction",
             link: "/blueprint/backend/ands",
             collapsed: false,
@@ -369,7 +369,7 @@ export default defineConfig({
             items: [
               {
                 text: "Multiplying in the Exponent",
-                link: "/blueprint/backend/muls/exponent"
+                link: "/blueprint/backend/muls/multiplying"
               },
               {
                 text: "Exponentiating Multilinears",
@@ -386,6 +386,10 @@ export default defineConfig({
             link: "/blueprint/backend/reduction",
             collapsed: false,
             items: [
+              {
+                text: "Mathematizing Constraint Arrays",
+                link: "/blueprint/backend/reduction/mathematizing"
+              },
               {
                 text: "The Sumchecks",
                 link: "/blueprint/backend/reduction/sumchecks"

@@ -1,4 +1,4 @@
-# Mathematizing Constraint Arrays [From constraint arrays to oblong-multilinear polynomials]
+# Mathematizing Constraint Arrays [Connecting oblong-multilinearized constraint arrays to the witness]
 
 While defining both our [AND](/blueprint/constraints/ands#the-constraint-arrays) and [MUL](/blueprint/constraints/muls#the-constraint-arrays) constraints, we made use of "constraint arrays", arrays $z$ whose elements take the form
 
@@ -8,34 +8,21 @@ $$
 
 for $x \in \{0, \ldots , n_\text{cons} - 1\}$. Here, $n_\text{cons}$ is the total number of constraints (either AND or MUL), and each $L^z_x$ is a list of [shifted value indices](/blueprint/constraints/indices). We recall that, by definition, each shifted value index $(y, \text{op}, s) \in L^z_x$ is an element of the set $\{0, \ldots , n_\text{words} - 1\} \times \{ \mathsf{sll}, \mathsf{srl}, \mathsf{sra}\} \times \{0, \ldots , 63\}$.
 
-In this page, we factor out an essential mathematical construction that we will use repeatedly throughout the [AND](/blueprint/backend/ands), [MUL](/blueprint/backend/muls) and [shift](/blueprint/backend/reduction) reductions. Our goal is to define an [oblong-multilinear](/blueprint/math/oblong) polynomial
+Both our [AND](/blueprint/backend/ands) and [MUL](/blueprint/backend/muls) reductions closed out by ouputting evaluation claims on the _[oblong-multilinearizations](/blueprint/math/oblong)_ of these constraint arrays. In order to assess validity of these claims, we need to connect them mathematically to the witness.
+
+By definition, the oblong-multilinearization of the array $z$ above is a polynomial
 
 $$
-\begin{equation*}\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell - 1})\end{equation*}
+\begin{equation*}\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{cons} - 1})\end{equation*}
 $$
-
-with the following property. First, we let $k \coloneqq 6$ once and for all; thus, $D \subset \mathbb{F}_{2^{128}}$ is a 6-dimensional $\mathbb{F}_2$-linear subspace. We identify $\mathcal{B}_6 \cong D$ by basis combination, sending $i \mapsto \widehat{i} \coloneqq i_0 \cdot \zeta_0 + \cdots + i_5 \cdot \zeta_0$. By definition, it should be the case that, for each $i \in \mathcal{B}_6$ and $x \in \mathcal{B}_\ell$,
+for which
 
 $$
 \begin{equation*}\widehat{z}(\widehat{i}, x) = z[x]_i.\end{equation*}
 $$
+holds for each $i \in \mathcal{B}_6$ and each $x \in \mathcal{B}_{\ell_\text{cons}}$. Our task now is to express this oblong-multilinearization $\widehat{z}(\widehat{I}, X)$ as a polynomial in terms of $\widehat{W}(J, Y)$, the [multilinearization of the prover's witness](/blueprint/backend/shifts/polynomials#as-polynomials). The initial definition of $z[x]$ above suggests that this should be possible; on the other hand, making everything algebraic is hard. We will have to put our [shifted witness polynomials](/blueprint/backend/shifts/polynomials) to use.
 
-In the right-hand side above, we take the "$i$<sup>th</sup> bit" of the 64-bit word $z[x]$.
-
-More precisely, we want to express $\widehat{z}(\widehat{I}, X)$ in terms of $w$. This problem is nontrivial because of the presence of shifting in the definition of $z$. We will have to put our [shifted witness polynomials](/blueprint/backend/shifts/polynomials) to use.
-
-## Computing Them
-
-There is a straightforward efficient algorithm that computes the array $z$, given the list $\left( L^z_x \right)_{x = 0}^{n_\text{cons} - 1}$, which exploits the sparsity of the constraint system. For completeness, we record it here. On input $w$ and $\left( L^z_x \right)_{x = 0}^{n_\text{cons} - 1}$, the prover runs:
-
-- allocate the array $\mathsf{z}$, containing $n_\text{cons}$ 64-bit words, initially all 0.
-- **for** each $x \in \{0, \ldots , n_\text{and} - 1\}$ **do**:
-  - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
-  - **for** each shifted value index $(y, \text{op}, s) \in L^z_x$ **do**:
-    - update $\mathsf{z}[x] \mathrel{+}= \text{op}(w[y], s)$.
-- return $\mathsf{z}$.
-
-The array $\mathsf{z}$ returned by that algorithm equals the constraint array $z$.
+[Later](/blueprint/backend/reduction/sumchecks), we will undertake the actual task of reducing a claim on $\widehat{z}(\widehat{I}, X)$ to one on $\widehat{W}(J, Y)$.
 
 ## The Constraint Matrices
 
@@ -60,11 +47,11 @@ $$
 z[x] = \sum_\text{op} \sum_{s = 0}^{63} \sum_{y = 0}^{n_\text{words} - 1} Z_{\text{cons}, \text{op}}[x, y, s] \cdot \textsf{shift}_\text{op}(w)(y, s).\end{equation*}
 $$
 
-We recall that we originally defined $z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^z_x} \text{op}(w[y], s)$; the equality above follows essentially by definition of the matrices $Z_{\text{cons}, \text{op}}$.
+We [recall](/blueprint/constraints/arrays) that $z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^z_x} \text{op}(w[y], s)$ by definition; the equality above follows essentially from the definition of the matrices $Z_{\text{cons}, \text{op}}$.
 
 ## Multilinearizing
 
-Now, we take multilinear extensions. At this point, we assume that $n_\text{cons} = 2^{\ell_\text{cons}}$ and $n_\text{words} = 2^{\ell_\text{words}}$ are both powers of 2. As usual, $\mathcal{B}_\ell \coloneqq \{0, 1\}^\ell$ means the $\ell$-dimensional cube.
+Now, we take multilinear extensions. At this point, we assume that $n_\text{cons} = 2^{\ell_\text{cons}}$ and $n_\text{words} = 2^{\ell_\text{words}}$ are both powers of 2.
 
 By identifying the matrices $Z_{\text{cons}, \text{op}}$ with their multilinear extensions, we can view them now as multilinear polynomials $\widetilde{Z}_{\text{cons}, \text{op}}(X, Y, S)$, each with coefficients in $\mathbb{F}_2$, and of $\ell_\text{and} + \ell_\text{words} + 6$ variables. Similarly, we have [already seen](/blueprint/backend/shifts/polynomials#as-polynomials) that the shifted witness functions $\textsf{shift}_\text{op}(w)(y, s)$ can be multilinearized. Multilinearizing everything, we obtain a multilinear polynomial, on $6 + \ell_\text{cons}$ variables, $\mathbb{F}_2$-valued on the cube:
 
@@ -86,16 +73,13 @@ These are identically equal (as polynomials) to the above expressions we gave; t
 
 ## Oblong-Multilinearizing
 
-Now, we have one final step. If we apply the standard oblong-multilinearization transformation to $\widetilde{Z}(I, X)$, i.e. completely generically, then we obtain a further polynomial $\widehat{z}(\widehat{I}, X)$, now oblong-multilinear, whose values on $D \times \mathcal{B}_{\ell_\text{cons}}$ equal those of $\widetilde{z}(I, X)$ on $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{cons}}$. Unrolling what that transformation means and applying it to our expression for $\widetilde{z}(I, X)$ above, and finally rearranging a few sums, we get:
-
+Now, we apply the standard oblong-multilinearization [construction](/blueprint/math/oblong#existence-and-uniqueness) to $\widetilde{z}(I, X)$. In this way, we obtain the expression:
 $$
 \begin{equation*}\widehat{z}(\widehat{I}, X) = \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(\widehat{I}, \widehat{i}) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(X, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
-
-By the standard property of the oblong-multilinearization transformation, for each $i \in \mathcal{B}_6$ and each $x \in \mathcal{B}_{\ell_\text{cons}}$, $\widehat{z}(\widehat{i}, x) = \widetilde{z}(i, x)$. On the other hand, we have already seen that that latter quantity equals $z[x]_i$. Thus,
+The polynomial $\widehat{z}(\widehat{I}, X)$ obtained in this way indeed yields the one we set out to obtain above. Indeed by the standard property of the oblong-multilinearization transformation, for each $i \in \mathcal{B}_6$ and each $x \in \mathcal{B}_{\ell_\text{cons}}$, $\widehat{z}(\widehat{i}, x) = \widetilde{z}(i, x)$; on the other the other hand, we have already seen that that latter quantity equals $z[x]_i$. Thus,
 
 $$
-\begin{equation*}\widehat{z}(\widehat{i}, x) = z[x]_i,\end{equation*}
+\begin{equation*}\widehat{z}(\widehat{i}, x) = z[x]_i\end{equation*}
 $$
-
-which is what we set out to achieve.
+holds for each $i \in \mathcal{B}_6$ and each $x \in \mathcal{B}_{\ell_\text{cons}}$, a condition that uniquely characterizes the polynomial $\widehat{z}(\widehat{I}, X)$.

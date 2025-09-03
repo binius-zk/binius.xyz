@@ -18,11 +18,11 @@ In this page, we describe a highly optimized implementation, which strategically
 
 ## The Underlying Arrays
 
-We [recall](/blueprint/backend/ands/univariate) that we defined the polynomials $\widehat{a}(\widehat{I}, x)$, $\widehat{b}(\widehat{I}, x)$ and $\widehat{c}(\widehat{I}, x)$ above to be the [oblong-multilinearizations](/blueprint/backend/mathematizing) of the prover's constraint arrays. By construction, these oblong-multilinears' respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are simply the prover's constraint arrays $a$, $b$ and $c$. The prover can prepare these arrays [efficiently](/blueprint/backend/mathematizing#computing-them).
+Our prover algorithm below makes use of the [constraint arrays](/blueprint/constraints/ands#the-constraint-arrays) $a$, $b$ and $c$. As we [have seen](/blueprint/constraints/arrays#efficient-algorithm), there is a straightforward way that the prover can compute these, on input his witness $w$ and the constraint system.
 
 ## Efficient Lookup-Based Extrapolation
 
-Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an abstract, $6$-dimensional subspace. Now, we enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that $D' \subset \mathbb{F}_{2^{128}}$ too, so we have a chain of inclusions
+Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an arbitrary $6$-dimensional subspace. Now, we enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that $D' \subset \mathbb{F}_{2^{128}}$ too, so we have a chain of inclusions
 
 $$
 \begin{equation*}D \subset D' \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}.\end{equation*}

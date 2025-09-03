@@ -1,0 +1,26 @@
+# Constraint Arrays [A convenient formalism]
+
+Here, we factor out a convenient notational device that we will use repeatedly.
+
+We fix a total number $n_\text{cons}$ of constraints. In the situations we'll be working with, we'll have $n_\text{cons}$ _lists_ of [shifted value indices](/blueprint/constraints/indices), indexed by $x \in \{0, \ldots , n_\text{cons} - 1\}$; thus for each $x \in \{0, \ldots , n_\text{cons} - 1\}$, we will have a list $L^z_x$.
+
+Our goal here is to define an array, $z$, that contains the words "specified by the lists" $L^z_x$. The array $z$ will be of length $n_\text{cons}$; each of its elements $z[x]$ will be a 64-bit word.
+
+To define $z$, we set, for each $x \in \{0, \ldots , n_\text{cons} - 1\}$:
+
+$$
+\begin{equation*}z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^z_x} \text{op}(w[y], s).\end{equation*}
+$$
+
+## Efficient Algorithm
+
+There is a straightforward efficient algorithm that computes the array $z$, given the list $\left( L^z_x \right)_{x = 0}^{n_\text{cons} - 1}$, which exploits the sparsity of the constraint system. For completeness, we record it here. On input $w$ and $\left( L^z_x \right)_{x = 0}^{n_\text{cons} - 1}$, the prover runs:
+
+- allocate the array $\mathsf{z}$, containing $n_\text{cons}$ 64-bit words, initially all 0.
+- **for** each $x \in \{0, \ldots , n_\text{cons} - 1\}$ **do**:
+  - load the $x$<sup>th</sup> list $L^z_x$ from the constraint system.
+  - **for** each shifted value index $(y, \text{op}, s) \in L^z_x$ **do**:
+    - update $\mathsf{z}[x] \mathrel{+}= \text{op}(w[y], s)$.
+- return $\mathsf{z}$.
+
+The array $\mathsf{z}$ returned by that algorithm equals the constraint array $z$.

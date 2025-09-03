@@ -14,7 +14,7 @@ Each given constraint system will specify, first, the total number $n_\text{and}
 
 ## The Constraint Arrays
 
-There's a useful array-based reformulation of this condition. We can define arrays $a$, $b$ and $c$, containing $n_\text{and}$ 64-bit words, by setting, for each $x \in \{0, \ldots , n_\text{and} - 1\}$:
+We now apply the [constraint array](/blueprint/constraints/arrays) formalism to this condition. Applying it, we get arrays $a$, $b$ and $c$, containing $n_\text{and}$ 64-bit words, defined by the equalities:
 
 $$
 \begin{align*}
@@ -24,7 +24,7 @@ c[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^c_x} \text{op}(w[y], s).
 \end{align*}
 $$
 
-Having defined these arrays, we can say that the constraint system is fulfilled if and only if
+Having defined these arrays, we can now say that our constraint system's AND constraints are fulfilled if and only if
 
 $$
 \begin{equation*}a[x] \mathbin{\&} b[x] = c[x]\end{equation*}

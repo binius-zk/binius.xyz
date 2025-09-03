@@ -1,22 +1,21 @@
 # The Sumchecks [The two phases of the shift reduction]
 
-Both the [AND](/blueprint/backend/ands) and [MUL](/blueprint/backend/muls) reductions, at their very conclusions, close out by outputting evaluation claims on [oblong-multilinearizations of constraint arrays](/blueprint/backend/mathematizing), i.e. claims of the form
+As [we've explained](/blueprint/backend/reduction/mathematizing), our goal now is to assess the validity of evaluation claims of the form
 
 $$
-\begin{equation*}\alpha_z \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x).\end{equation*}
+\begin{equation*}\alpha_z \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x),\end{equation*}
 $$
-
-Here, $z$ is a _constraint array_, an object that arises naturally in the definitions of our [AND](/blueprint/constraints/ands#the-constraint-arrays) and [MUL](/blueprint/constraints/muls#the-constraint-arrays) constraints; $\widehat{z}(\widehat{I},  X)$ is its [oblong-multilinearization](/blueprint/backend/mathematizing#oblong-multilinearizing). Finally, $\alpha_z$, $r_{\widehat{i}}$ and $r'_x$ are values known to both the prover and the verifier. In each case, the evaluation points $r_{\widehat{i}}$ and $r'_x$ will be identical across all claims, whereas the claimed evaluations $\alpha_z$ of course won't be.
+where $\widehat{z}(\widehat{I},  X)$ is an oblong-multilinearized constraint array. The values $\alpha_z$, $r_{\widehat{i}}$ and $r'_x$ are known to both the prover and the verifier. In each case, the evaluation points $r_{\widehat{i}}$ and $r'_x$ will be identical across all claims, whereas the claimed evaluations $\alpha_z$ of course won't be.
 
 In this page, we explain how to reduce a plurality of evaluation claims of this form to a single evaluation claim on the multilinearization $\widetilde{w}(J, Y)$ of the witness. For expository reasons, we explain the case in which there is just one claim. The case in which there are more than one is similar, and we explain inline where it needs to be accommodated. This choice lets us abstract away how many claims there are (there will be 3 at the end of the AND reduction and 4 at the end of the MUL reduction).
 
-Unwinding the [definition](/blueprint/backend/mathematizing#oblong-multilinearizing) of the oblong-multilinearization $\widehat{z}(\widehat{I},  X)$, and inserting $r_{\widehat{i}}$ and $r'_x$, we obtain the claim:
+Unwinding the description of $\widehat{z}(\widehat{I},  X)$ that we [constructed](/blueprint/backend/reduction/mathematizing#oblong-multilinearizing) in the last page, and inserting $r_{\widehat{i}}$ and $r'_x$, we obtain the claim:
 
 $$
 \begin{equation*}\alpha_z \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \widetilde{w}(j, y).\end{equation*}
 $$
 
-As usual, $\widetilde{Z}_{\text{cons}, \text{op}}$ is the [multilinearized](/blueprint/backend/mathematizing#multilinearizing) [constraint matrix](/blueprint/backend/mathematizing#the-constraint-matrices) associated to the constraint array $z$.
+As usual, $\widetilde{Z}_{\text{cons}, \text{op}}$ is the [multilinearized](/blueprint/backend/reduction/mathematizing#multilinearizing) [constraint matrix](/blueprint/backend/reduction/mathematizing#the-constraint-matrices) associated to the constraint array $z$.
 
 ## A Factorization
 

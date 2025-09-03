@@ -1,10 +1,10 @@
 # MUL Constraints [Enforcing unsigned-integer-multiplication relations]
 
-Multiplication constraints let us capture the unsigned integer multiplication of 64-bit words. We now fix a total number of MUL constraints, $n_\text{mul}$. For each $x \in \{0, \ldots , n_\text{mul} - 1\}$, the $x$<sup>th</sup> MUL constraint is a tuple $(L^p, L^q, L^\text{hi}, L^\text{lo})$ of four lists of [shifted value indices](/blueprint/constraints/indices).
+Multiplication constraints let us capture the unsigned integer multiplication of 64-bit words. We now fix a total number of MUL constraints, $n_\text{mul}$. For each $x \in \{0, \ldots , n_\text{mul} - 1\}$, the $x$<sup>th</sup> MUL constraint is a tuple $(L^p_x, L^q_x, L^\text{hi}_x, L^\text{lo}_x)$ of four lists of [shifted value indices](/blueprint/constraints/indices).
 
 ## The Constraint Arrays
 
-Immediately adopting the [array-theoretic viewpoint](/blueprint/constraints/ands#the-constraint-arrays), we now define length-$n_\text{mul}$ arrays $p$, $q$, $\text{lo}$, and $\text{hi}$ of 64-bit words, by setting, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$:
+Immediately adopting the [constraint array](/blueprint/constraints/arrays) formalism, we now obtain length-$n_\text{mul}$ arrays $p$, $q$, $\text{lo}$, and $\text{hi}$ of 64-bit words, defined, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$, by:
 
 $$
 \begin{align*}
@@ -15,7 +15,7 @@ q[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^q_x} \text{op}(w[y], s), \\
 \end{align*}
 $$
 
-Now, we can say that the prover data $w$ fulfills the constraint system's MUL constraints if, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$,
+The prover data $w$ fulfills the constraint system's MUL constraints if, for each $x \in \{0, \ldots , n_\text{mul} - 1\}$,
 
 $$
 \begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]\end{equation*}

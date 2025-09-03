@@ -1,12 +1,9 @@
 # The AND Reduction [Evaluating bitwise ANDs of 64-bit words]
 
-Here, we handle the prover's [AND constraints](/blueprint/constraints/ands). To check whether some fixed AND constraints hold over committed prover data $w$, we need to do a number of cryptographic steps. First, we need to arithmetize the problem using multilinears. Next, we need to oblong-multilinearize everything, and run the univariate skip.
-
-Ultimately, our goal will be to reduce the problem of the prover's AND-constraint satisfaction to one amenable to the [shift reduction](/blueprint/backend/reduction).
+Here, we handle the prover's [AND constraints](/blueprint/constraints/ands). To check whether some fixed AND constraints hold over committed prover data $w$, we need to do a number of cryptographic steps. Technically, the job of the AND reduction is to reduce the satisfaction of the prover's AND constraints to certain further claims, pertaining to evaluations of the oblong-multilinearizations of the prover's constraint arrays. This is exactly type of claim ingested by the [shift reduction](/blueprint/backend/reduction).
 
 We explain our steps in the following pages.
 
-- [**Mathematizing the Problem.**](mathematizing) Equipped with our [shift indicators](/blueprint/backend/shifts), we explain how to recast the prover's AND-constraint satisfaction into a problem about multilinears.
 - [**The Rijndael Field.**](rijndael) Here, we explain the _Rijndael field_, a small, 8-bit field used in AES (for example). We also discuss how this field interacts with $\mathbb{F}_{2^{128}}$, our ambient field.
 - [**The Univariate Skip.**](univariate) The _univariate skip_ is an efficient protocol for zerochecking polynomials over tiny fields, originally due to Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1]. We use a variant of that idea, adapted to our 64-bit setting, that also incorporates ideas of Dao and Thaler [[DT24a](https://eprint.iacr.org/2024/1038)]. Here, we record the overall structure of our univariate skip variant, and prove its soundness.
 - [**The Rijndael Zerocheck.**](implementation) This page is dedicated to our _prover implementation_ of the univariate skip. Our prover works in the Rijndael field "where possible". The interplay between these small and large fields is subtle, and incorporates ideas from Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] and Hu et al. [[Hu+25](https://eprint.iacr.org/2025/717)].

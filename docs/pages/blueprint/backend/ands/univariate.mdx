@@ -6,23 +6,24 @@ By the definition of [AND constraint](/blueprint/constraints/ands) satisfaction,
 $$
 \begin{equation*}a[x] \mathbin{\&} b[x] \stackrel{?}= c[x]\end{equation*}
 $$
-holds for each $x \in \{0, \ldots , n_\text{and} - 1\}$. Here, $a$, $b$ and $c$ are the prover's [constraint arrays](/blueprint/constraints/ands#the-constraint-arrays).
+holds for each $x \in \{0, \ldots , n_\text{and} - 1\}$. Here, $a$, $b$ and $c$ are the [constraint arrays](/blueprint/constraints/arrays) associated with the prover's [AND constraints](/blueprint/constraints/ands#the-constraint-arrays).
 
-Now, we apply our [generic oblong-multilinearization procedure](/blueprint/backend/mathematizing) to the three constraint arrays $a$, $b$ and $c$. In this way, we obtain oblong-multilinear polynomials $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ whose respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ yield precisely the constraint arrays $a$, $b$ and $c$.
+Whatever these arrays are, we can [oblong-multilinearize](/blueprint/math/oblong) them. In this way, we get oblong-multilinears $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$ whose respective tables of values on $D \times \mathcal{B}_{\ell_\text{and}}$ are the constraint arrays $a$, $b$ and $c$.
 
-By the definition of AND-constraint satisfaction, then, we must show that
-
+Having done this, we can say that prover's AND constraints hold if and only if
 $$
 \begin{equation*}\widehat{a}(\widehat{i}, x) \cdot \widehat{b}(\widehat{i}, x) \stackrel{?}= \widehat{c}(\widehat{i}, x)\end{equation*}
 $$
-holds for each $\widehat{i} \in D$ and each $x \in \mathcal{B}_{\ell_\text{and}}$. For notation's sake, we write
+holds for each $\widehat{i} \in D$ and each $x \in \mathcal{B}_{\ell_\text{and}}$. Our goal here will be to _reduce_ the satisfaction of this condition to a further one, involving evaluation claims on the oblong-multilinearizations $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$. It will be the job of the [shift reduction](/blueprint/backend/reduction) to assess those latter claims (and in particular, to connect them to the witness).
+
+## Protocol Description
+
+For notation's sake, we write
 $$
 \begin{equation*}f(\widehat{I}, X) \coloneqq \widehat{a}(\widehat{I}, X) \cdot \widehat{b}(\widehat{I}, X) - \widehat{c}(\widehat{I}, X).\end{equation*}
 $$
 
-Our goal is now to show that $f(\widehat{I}, X)$ vanishes identically on $D \times \mathcal{B}_{\ell_\text{and}}$. Note that $f(\widehat{I}, X)$ is multivariate in $1 + \ell_\text{and}$ variables; it is _not_ oblong-multilinear.
-
-## Protocol Description
+Our goal is now to show that $f(\widehat{I}, X)$ vanishes identically on $D \times \mathcal{B}_{\ell_\text{and}}$; more precisely, our goal is to reduce the question of this vanishing to evaluation claims on $\widehat{a}(\widehat{I}, X)$, $\widehat{b}(\widehat{I}, X)$ and $\widehat{c}(\widehat{I}, X)$. Note that $f(\widehat{I}, X)$ is multivariate in $1 + \ell_\text{and}$ variables; it is _not_ oblong-multilinear.
 
 We now describe the protocol explicitly. Later, we explain soundness and implementation considerations.
 
@@ -94,7 +95,7 @@ $$
 
 here, $s_{\ell_\text{and}}$ and $r'_x$ are further quantities that will arise during the sumcheck. In the second equality, we unroll the definition of $f(r_{\widehat{i}}, r'_x)$, using our definition of $f(\widehat{I}, X)$ above.
 
-The verifier can locally evaluate $\widetilde{\texttt{eq}}(r_x, r'_x)$. The prover can nondeterministically send the verifier scalars $\alpha_a$, $\alpha_b$ and $\alpha_c$ which it claims satisfy:
+The verifier can locally evaluate $\widetilde{\texttt{eq}}(r_x, r'_x)$. At this point, the prover can nondeterministically send the verifier scalars $\alpha_a$, $\alpha_b$ and $\alpha_c$ which it claims satisfy:
 
 $$
 \begin{align*}
@@ -109,4 +110,4 @@ $$
 \begin{equation*}s_{\ell_\text{and}} \stackrel{?}= \left[ \alpha_a \cdot \alpha_b - \alpha_c \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x).
 \end{equation*}
 $$
-If this equality passes, then the verifier will have closed out the univariate skip, pending the correctness of the three evaluation claims just given. These are exactly the kind of claims that the [shift reduction](/blueprint/backend/reduction) is designed to evaluate.
+If this equality passes, then the verifier will have closed out the univariate skip, pending the correctness of the prover's three evaluation claims. These are exactly the kind of claims that the [shift reduction](/blueprint/backend/reduction) is designed to evaluate.
