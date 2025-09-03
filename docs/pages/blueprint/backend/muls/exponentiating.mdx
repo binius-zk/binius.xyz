@@ -1,0 +1,143 @@
+# Exponentiating Multilinears [Using GKR to multiply "twisted" multilinears]
+
+In this page, we explain a generic mathematical technique that exponentiates a variable base by a variable exponent pointwise on the cube. That is, we explain how to algebraically relate the multilinear extension of this exponentiation to the multilinear extensions of the base and the exponent. This protocol is the technical core of our multiplication protocol. In the [next page](/blueprint/backend/muls/combined), we apply this protocol to our situation.
+
+We fix an $\ell_\text{mul}$-variate multilinear $\widetilde{V}(X)$ with values in $\mathbb{F}_{2^{128}}$, and an $\mathbb{F}_2$-valued, [oblong-multilinear](/blueprint/math/oblong) exponent function $\widehat{z}(\widehat{I}, X_0, \ldots , X_{\ell_\text{mul} - 1})$. As a notational device, we write $z_i(x) \coloneqq \widehat{z}(\widehat{i}, x)$ for each $i \in \{0, \ldots , 63\}$ and each $x \in \mathcal{B}_{\ell_\text{mul}}$. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we define the _exponent_ $Z(x) \in \{0, \ldots , 2^{64} - 1\}$ by combining $\widehat{z}(\widehat{I}, x)$'s bits on $D$:
+$$
+\begin{equation*}Z(x) \coloneqq \sum_{i = 0}^{63} 2^i \cdot \widehat{z}(\widehat{i}, x).\end{equation*}
+$$
+
+We define the _exponentiated multilinear_ $\widetilde{W}(X_0, \ldots , X_{\ell_\text{mul} - 1})$ by specifying its values on the cube. For each $x \in \mathcal{B}_{\ell_\text{mul}}$, we set:
+$$
+\begin{equation*}W(x) \coloneqq \widetilde{V}(x)^{Z(x)}.\end{equation*}
+$$
+
+In this page, our goal will be to efficiently reduce an evaluation claim on $\widetilde{W}(X)$ to evaluation claims on $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$. This problem is tricky, since $\widetilde{W}(X)$ doesn't depend algebraically on $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$ (the exponentiation operation is not algebraic).
+
+## The Product Decomposition
+
+We first express $\widetilde{W}(X)$ pointwise on the cube as a product of 64 individual multilinears. Indeed, for each $x \in \mathcal{B}_{\ell_\text{mul}}$,
+$$
+\begin{equation*}W(x) = \widetilde{V}(x)^{Z(x)} = \widetilde{V}(x)^{\sum_{i = 0}^{63} 2^i \cdot z_i(x)} = \prod_{i = 0}^{63} \left( \widetilde{V}(x)^{2^i} \right)^{z_i(x)}.\end{equation*}
+$$
+We thus define
+$$
+\begin{equation*}W_i(x) \coloneqq \left( \widetilde{V}(x)^{2^i} \right)^{z_i(x)}\end{equation*}
+$$
+for each $i \in \{0, \ldots , 63\}$, and let $\widetilde{W_i}(X)$ be its multilinear extension.
+
+Our treatment from this point onwards has two phases. [First](/blueprint/backend/muls/exponentiating#the-gkr-step), we reduce an evaluation claim on $\widetilde{W}(X)$ to evaluation claims on the individual multilinears $\widetilde{W_i}(X)$. [After that](/blueprint/backend/muls/exponentiating#the-frobenius-step), we reduce claims on the $\widetilde{W_i}(X)$ to claims on $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$.
+
+## The GKR Step
+
+To reduce a claim on $\widetilde{W}(X)$ to claims on the $\widetilde{W_i}(X)$, the parties could directly multilinearize the expression for $W(x)$ above and run a sumcheck. The resulting sumcheck would be of a multilinear of individual degree 64 (excluding the equality indicator), which is very large.
+
+Instead, we use GKR. We array the 64 multilinears $\widetilde{W_i}(X)$, for $i \in \{0, \ldots , 63\}$, into the leaves of a balanced binary tree of height 6. Each internal node is defined to be the product of its children, pointwise on the cube.
+
+Notationally, we index the layers as $k \in \{0, \ldots , 6\}$. In the leaf layer $k = 6$, for each $i \in \{0, \ldots , 63\}$, we let
+
+$$
+\begin{equation*}\widetilde{W^{(6)}_i}(X) \coloneqq \widetilde{W_i}(X).\end{equation*}
+$$
+For each intermediate layer $k \in \{0, \ldots , 5\}$ and each $i \in \{0, \ldots , 2^k - 1\}$, we let
+$$
+\begin{equation*}\widetilde{W^{(k)}_i}(X) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}(X, x) \cdot \widetilde{W^{(k + 1)}_{2i}}(X) \cdot \widetilde{W^{(k + 1)}_{2i + 1}}(X).\end{equation*}
+$$
+We claim that our original multilinear $\widetilde{W}(X)$ and the resulting root multilinear $\widetilde{W^{(0)}_0}(X)$ are identical, as multilinears. Indeed, it's enough to note that, for each $k \in \{0, \ldots , 5\}$, each $i \in \{0, \ldots , 2^k - 1\}$, and each $x \in \mathcal{B}_{\ell_\text{mul}}$, $\widetilde{W^{(k)}_i}(x) = \widetilde{W^{(k + 1)}_{2i}}(x) \cdot \widetilde{W^{(k + 1)}_{2i + 1}}(x)$, and use induction.
+
+We fix an initial evaluation claim $\widetilde{W}(r^{(0)}) \stackrel{?}= s^{(0)}_0$. To assess it, the parties can run the following GKR loop:
+
+- **for** each tree layer $k \in \{0, \ldots , 5\}$ **do**:
+  - for each $i \in \{0, \ldots , 2^k - 1\}$ **do**: verifier samples $\beta^{(k)}_i \gets \mathbb{F}_{2^{128}}$, and sends it to the prover.
+  - the parties run a batched sumcheck on the claim:
+    $$
+    \begin{align*}
+    \sum_{i = 0}^{2^k - 1} \beta^{(k)}_i \cdot s^{(k)}_i &\stackrel{?}= \sum_{i = 0}^{2^k - 1} \beta^{(k)}_i \cdot \widetilde{W^{(k)}_j}(r^{(i)}) \\
+    &= \sum_{i = 0}^{2^k - 1} \beta^{(k)}_i \cdot \left[ \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}(r^{(i)}, x) \cdot \widetilde{W^{(k + 1)}_{2i}}(x) \cdot \widetilde{W^{(k + 1)}_{2i + 1}}(x) \right] \\
+    &= \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}(r^{(i)}, x) \cdot \left[ \sum_{i = 0}^{2^k - 1} \beta^{(k)}_i \cdot \widetilde{W^{(k + 1)}_{2i}}(x) \cdot \widetilde{W^{(k + 1)}_{2i + 1}}(x) \right],
+    \end{align*}
+    $$
+    which pertains to a composition of multilinears of degree just 2 (excluding the equality indicator).
+  - in this way, after $\ell_\text{mul}$ rounds, reduce the claim above to the further claim:
+    $$
+    \begin{equation*}s^{(i)}_\text{end} \stackrel{?}= \widetilde{\texttt{eq}}(r^{(i)}, r^{(i + 1)}) \cdot \left[ \sum_{i = 0}^{2^k - 1} \beta^{(k)}_i \cdot \widetilde{W^{(k + 1)}_{2i}}(r^{(i + 1)}) \cdot \widetilde{W^{(k + 1)}_{2i + 1}}(r^{(i + 1)}) \right],\end{equation*}
+    $$
+    where $r^{(i + 1)}$ is a further $\ell_\text{mul}$-dimensional challenge sampled during the sumcheck.
+  - **for** each $i \in \{0, \ldots, 2^{k + 1} - 1\}$ **do**: the prover sends the _claimez_ evaluation $s^{(k + 1)}_i = \widetilde{W^{(k + 1)}_i}(r^{(i + 1)})$.
+  - using the prover's claims $s^{(k + 1)}_i$, the verifier explicitly checks the equation just above.
+- output the reduced evaluation point $r^{(6)}$ and the reduced claims $s^{(6)}_i$, for $i \in \{0, \ldots , 63\}$.
+
+The security analysis of this protocol is just standard GKR and batched sumcheck. The invariant of the loop is that, as of the beginning of each iteration $k \in \{0, \ldots , 5\}$, we  have reduced the initial evaluation claim to the list of $2^k$ individual evaluation claims $\widetilde{W^{(k)}_i}(r^{(k)}) \stackrel{?}= s^{(k)}_i$, for $i \in \{0, \ldots , 2^k - 1\}$. By the usual batched sumcheck, the validity of these claims, individually, is implied—up to soundness error $\frac{2^k}{2^{128}}$—by the validity of the sum claim that the parties check. The sumcheck's soundness analysis reduces this claim in turn, with soundness error just $\frac{2 \cdot \ell_\text{mul}}{2^{128}}$, to the validity of the prover's claimed evaluations $\widetilde{W^{(k + 1)}_i}(r^{(k + 1)}) \stackrel{?}= s^{(k + 1)}_i$, for $i \in \{0, \ldots , 2^{k + 1} - 1\}$. This proves the security of the reduction.
+
+## The Frobenius Step
+
+We now reduce the individual evaluation claims $\widetilde{W_i}(r^{(6)}) \stackrel{?}= s^{(6)}_i$, for $i \in \{0, \ldots, 63\}$, to _a single_ claim on both $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$. For notation, we rename $r_x \coloneqq r^{(6)}$.
+
+By definition, we have
+$$
+\begin{equation*}W_i(x) \coloneqq \left( \widetilde{V}(x)^{2^i} \right)^{z_i(x)}\end{equation*}
+$$
+on each cube point $x \in \mathcal{B}_{\ell_\text{mul}}$. Since each $z_i(x)$ is either $0$ or $1$, each $\left( \widetilde{V}(x)^{2^i}\right)^{z_i(x)}$ is either $1$ or $\widetilde{V}(x)^{2^i}$, and we just need to select between those two. We thus get the equivalent expression:
+$$
+\begin{equation*}W_i(x) = 1 + z_i(x) \cdot \left( \widetilde{V}(x)^{2^i} - 1 \right)\end{equation*}
+$$
+for each $x \in \mathcal{B}_{\ell_\text{mul}}$. Taking the multilinear extension, we get in turn:
+$$
+\begin{equation*}\widetilde{W_i}(X) = \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}(X, x) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x)^{2^i} - 1 \right) \right).\end{equation*}
+$$
+Our claims thus take the form
+$$
+\begin{equation*}s^{(6)}_i \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}(r_x, x) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x)^{2^i} - 1 \right) \right),\end{equation*}
+$$
+for $i \in \{0, \ldots , 63\}$.
+
+We could again _in theory_ run sumcheck here, since the right-hand expression above is fully algebraic in $\widetilde{V}(X)$ and $\widehat{z}(\widehat{I}, X)$. On the other hand, the relevant multivariate would be of enormous degree: on the order of $2^i$. Instead, we use a trick, based on the [Frobenius endomorphism](/blueprint/math/fields#algebraic-properties) $\varphi$.
+
+Indeed, for each $i \in \{0, \ldots , 63\}$, applying $\varphi^{-i}$ to both sides of the above equality, we the equivalent claim:
+
+$$
+\begin{equation*}\varphi^{-i}\left( s^{(6)}_i \right) \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right).\end{equation*}
+$$
+
+Indeed, first off, the Frobenius is invertible, so $\varphi^{-i}$ makes sense. Second, $\varphi^{-i}$ is a ring homomorphism, so we can distribute it over all sums and products. Since $\widetilde{\texttt{eq}}$ is defined over $\mathbb{F}_2$, $\varphi^{-i}\left( \widetilde{\texttt{eq}}(r_x, x) \right) = \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right)$. Finally, $\varphi^{-i}$ has no effect on $1$ or $z_i(x)$, since it fixes $\mathbb{F}_2$, and it exactly "undoes" the $2^i$<sup>th</sup> power attached to $\widetilde{V}(x)$, since $V(x)^{2^i} = \varphi^i\left( V(x) \right)$.
+
+We thus now have 64 evaluation evaluation claims about _low-degree_ multivariates. We can now apply the usual batch sumcheck to these. The verifier samples and sends to the prover 64 random scalars $\gamma_i$, for $i \in \{0, \ldots , 63\}$; the parties then sumcheck the claim:
+
+$$
+\begin{align*}
+\sum_{i = 0}^{63} \gamma_i \cdot \varphi^{-1}\left( s^{(6)}_i \right) &\stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \left[ \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right) \right] \\
+&= \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \left[ \sum_{i = 0}^{63} \gamma_i \cdot \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right) \right].
+\end{align*}
+$$
+In this way, they can further reduce all 64 claims to a further claim of the form
+
+$$
+\begin{equation*}s_\text{end} \stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right) \cdot \left( 1 + z_i(r'_x) \cdot \left( \widetilde{V}(r'_x) - 1 \right) \right),\end{equation*}
+$$
+
+for some challenge $r'_x$ sampled during the sumcheck. The verifier can evaluate each quantity $\widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right)$ himself. As a practical matter, we note that $\varphi^{-i} = \varphi^{128 - i}$—since the order of $\varphi$ as an operator is 128—so the verifier can always evaluate $\varphi^{-i}$ using a few squarings. As for the rest, the prover can nondeterministically send evaluation claims $\alpha_V \stackrel{?}= \widetilde{V}(r'_x)$ and $\alpha_{z, i} \stackrel{?}= z_i(r'_x)$ for each $i \in \{0, \ldots , 63\}$, say. Pending the correctness of these, the verifier can close out the above sumcheck.
+
+## Oblong-Multilinearizing
+
+We've reduced everything to claims on $\widetilde{V}(X)$ and on all 64 polynomials $z_i(X) = \widehat{z}(\widehat{i}, X)$. On the other hand, our goal was to reduce everything to a _single_ claim on the oblong-multilinear $\widehat{z}(\widehat{I}, X)$. To do this, the verifier samples a random scalar $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$, and outputs the single reduced evaluation claim
+
+$$
+\begin{equation*}\sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(r_{\widehat{i}}, \widehat{i}) \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x).\end{equation*}
+$$
+I.e., it outputs the claim $\alpha_z \stackrel{?}= \widehat{z}(r_{\widehat{i}}, r'_x)$, where $\alpha_z \coloneqq \sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(r_{\widehat{i}}, \widehat{i})$.
+
+To see why this is correct, we note that the equality of degree-63, univariate polynomials
+$$
+\begin{equation*}\widehat{z}(\widehat{I}, r'_x) = \sum_{i = 0}^{63} \delta_D(\widehat{I}, \widehat{i}) \cdot \widehat{z}(\widehat{i}, r'_x)\end{equation*}
+$$
+holds, since $\widehat{z}(\widehat{I}, X)$ is oblong-multilinear. Specializing both sides to $r_{\widehat{i}}$, we get the correctness of this step. Conversely, if $\alpha_{z, i^*} \neq \widehat{z}(\widehat{i}^*, r'_x)$ holds for some $i^* \in \{0, \ldots , 63\}$, then the degree-63 univariate polynomials
+
+$$
+\begin{equation*}P(\widehat{I}) \coloneqq \sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(\widehat{I}, \widehat{i})\end{equation*}
+$$
+and $\widehat{z}(\widehat{I}, r'_x)$ are unequal, as univariate polynomials, since they differ at $\widehat{i}^* \in D$. The chance, over the verifier's challenge $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$, that $P(r_{\widehat{i}}) = \widehat{z}(r_{\widehat{i}}, r'_x)$ is thus at most $\frac{64}{2^{128}}$. If this doesn't happen, then we get
+
+$$
+\begin{equation*}\alpha_z = \sum_{i = 0}^{63} \alpha_{z, i} \cdot \delta_D(r_{\widehat{i}}, \widehat{i}) = P(r_{\widehat{i}}) \neq \widehat{z}(r_{\widehat{i}}, r'_x),\end{equation*}
+$$
+so the reduction is sound.

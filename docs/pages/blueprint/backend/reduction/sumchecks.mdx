@@ -24,11 +24,11 @@ At this point, it would be correct to just tell the prover to "run the sumcheck 
 
 The essential point for us is that that not all variables appear in all functions. If they did, we'd have no choice but to run the standard algorithm. As it happens, though, each function has only some of the variables $I$, $J$, $S$, and $Y$. Moreover, the way that these variables are "distributed" allows some very interesting things to happen.
 
-First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, while $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$ contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we factor the above sum expression as follows:
+First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, while $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$ contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we factorize the above claim as follows:
 
 $$
 \begin{equation*}
-\sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].\end{equation*}
+a_z \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} \Bigg[\sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)  \Bigg] \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \widetilde{w}(j, y) \Bigg].\end{equation*}
 $$
 
 This wouldn't do us much good, if it weren't for the following further observation. In each of the three expressions above, both bracketed quantities are _multilinear_ in both $J$ and $S$.
@@ -39,7 +39,7 @@ If this weren't true, then the above multivariate in $J$ and $S$ would not be ex
 
 ## The First Phase
 
-The above remarks suggest the following first step. As a purely notational matter, we introduce some abbreviations. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, we define two 12-variate multilinears in $J$ and $S$:
+The above remarks suggest the following first step. Purely for notation, we introduce some abbreviations. For each $\text{op} \in \{\mathsf{sll}, \mathsf{srl}, \mathsf{sra}\}$, we define two 12-variate multilinears in $J$ and $S$:
 
 $$
 \begin{equation*}h_\text{op}(J, S) \coloneqq \sum_{i \in \mathcal{B}_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \widetilde{\textsf{shift-ind}}_\text{op}(i, J, S);\end{equation*}
@@ -51,7 +51,7 @@ g_\text{op}(J, S) &\coloneqq \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widet
 \end{align*}
 $$
 
-Crucially, both polynomials above are multilinear in $J$ and $S$. By definition, our claim amounts to:
+Indeed, both multivariates above in $J$ and $S$ are above multilinear (we [just argued this](/blueprint/backend/reduction/sumchecks#a-factorization)). By definition, our claim now amounts to:
 
 $$
 \begin{equation*}\alpha_z \stackrel{?}= \sum_{j \in \mathcal{B}_6} \sum_{s \in \mathcal{B}_6} \sum_\text{op} h_\text{op}(j, s) \cdot g_\text{op}(j, s).\end{equation*}
@@ -64,7 +64,7 @@ Pending that problem, we can tell the parties to run the sumcheck above. In the 
 The sumcheck is 12-dimensional, over a sum of three products of multilinears (i.e., taken over $\text{op}$). After 12 rounds, the parties will have reduced the prover's claim to a further claim, say:
 
 $$
-\begin{equation*}\gamma \stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s),\end{equation*}
+\begin{equation*}\beta \stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s),\end{equation*}
 $$
 
 for 6-dimensional random scalars $r_j$ and $r_s$ sampled during the sumcheck.
@@ -74,7 +74,7 @@ for 6-dimensional random scalars $r_j$ and $r_s$ sampled during the sumcheck.
 Rearranging the claim we left off with above, by unwinding what the evaluations $g_\text{op}(r_j, r_s)$ mean, we get the identical claim:
 
 $$
-\begin{align*}\gamma &\stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s) \\
+\begin{align*}\beta &\stackrel{?}= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s) \\
 &= \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \Bigg[ \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, r_s) \cdot \widetilde{w}(r_j, y) \Bigg] \\
 &= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, r_s) \right] \cdot \widetilde{w}(r_j, y).
 \end{align*}
@@ -85,7 +85,7 @@ We can now view the above expression as a further sumcheckeckable claim, now ove
 For now, we instruct the parties to run an $\ell_\text{words}$-round sumcheck on the above. After doing that, they wind up with a final claim of the form:
 
 $$
-\begin{equation*}\delta \stackrel{?}= \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s) \right] \cdot \widetilde{w}(r_j, r_y),\end{equation*}
+\begin{equation*}\gamma \stackrel{?}= \left[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \widetilde{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s) \right] \cdot \widetilde{w}(r_j, r_y),\end{equation*}
 $$
 
 where $r_y$ is a further value sampled during the sumcheck.

@@ -29,9 +29,9 @@ We now describe the protocol explicitly. Later, we explain soundness and impleme
 - the verifier samples a _partial_ challenge $\overline{r_x} \gets \mathbb{F}_{2^{128}}^{\ell_\text{and} - 3}$, as usual in the [deterministic zerocheck variant](/blueprint/backend/ands/rijndael#deterministic-zerocheck). the verifier sends $\overline{r_x}$ to the prover.
 - the parties both define
   $$
-  \begin{equation*} r_x \coloneqq (\gamma_0, \gamma_1, \gamma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}),\end{equation*}
+  \begin{equation*} r_x \coloneqq (\sigma_0, \sigma_1, \sigma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}),\end{equation*}
   $$
-  where the elements $\gamma_0$, $\gamma_1$, and $\gamma_2$ of $\mathbb{F}_{2^{128}}$ the fixed [deterministic challenges](/blueprint/backend/ands/rijndael#embedding) we've already explained.
+  where the elements $\sigma_0$, $\sigma_1$, and $\sigma_2$ of $\mathbb{F}_{2^{128}}$ the fixed [deterministic challenges](/blueprint/backend/ands/rijndael#embedding) we've already explained.
 - the univariate polynomial
   $$
   \begin{equation*}g(\widehat{I}) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}

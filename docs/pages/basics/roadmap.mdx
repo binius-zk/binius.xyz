@@ -1,0 +1,36 @@
+# Binius64 Roadmap [What features and apps we plan to build]
+
+## Features
+
+We are actively working on the following Binius64 features:
+
+* **Zero-knowledge** - Binius64 does not guarantee the input privacy yet. Adding this feature will enable a set of privacy-preserving applications. We are looking forward to enabling verifiable-credentials, private payments and other _zero-kowledge_ applications built on Binius64.
+* **Recursion** - Proof composition and recursion are important techniques for proving large statements, while bounding memory usage.
+* **Succinctness** - While Binius64 proof size is succinct, the verification complexity is not. We are working on achieving succinct verifier complexity and reducing verification times.
+* **Vision Hasher** - We are working on achieving a higher throughput of proving hash functions, by using field-native hash constructions like [Vision.](https://tosc.iacr.org/index.php/ToSC/article/view/8695)
+
+## DevX
+
+At the moment, Binius64 implements frontend which requires hand-written circuits. All our examples are implemented this way. We are working on the "rust-to-circuits" interface which should transpile rust code into our circuit framework, matching the UX of modern zkVMs.
+
+## Apps
+
+Currently we list these demo examples in our OSS repo:
+* Keccak
+* Blake2s
+* SHA256
+* SHA512
+* ECDSA sig-aggregation
+* XMSS sig-aggregation
+
+We are planning to release these app demos:
+* zkLogin
+* Semaphore
+* zkPassport
+
+## Platforms
+
+We are optimizing Binius64 for commodity/consumer x86/aarch64 CPUs.
+
+There are two additional strategic directions with Platforms: TEEs and mobile CPUs. We are planning to release more mobile examples going forward.
+

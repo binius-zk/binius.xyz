@@ -1,0 +1,67 @@
+# Multiplying in the Exponent [From repeated exponentiation to multiplication]
+
+Here, we explain a fairly simple mathematical idea that underpins our multiplication technique. We fix a number $n_\text{mul}$ of MUL constraints; we recall the [constraint arrays](/blueprint/constraints/muls#the-constraint-arrays) $p$, $q$, $\text{lo}$ and $\text{hi}$. Each of these arrays is of length $n_\text{mul}$ and contains 64-bit words.
+
+For each $x \in \{0, \ldots , n_\text{mul} - 1\}$, $p[x]$ and $q[x]$ are in $\{0, \ldots , 2^{64} - 1\}$. We're interested in $p[x] \cdot q[x]$. Recall that we work throughout with binary fields. This means that we can't use typical prime-field ideas—say (like breaking our numbers into limbs so small that their products don't overflow the characteristic, using range checks, and so on).
+
+## The Exponentiation Identity
+
+The idea is to use the basic identity $(g^{p[x]})^{q[x]} = g^{p[x] \cdot q[x]}$. This is true in all rings, but we have to be careful about reduction in the exponent. 
+
+We [recall](/blueprint/math/fields#binary-fields) that the multiplicative group of units $\mathbb{F}_{2^{128}}^*$ is cyclic; we fix a generator $g \in \mathbb{F}_{2^{128}}^*$. Thus, the multiplicative order of $g$ in $\mathbb{F}_{2^{128}}$ is $2^{128} - 1$.
+
+For each $x \in \{0, \ldots , n_\text{mul} - 1\}$, the array elements $p[x]$, $q[x]$, $\text{lo}[x]$ and $\text{hi}[x]$ are all elements of $\{0, \ldots , 2^{64} - 1\}$. Our [goal](/blueprint/constraints/muls#the-constraint-arrays) is to check whether
+
+$$
+\begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]\end{equation*}
+$$
+
+holds as integers. By the basic properties of rings, we know that
+
+$$
+\begin{equation*}g^r = g^s\end{equation*}
+$$
+holds if and only if $r \equiv s \pmod{\text{ord}(g)}$; in our case, we conclude that
+
+$$
+\begin{equation*}(g^{p[x]})^{q[x]} = g^{p[x] \cdot q[x]} \stackrel{?}= g^{2^{64} \cdot \text{hi}[x] + \text{lo}[x]} = \left( g^{2^{64}} \right)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}\end{equation*}
+$$
+holds in in $\mathbb{F}_{2^{128}}$ if and only if
+$$
+\begin{equation*}p[x] \cdot q[x] \equiv 2^{64} \cdot \text{hi}[x] + \text{lo}[x] \pmod{2^{128} - 1}.\end{equation*}
+$$
+
+## Controlling Wraparound
+
+If $p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds as integers, then it definitely also holds modulo $2^{128} - 1$. The converse is not quite true, as we now explain. Since
+$$
+\begin{equation*}p[x] \cdot q[x] \leq (2^{64} - 1)^2 = 2^{128} - 2 \cdot 2^{64} + 1 < 2^{128} - 1,\end{equation*}
+$$
+$p[x] \cdot q[x]$ can't wrap around modulo $2^{128} - 1$. On the other hand, since
+$$
+\begin{equation*}2^{64} \cdot \text{hi}[x] + \text{lo}[x] \leq 2^{64} \cdot (2^{64} - 1) + 2^{64} - 1 = 2^{128} - 1,\end{equation*}
+$$
+$2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ can wrap around _only_ in the case of a direct equality $2^{64} \cdot \text{hi}[x] + \text{lo}[x] = 2^{128} - 1$. This equality happens if and only if $\text{lo}[x]$ and $\text{hi}[x]$ are both $2^{64} - 1$; and indeed, by choosing at least one of $p[x]$ and $q[x]$ to be zero, the prover could get a case in which $p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ holds modulo $2^{128} - 1$ but _not_ over the integers.
+
+In this latter case, $p[x] \cdot q[x]$ is even, while $2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ is odd. To eliminate it, it thus suffices to ensure to boot that
+$$
+\begin{equation*}p[x] \cdot q[x] \equiv 2^{64} \cdot \text{hi}[x] + \text{lo}[x] \pmod{2}.\end{equation*}
+$$
+This latter equality is easy to check, since it only depends on the least-significant bits of $p$, $q$ and $\text{lo}$. One simple way to do this is to use AND constraints. It's enough to add 3 new witness words, say $p'$, $q'$, and $\text{lo}'$, and to constrain that
+
+$$
+\begin{equation*}\mathsf{sll}(p', 63) \mathbin{\&} \mathsf{sll}(q', 63) \stackrel{?}= \mathsf{sll}(\text{lo}', 63),\end{equation*}
+$$
+as well as that $p = p'$, $q = q'$, and $\text{lo} = \text{lo}'$. The total cost for this is 3 new witness components and 4 new AND constraints (we note that MUL is already much costlier than AND, on a per-constraint basis).
+
+## Putting it Together
+
+Assuming that the above issue has been separately resolved, we see that the MUL constraint
+$$
+\begin{equation*}p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]\end{equation*}
+$$
+holds over the integers if and only if
+$$
+\begin{equation*}(g^{p[x]})^{q[x]} \stackrel{?}= \left( g^{2^{64}} \right)^{\text{hi}[x]} \cdot g^{\text{lo}[x]}\end{equation*}
+$$
+holds in $\mathbb{F}_{2^{128}}$. We explain the rest of this site section explaining how to check the exponent condition above.

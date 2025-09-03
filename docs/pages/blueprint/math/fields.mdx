@@ -1,21 +1,21 @@
 # Binary Fields [Basics on the fields we use]
 
-A _field_ is a set equipped with addition and multiplication operations, which satisfy the commutative, associative and distributive laws, and where everything nonzero has an inverse. A _finite field_ is moreover, well, finite.
+A _field_ is a set equipped with addition and multiplication operations, which satisfy the commutative, associative and distributive laws, and where everything nonzero has an inverse. A _finite field_ is moreover finite.
 
 The finite fields you're probably most used to look like $\mathbb{F}_p = \{0, \ldots , p - 1\}$, where $p$ is a large prime. Arithmetic in that set is carried out modulo $p$. Elements of the field can be represented, concretely, as $\lceil \log_2 p \rceil$-bit strings. Some of those strings—i.e., the ones representing integers in the high range $\{p, \ldots , \lceil \log_2 p \rceil - 1\}$—will be "off-limits".
 
-## Binary Fields
-
 Here, we work in characteristic 2. This means that we construct our fields differently.
+
+## Construction
 
 The simplest binary field is $\mathbb{F}_2 = \{0, 1\}$, the field with two elements.
 
-By taking algebraic extensions of this field, we can get further ones. We pick a bit-length. For us, we'll stick with $128$. If we pick an irreducible polynomial $f(X) \in \mathbb{F}_2[X]$ of degree $128$, then the quotient ring $\mathbb{F}_2[X] / (f(X))$ is a field. Up to ring isomorphism, this thing is unique. This gives us the field $\mathbb{F}_{2^{128}}$.
+By taking algebraic extensions of this field, we can get further binary fields. We pick a bit-length. For now, we'll stick with $128$. We fix once and for all a global irreducible polynomial $f(X) \in \mathbb{F}_2[X]$ of degree $128$. The corresponding quotient ring $\mathbb{F}_2[X] / (f(X))$ is a field, namely $\mathbb{F}_{2^{128}}$.
 
-Each element $\alpha \in \mathbb{F}_{2^{128}}$ can be represented as a polynomial of degree less than $128$, say $\alpha = \sum_{i = 0}^{127} \alpha_i \cdot X^i$. Thus we can represent elements of $\mathbb{F}_{2^{128}}$ _concretely_ as $128$-bit strings (i.e., in coefficients with respect to the $\mathbb{F}_2$-basis $1, X, \ldots , X^{127}$).
+Concretely, we can represent elements $\alpha \in \mathbb{F}_{2^{128}}$ as polynomials of degree less than $128$; say, $\alpha = \sum_{i = 0}^{127} \alpha_i \cdot X^i$. In other words, the list of monomials $1, X, \ldots , X^{127}$ is an $\mathbb{F}_2$-basis of $\mathbb{F}_{2^{128}}$. Thus elements of $\mathbb{F}_{2^{128}}$ get represented in practice as $128$-bit words (or say as pairs of 64-bit words).
 
-## GHASH
+## Algebraic Properties
 
-Concretely, we use the _[GHASH](https://datatracker.ietf.org/doc/html/rfc8452#appendix-A)_ field. To get that field, we just need to take $f(X) \coloneqq X^{128} + X^7 + X^2 + X + 1$. That polynomial $f(X)$ is indeed irreducible in $\mathbb{F}_2[X]$.
+We fix a binary field, say $\mathbb{F}_{2^{128}}$. The _multiplicative group of units_ of $\mathbb{F}_{2^{128}}$, written $\mathbb{F}_{2^{128}}^*$, is the set of nonzero elements of $\mathbb{F}_{2^{128}}$, with multiplication as its group operation. [The multiplicative group of units of a finite field is cyclic](https://groupprops.subwiki.org/wiki/Multiplicative_group_of_a_finite_field_is_cyclic), and so $\mathbb{F}_{2^{128}}^*$ in particular is. This means that we can fix an element $g \in \mathbb{F}_{2^{128}}^*$ such that that the powers $g^a$, for $a \in \{0, \ldots , 2^{128} - 2\}$, exactly exhaust $\mathbb{F}_{2^{128}}^*$.
 
-On processors that feature the _[carryless multiplication](https://en.wikipedia.org/wiki/CLMUL_instruction_set)_ (CLMUL) instruction set extension, multiplication in the GHASH field can be carried out extremely efficiently.
+In $\mathbb{F}_{2^{128}}$, the _Frobenius endomorphism_ $\varphi$ sends $\varphi : \alpha \mapsto \alpha^2$. The Frobenius endomorphism is $\mathbb{F}_2$-linear and injective; in finite fields, it's also surjective, and so invertible.
