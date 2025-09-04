@@ -32,14 +32,14 @@ We now describe the protocol explicitly. Later, we explain soundness and impleme
   $$
   \begin{equation*} r_x \coloneqq (\sigma_0, \sigma_1, \sigma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell - 4}}),\end{equation*}
   $$
-  where the elements $\sigma_0$, $\sigma_1$, and $\sigma_2$ of $\mathbb{F}_{2^{128}}$ the fixed [deterministic challenges](/blueprint/backend/ands/rijndael#embedding) we've already explained.
+  where the elements $\sigma_0$, $\sigma_1$, and $\sigma_2$ of $\mathbb{F}_{2^{128}}$ are the fixed [deterministic challenges](/blueprint/backend/ands/rijndael#embedding) we've already explained.
 - the univariate polynomial
   $$
   \begin{equation*}g(\widehat{I}) \coloneqq \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(\widehat{I}, x) \cdot \widetilde{\texttt{eq}}(r_x, x)\end{equation*}
   $$
   is univariate, of degree at most $2 \cdot (2^k - 1)$, and vanishes on $D$ if the prover is honest. The prover sends this polynomial, by sending its values on at least $2^k - 1$ points outside of $D$ (we will be more precise about this [later](/blueprint/backend/ands/implementation)).
 - the verifier checks that $g(\widehat{I})$ vanishes identically on $D$.
-- the verifier samples a single challenges $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and sends it to the prover.
+- the verifier samples a single challenge $r_{\widehat{i}} \gets \mathbb{F}_{2^{128}}$ and sends it to the prover.
 - both parties write $s_0 \coloneqq g(r_{\widehat{i}})$, and run an $\ell_\text{and}$-round sumcheck on the claim
   $$
   \begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
@@ -105,7 +105,7 @@ $$
 \end{align*}
 $$
 
-Then verifier can explicitly check whether
+Then the verifier can explicitly check whether
 $$
 \begin{equation*}s_{\ell_\text{and}} \stackrel{?}= \left[ \alpha_a \cdot \alpha_b - \alpha_c \right] \cdot \widetilde{\texttt{eq}}(r_x, r'_x).
 \end{equation*}

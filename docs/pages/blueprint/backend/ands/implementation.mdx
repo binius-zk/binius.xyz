@@ -1,4 +1,4 @@
-# The Rijndael Zerocheck [Our efficient prover implementation our univariate skip variant]
+# The Rijndael Zerocheck [Our efficient prover implementation of our univariate skip variant]
 
 Here, we explain our optimized _prover implementation_ of our [univariate skip](/blueprint/backend/ands/univariate) variant. Essentially, the problem is to combine Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1] and both Dao–Thaler works [[DT24a](https://eprint.iacr.org/2024/1038), [DT24b](https://eprint.iacr.org/2024/1210)] in a way that lets the prover do as much work as possible in the small [Rijndael field](/blueprint/backend/ands/rijndael). We also use a lookup-based NTT like Hu et al. [[Hu+25](https://eprint.iacr.org/2025/717)]'s.
 
@@ -68,7 +68,7 @@ We proceed with the prover's algorithm. The prover's inputs are the constraint a
 
 We claim that the array $\mathsf{g}$ returned by this algorithm contains exactly the values of $g(\widehat{i})$ for $\widehat{i} \in D' \setminus D$, which is what we want.
 
-The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ [embeddings](/blueprint/backend/ands/rijndael#embedding) and 64 multiplications in $\mathbb{F}_{2^{128}}$. "Between" iterations, we work entirely in $K$. The breakup of our sum into outer and inner loops above can be viewed as a variant of an idea of Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] (i.e., separate from the use of [determinstic challenges](/blueprint/backend/ands/rijndael#deterministic-zerocheck)).
+The above protocol is very efficient. Every 8<sup>th</sup> iteration, we have to do 64 $K \to \mathbb{F}_{2^{128}}$ [embeddings](/blueprint/backend/ands/rijndael#embedding) and 64 multiplications in $\mathbb{F}_{2^{128}}$. "Between" iterations, we work entirely in $K$. The breakup of our sum into outer and inner loops above can be viewed as a variant of an idea of Dao and Thaler [[DT24b](https://eprint.iacr.org/2024/1210)] (i.e., separate from the use of [deterministic challenges](/blueprint/backend/ands/rijndael#deterministic-zerocheck)).
 
 ## Correctness
 
@@ -98,7 +98,7 @@ $$
 \begin{equation*}s_0 \stackrel{?}= \sum_{x \in \mathcal{B}_{\ell_\text{and}}} f(r_{\widehat{i}}, x) \cdot \widetilde{\texttt{eq}}(r_x, x) = \sum_{x \in \mathcal{B}_{\ell_\text{and}}} \left[ \widehat{a}(r_{\widehat{i}}, x) \cdot \widehat{b}(r_{\widehat{i}}, x) - \widehat{c}(r_{\widehat{i}}, x) \right] \cdot \widetilde{\texttt{eq}}(r_x, x).\end{equation*}
 $$
 
-To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized $\ell_{\text{and}}$-variate multilinears $\widehat{a}(r_{\widehat{i}}, X)$, $\widehat{b}(r_{\widehat{i}}, X)$ and $\widehat{c}(r_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$. As we [saw above](/blueprint/backend/ands/implementation#the-underlying-arrays), the tables of values of these latter oblong-multilinears are just the constraint arrays $a$, $b$ and $c$. How do the tables of values of $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to $a$, $b$ and $c$?
+To prepare this sumcheck, the prover needs to prepare the tables of values of the partially specialized $\ell_\text{and}$-variate multilinears $\widehat{a}(r_{\widehat{i}}, X)$, $\widehat{b}(r_{\widehat{i}}, X)$ and $\widehat{c}(r_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$. As we [saw above](/blueprint/backend/ands/implementation#the-underlying-arrays), the tables of values of these latter oblong-multilinears are just the constraint arrays $a$, $b$ and $c$. How do the tables of values of $\widehat{a}(r'_{\widehat{i}}, X)$, $\widehat{b}(r'_{\widehat{i}}, X)$ and $\widehat{c}(r'_{\widehat{i}}, X)$ on $\mathcal{B}_{\ell_\text{and}}$ relate to $a$, $b$ and $c$?
 
 We have already [answered this question](/blueprint/math/oblong#partial-specialization) in the general context of oblong-multilinearization. In our context, we have $k = 6$. Moreover, for each $x \in \mathcal{B}_{\ell_\text{and}}$, the three bit-arrays
 

@@ -68,7 +68,7 @@ We fix an initial evaluation claim $\widetilde{W}(r^{(0)}) \stackrel{?}= s^{(0)}
   - using the prover's claims $s^{(k + 1)}_i$, the verifier explicitly checks the equation just above.
 - output the reduced evaluation point $r^{(6)}$ and the reduced claims $s^{(6)}_i$, for $i \in \{0, \ldots , 63\}$.
 
-The security analysis of this protocol is just standard GKR and batched sumcheck. The invariant of the loop is that, as of the beginning of each iteration $k \in \{0, \ldots , 5\}$, we  have reduced the initial evaluation claim to the list of $2^k$ individual evaluation claims $\widetilde{W^{(k)}_i}(r^{(k)}) \stackrel{?}= s^{(k)}_i$, for $i \in \{0, \ldots , 2^k - 1\}$. By the usual batched sumcheck, the validity of these claims, individually, is implied—up to soundness error $\frac{2^k}{2^{128}}$—by the validity of the sum claim that the parties check. The sumcheck's soundness analysis reduces this claim in turn, with soundness error just $\frac{2 \cdot \ell_\text{mul}}{2^{128}}$, to the validity of the prover's claimed evaluations $\widetilde{W^{(k + 1)}_i}(r^{(k + 1)}) \stackrel{?}= s^{(k + 1)}_i$, for $i \in \{0, \ldots , 2^{k + 1} - 1\}$. This proves the security of the reduction.
+The security analysis of this protocol is just standard GKR and batched sumcheck. The invariant of the loop is that, as of the beginning of each iteration $k \in \{0, \ldots , 5\}$, we have reduced the initial evaluation claim to the list of $2^k$ individual evaluation claims $\widetilde{W^{(k)}_i}(r^{(k)}) \stackrel{?}= s^{(k)}_i$, for $i \in \{0, \ldots , 2^k - 1\}$. By the usual batched sumcheck, the validity of these claims, individually, is implied—up to soundness error $\frac{2^k}{2^{128}}$—by the validity of the sum claim that the parties check. The sumcheck's soundness analysis reduces this claim in turn, with soundness error just $\frac{2 \cdot \ell_\text{mul}}{2^{128}}$, to the validity of the prover's claimed evaluations $\widetilde{W^{(k + 1)}_i}(r^{(k + 1)}) \stackrel{?}= s^{(k + 1)}_i$, for $i \in \{0, \ldots , 2^{k + 1} - 1\}$. This proves the security of the reduction.
 
 ## The Frobenius Step
 
@@ -102,11 +102,11 @@ $$
 
 Indeed, first off, the Frobenius is invertible, so $\varphi^{-i}$ makes sense. Second, $\varphi^{-i}$ is a ring homomorphism, so we can distribute it over all sums and products. Since $\widetilde{\texttt{eq}}$ is defined over $\mathbb{F}_2$, $\varphi^{-i}\left( \widetilde{\texttt{eq}}(r_x, x) \right) = \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right)$. Finally, $\varphi^{-i}$ has no effect on $1$ or $z_i(x)$, since it fixes $\mathbb{F}_2$, and it exactly "undoes" the $2^i$<sup>th</sup> power attached to $\widetilde{V}(x)$, since $V(x)^{2^i} = \varphi^i\left( V(x) \right)$.
 
-We thus now have 64 evaluation evaluation claims about _low-degree_ multivariates. We can now apply the usual batch sumcheck to these. The verifier samples and sends to the prover 64 random scalars $\gamma_i$, for $i \in \{0, \ldots , 63\}$; the parties then sumcheck the claim:
+We thus now have 64 evaluation claims about _low-degree_ multivariates. We can now apply the usual batch sumcheck to these. The verifier samples and sends to the prover 64 random scalars $\gamma_i$, for $i \in \{0, \ldots , 63\}$; the parties then sumcheck the claim:
 
 $$
 \begin{align*}
-\sum_{i = 0}^{63} \gamma_i \cdot \varphi^{-1}\left( s^{(6)}_i \right) &\stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \left[ \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right) \right] \\
+\sum_{i = 0}^{63} \gamma_i \cdot \varphi^{-i}\left( s^{(6)}_i \right) &\stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \left[ \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right) \right] \\
 &= \sum_{x \in \mathcal{B}_{\ell_\text{mul}}} \left[ \sum_{i = 0}^{63} \gamma_i \cdot \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), x \right) \cdot \left( 1 + z_i(x) \cdot \left( \widetilde{V}(x) - 1 \right) \right) \right].
 \end{align*}
 $$
