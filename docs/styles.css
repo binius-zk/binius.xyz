@@ -86,6 +86,10 @@ a.vocs_Anchor,
   color: #838383;
 }
 
+.vocs_DocsLayout_gutterRight .vocs_Outline_link[data-active="true"]:hover {
+  color: #272962;
+}
+
 .vocs_Sidebar_sectionTitle[data-active="false"] {
   color: #202020;
 }
@@ -343,6 +347,20 @@ h2 {
 
 .vocs_DesktopTopNav_withLogo {
   padding-left: calc(((100% - var(--vocs-content_width)) / 2) + 3rem);
+}
+
+@media (max-width: 1359px) {
+  .vocs_DocsLayout {
+    background: #fff;
+  }
+
+  .dark .vocs_DocsLayout {
+    background: inherit;
+  }
+
+  .vocs_DocsLayout_gutterRight .vocs_Outline {
+    display: none;
+  }
 }
 
 @media (max-width: 600px) {
