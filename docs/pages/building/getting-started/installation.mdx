@@ -22,10 +22,13 @@ RUSTFLAGS="-C target-cpu=native" cargo bench --bench sha256
 
 ## Tutorial Examples
 
-The `crates/tutorial` directory contains runnable examples from this tutorial:
+Tutorial examples are located in `crates/examples/examples/tutorials/`:
 
 ```bash
-cd crates/tutorial
-./run_all.sh
+# Run all tutorial examples
+for f in crates/examples/examples/tutorials/*.rs; do n=$(basename $f .rs); echo "=== $n ===" && RUSTFLAGS="-C target-cpu=native" cargo run --release -p binius-examples --example $n || break; done
+
+# Or run a specific tutorial example
+RUSTFLAGS="-C target-cpu=native" cargo run --release -p binius-examples --example getting_started_first_circuits
 ```
 
