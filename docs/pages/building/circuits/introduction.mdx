@@ -1,0 +1,26 @@
+# Introduction [Key concepts to know, before you start building]
+
+A ZK-SNARK is basically a "proof of a computation". In the [general setup](/basics/concepts), a _prover_ wants to prove to a _verifier_ that some computational relationship holds over data. Some of that data will be shared by both the prover and the verifier; other parts of it will be known only to the prover.
+
+The prover and verifier will both run as compiled computer programs (in a command line, say). The prover and the verifier will need some way to agree on the function that they're generating and verifying proofs about. Thus, each SNARK must give its users some way to feed concrete programs to it. In Binius64, we use _circuits_ for this task. _Circuits_, basically, give us a minimal, rigorous and simple way of specifying computer programs. We'll see below how to use them.
+
+## Wires
+
+In Binius64, our fundamental datatype is the _64-bit word_. Every _wire_ that we talk about will be understood as taking values in the set of possible 64-bit words. For example, the AND gate takes in two wires—i.e., word-valued inputs. It outputs a further wire, defined to be the bitwise AND of the words it got in.
+
+## Public and Witness Wires
+
+The whole point of ZK is to run computations that conceal _some_ of the prover's data from the verifier. We do this not just for privacy, but also for succinctness. Many computations involve auxiliary data that's huge, and that we don't want the verifier to have to read.
+
+When we write down our circuits, we will need some way of specifying which wires contain data designed to be seen by the verifier, and which wires contain witness data. Our API gives us a way of making this distinction, as we'll see.
+
+## Circuit Hierarchy
+
+Binius64's circuit libraries yield convenient, reusable abstractions, which themselves sit atop lower-level objects. Here, we roughly explain the hierarchy:
+
+- **Constraints.** Our [backend](/blueprint/backend) ultimately works with extremely low-level objects called _constraints_. (Technically, we support two types of constraints, [ANDs](/blueprint/constraints/ands) and [MULs](/blueprint/constraints/muls).) Developers will rarely need to interact directly with constraints. Our circuit library will hide the details of these, and surface more usable abstractions.
+- **Gates.** _Gates_ are the lowest-level atomic building blocks that developers will routinely come across. These capture basic operations on 64-bit words—things like bitwise operations on these words (AND, OR, shifts, etc.), as well as more complex atomic operations like unsigned integer addition (again of 64-bit words).
+- **Gadgets.** Gadgets are larger templates, _built_ out of gates, designed to handle common sub-tasks. Gadgets can be reused repeatedly, "stamped in place" like cookie-cutters, and wired together. Binius64 has premade gadgets for many key computational problems, like those associated with SHA-256 and ECDSA, for example.
+- **Circuits.** These are the highest-level objects we deal with, designed to capture the end-to-end, full-blown computations that the prover and verifier are interested in generating and verifying proofs about, in real-life applications.
+
+In the following pages, we will see how all of these interact in real applications.

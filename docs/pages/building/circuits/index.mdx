@@ -1,14 +1,15 @@
 # Circuits
 
-1. **[Gadgets](gadgets)** - Reusable functions for common operations like byte manipulation and bit counting. Compose multiple gates into higher-level algorithms for complex tasks.
+In this section, we explain how to build real circuits.
 
-2. **[Wires](wires)** - Wire types and witness array organization for data flow between gates. Understand how data flows through circuits and compiler optimizations for wire management.
+Before we can do this, we need to [elaborate a few concepts](/building/circuits/introduction) that only exist in ZK. We need to explain what _wires_ are, for example, as well as the distinction between _public_ and _witness_ wires.
 
-3. **[Control Flow](control-flow)** - Conditional execution and iteration patterns without runtime branching. Implement if-statements, loops, and array access using arithmetic masking and multiplexers.
+Having done that, we turn to practical matters. We go through various motifs that arise repeatedly in practical circuit design.
 
-4. **[Data Structures](data-structures)** - Dealing with data structures in circuits using static allocation. Handle arrays, concatenation, and variable-length data within circuit constraints.
-
-5. **[Composition](composition)** - Circuit building patterns and organization for larger systems. Organize complex circuits through consistent function patterns, wire ownership, and hierarchical design.
-
-6. **[Performance](performance)** - Analysis tools and optimization through compiler passes. Understand cost models, constraint counting, and circuit snapshots for performance analysis.
-
+Here are the pages in this section:
+- [**Introduction.**](introduction) Here, we set up basic notions, like _wires_, and explain the distinction between _witness_ and _public_ wires. We also talk about _gates_ and _gadgets_.
+- [**Gadgets.**](gadgets) _Gadgets_ are reusable components designed to achieve common operations (like byte-manipulation and hashing). By composing these and wiring them together, we can quickly build complex cryptographic circuits.
+- [**Control Flow.**](control-flow) Circuits can't run if-statements and loops, like classic imperative programs can. Here, we explain how to port these patterns into the language of circuits. _Multiplexers_ will prove to be a key tool.
+- [**Data Structures.**](data-structures) Because we can't branch, we need to design our datastructures differently too. Here, we explain a few techniques, mainly focusing on the concatenation of bytestrings.
+- [**Composition.**](composition) Circuit building patterns and organization for larger systems. Organize complex circuits through consistent function patterns, wire ownership, and hierarchical design.
+- [**Performance.**](performance) Here, we sketch how to understand the costs of the circuits you build. We explain the various cost metrics that circuits have, like _number of witness values_ and _number of constraints_.

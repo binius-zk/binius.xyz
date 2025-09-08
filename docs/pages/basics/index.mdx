@@ -2,9 +2,9 @@ import Collapsible from "../../components/Collapsible";
 
 import { Callout } from "vocs/components";
 
-# Overview [Welcome to Binius!]
+# Basics [Welcome to Binius!]
 
-_Binius_ is a state-of-the-art cryptographic proof system that allows fast and cheap verification of complex computations. In the world of cryptography, Binius is known as a succinct, noninteractive argument, or _SNARK_, the key primitive required for _verifiable computing_. Though Binius proofs today do not guarantee privacy, we are actively extending it with _zero knowledge_ (ZK), making it a _ZK-SNARK_. Because Binius uses binary fields as a foundational primitive, we also sometimes refer to it as a _binary proof system_[^1].
+_Binius_ is a state-of-the-art cryptographic proof system that makes it possible to quickly and cheaply verify complex computations. In the world of cryptography, Binius is known as a _succinct, noninteractive argument_, or a _SNARK_, the key primitive required for _verifiable computing_. Though Binius proofs today do not guarantee privacy, we are actively extending it with _zero knowledge_ (ZK), making it a _ZK-SNARK_. Because Binius uses binary fields as a foundational primitive, we also sometimes refer to it as a _binary proof system_[^1].
 
 The latest version of the project is called _Binius64_. Binius64 optimizes for proving computations over 64-bit words, making it the _fastest_ proof system for proving standard hash functions like SHA2 and SHA3. Moreover, the Binius64 prover delivers top-notch performance on ARM64 and x86-64 processors, including modern mobile CPUs, making it a perfect choice for local ZK proving. The construction is itself hash-based, meaning Binius has a transparent setup, is post-quantum secure, and relies only conservative cryptographic assumptions.
 
@@ -16,16 +16,16 @@ The open source [Rust codebase](https://github.com/IrreducibleOSS/binius64) cont
 - a standard library of common circuit components,
 - lots of examples to help get started!
 
-Binius is the product of [Irreducible's](https://www.irreducible.com/) research and development efforts, and builds directly on Irreducible's cryptography research into SNARKs over towers of binary fields [[DP24a](https://link.springer.com/chapter/10.1007/978-3-031-91134-7_4)] [[DP24b](https://eprint.iacr.org/2024/504)].
+Binius is the product of [Irreducible's](https://www.irreducible.com/) research and development efforts, and builds directly on Irreducible's cryptography research into SNARKs over towers of binary fields [[DP25](https://eprint.iacr.org/2024/1038)] [[DP24](https://eprint.iacr.org/2024/504)].
 
 ## Documentation
 
 This documentation site has four high-level sections.
 
 * This [Basics](/basics) section provides a high-level overview of what Binius is, the core concepts, and information about the project.
-* [Blueprint](/blueprint) provides a detailed description of the Binius64 cryptographic protocol. Go here for a peek under the hood.
-* [Building](/building) contains practical guides for how to build and prove applications using Binius64.
-* [Benchmarks](/benchmarks) shows up-to-date performance measurements for key benchmarks on different hardware platforms.
+* Our [Building](/building) section contains practical guides for how to build and prove applications using Binius64.
+* Our [Blueprint](/blueprint) provides a detailed description of the Binius64 cryptographic protocol. Go here for a peek under the hood.
+* Our [Benchmarks](/benchmarks) contain up-to-date performance measurements for key benchmarks on different hardware platforms.
 
 The code is available on GitHub at [IrreducibleOSS\/binius64](https://github.com/IrreducibleOSS/binius64), and the Rust docs are hosted at [docs.binius.xyz](https://docs.binius.xyz).
 
@@ -33,31 +33,39 @@ The code is available on GitHub at [IrreducibleOSS\/binius64](https://github.com
 
 <Callout type="note">
 <Collapsible>
-[**Concepts**](/basics/concepts) gives an overview of the core concepts of verifiable computing.
+[**Concepts.**](/basics/concepts) Here, we explain _SNARKs_ in big-picture terms. We explain what _verifiable computing_ is, as well as concepts like _soundness_ and _succinctness_.
 
-Here we explains what a SNARK is and how Binius differs from other SNARK constructions.
+We also sketch how Binius differs from other SNARK constructions, emphasizing its use of _binary fields_.
 </Collapsible>
 </Callout>
 
 <Callout type="note">
 <Collapsible>
-[**Binius64 vs V0**](/basics/binius-v0) discusses the original Binius protocol, Binius V0.
+[**Binius64 vs V0.**](/basics/binius-v0) Here, we discuss the original Binius protocol—_Binius V0_—and compare it to Binius64.
 
-Here we provide information about Binius V0 and explain the key differences between Binius64 and the original.
+We compare these protocols along various dimensions. We discuss their arithmetization architectures, the machines they target, the fields they use, and more.
 </Collapsible>
 </Callout>
 
 <Callout type="note">
-[**Roadmap**](/basics/roadmap) lists what we plan to add to Binius64 in the future.
-</Callout>
+<Collapsible>
+[**Roadmap.**](/basics/roadmap) We've got a lot planned. Here, we discuss features that we plan to add to Binius64 in the short and intermediate term.
 
-<Callout type="note">
-[**Licensing**](/basics/licensing) explains the terms of the open-source licenses that Binius is published under.
+Planned features include zero-knowledge—a feature essential in privacy-critical applications—as well as fully succinct verification, prover performance enhancements, developer-oriented improvements, and more.
+</Collapsible>
 </Callout>
 
 <Callout type="note">
 <Collapsible>
-[**Further Resources**](resources) aggregates various Binius-related resources from the broader internet.
+[**Licensing.**](/basics/licensing) This page explains the open-source licenses that Binius is published under.
+
+Our prover and verifier are released under different licenses. We explain these, and what compliance with them looks like.
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**Further Resources.**](resources) Here, we aggregate various Binius-related resources from the broader internet.
 
 Here we lay out separate sections for Binius-related Irreducible blog posts, talks given by Irreducible team members, and external content.
 </Collapsible>

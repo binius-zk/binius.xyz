@@ -1,15 +1,35 @@
-# Building with Binius64 [Tutorial on building ZK applications]
+import Collapsible from '../../components/Collapsible';
 
-This guide covers core concepts through building applications in Binius64.
+import { Callout } from 'vocs/components';
 
-**[Getting Started](getting-started)** - Covers the fundamentals of zero-knowledge circuits including verification concepts, building your first circuit, generating proofs, and creating command-line applications. Shows how constraint systems work through practical examples.
+# Building [Tutorial on building ZK applications with Binius64]
 
-**[Circuits](circuits)** - Explores practical patterns for building complex circuits including reusable gadgets, control flow without branches, circuit composition techniques, and performance analysis tools. These enable building production-ready cryptographic functions.
+In this site area, we explain how to build real applications in Binius64.
 
-Production applications rely on complex cryptographic circuits for real-world use cases. The framework includes production implementations of:
-- **Hash functions**: SHA256, SHA512, Blake2, Keccak, RIPEMD
-- **Signatures**: ECDSA, secp256k1, RSA
-- **Encoding**: Base64, JWT claims parsing
-- **Arithmetic**: BigNum operations, floating point
+Run our SHA-256 example by pasting the below code:
 
+```bash
+git clone https://github.com/IrreducibleOSS/binius64
+cd binius64
+
+RUSTFLAGS="-C target-cpu=native" cargo run --release --example sha256
+```
+
+We've broken up this guide into two main sections.
+
+<Callout type="note">
+<Collapsible>
+[**End-to-End Example.**](example) Here, we explain the overall, end-to-end flow of a Binius64 application, from setting up a project, to building a circuit, to generating and verifying proofs about it.
+
+We moreover show how each of these steps gets carried out in code, by dumping runnable snippets. Throughout, we focus on a classic, important cryptographic task (proving _knowledge-of-opening_ with respect to a simple, SHA-256-based commitment scheme).
+</Collapsible>
+</Callout>
+
+<Callout type="note">
+<Collapsible>
+[**Circuits.**](circuits) Here, we dive more deeply into actually writing circuit code. We explain various tips and motifs that show up repeatedly in real applications.
+
+We focus on recurring patterns like [branchless control flow](/building/circuits/control-flow) and [circuit composition](/building/circuits/composition). We also describe some [practical considerations](/building/circuits/performance) around performance.
+</Collapsible>
+</Callout>
 For cryptographic and mathematical details, see the [Blueprint](/blueprint) section.

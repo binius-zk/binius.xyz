@@ -19,16 +19,4 @@ RUSTFLAGS="-C target-cpu=native" cargo run --release --example sha256
 # Benchmark performance
 RUSTFLAGS="-C target-cpu=native" cargo bench --bench sha256
 ```
-
-## Tutorial Examples
-
-Tutorial examples are located in `crates/examples/examples/tutorials/`:
-
-```bash
-# Run all tutorial examples
-for f in crates/examples/examples/tutorials/*.rs; do n=$(basename $f .rs); echo "=== $n ===" && RUSTFLAGS="-C target-cpu=native" cargo run --release -p binius-examples --example $n || break; done
-
-# Or run a specific tutorial example
-RUSTFLAGS="-C target-cpu=native" cargo run --release -p binius-examples --example getting_started_first_circuits
-```
-
+Other examples you can try include `keccak`, `ethsign` and `blake2b`.

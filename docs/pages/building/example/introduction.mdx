@@ -1,35 +1,5 @@
-# Basics
+# Introduction [Crash course on zero-knowledge circuits]
 
-In zero-knowledge proofs, the goal is to verify claimed properties through cryptographic proofs. Proofs enable two fundamental capabilities: verifiable computation and zero-knowledge privacy.
-
-**Verifiable computation** delegates work to untrusted servers with proof of correctness. Applications of verifiable computation include blockchain, identity, and voting. A simplified example could be matrix multiplication outsourced by a smartphone to a cloud server that produces result and proof. The phone **verifies** the proof, avoiding the heavy computation. Without the proof, the phone must either trust the server blindly or perform the expensive multiplication itself.
-
-**Zero-knowledge privacy** adds privacy to verifiable computation - proving statements without revealing underlying data. Example applications: proving citizenship without revealing passport details, or proving knowledge of a hash preimage without revealing the input. Consider the hash preimage case (the input that produces a given hash output):
-- **Public data**: The hash output H that everyone can see
-- **Private data**: The private preimage S known only to the prover
-- **Verification**: The circuit confirms SHA256(S) = H without revealing S
-
-Complex verification tasks like hash preimages or digital signatures require thousands of mathematical operations. These operations are organized into **circuits** - composable units that express verification logic.
-
-## Circuit Hierarchy
-
-Binius64 organizes verification logic through a five-level hierarchy:
-
-- **Circuits**: Complete applications (identity verification, private computation)
-- **Gadgets**: Reusable computation units (from simple 32-bit arithmetic to complex functions like SHA256, ECDSA, Keccak)
-- **Gates**: Word-level operations (iadd_cin_cout, imul, icmp_ult, rotr_32)
-- **Constraints**: The underlying AND and MUL equations
-
-The hierarchy is compositional: proof systems compose circuits, circuits compose gadgets, gadgets compose gates. Gates are fundamental operations (from the circuit builder's perspective) that generate constraints.
-
-These constraints transform the verification problem into circuit satisfiability (SAT) - the format required for zero-knowledge proving. SAT formulation separates constraint definition from value assignment: the circuit defines equations that must hold, the prover uses the circuit structure to compute and populate witness values, then proves knowledge of the satisfying witness without revealing private values. The verifier confirms that the constraints are satisfied through the proof.
-
-The SHA256 circuit in `crates/circuits/src/sha256` demonstrates this hierarchy. At the proof system level, you might prove knowledge of a preimage. The circuit implements the complete SHA-256 algorithm through:
-- Message scheduling using `ror32` and `shr32` gadgets for bit manipulation
-- Compression function using `iadd32` for modular addition and `select` for choice operations
-- Sigma functions combining multiple rotations and XORs
-
-Gadgets decompose to gates, which generate constraints. The complete SHA256 circuit requires thousands of constraints, abstracted behind: `Sha256::new(builder, len, digest, message)`.
 
 ## Gates
 

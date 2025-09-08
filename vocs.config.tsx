@@ -108,7 +108,7 @@ export default defineConfig({
   sidebar: {
     "/basics": [
       {
-        text: "Overview",
+        text: "Basics",
         link: "/basics",
       },
       {
@@ -116,7 +116,7 @@ export default defineConfig({
         link: "/basics/concepts",
       },
       {
-        text: "Binius64 vs V0",
+        text: "Binius64 vs. V0",
         link: "/basics/binius-v0",
       },
       {
@@ -149,33 +149,21 @@ export default defineConfig({
     ],
     "/building": [
       {
-        text: "Building with Binius64",
+        text: "Building",
         link: "/building",
       },
       {
-        text: "Getting Started",
-        link: "/building/getting-started",
+        text: "End-to-End Example",
+        link: "/building/example",
         collapsed: false,
         items: [
           {
-            text: "Basics",
-            link: "/building/getting-started/basics",
+            text: "Writing a Circuit",
+            link: "/building/example/circuit",
           },
           {
-            text: "Installation",
-            link: "/building/getting-started/installation",
-          },
-          {
-            text: "First Circuits",
-            link: "/building/getting-started/first-circuits",
-          },
-          {
-            text: "Proving Workflow",
-            link: "/building/getting-started/proving",
-          },
-          {
-            text: "CLI Framework",
-            link: "/building/getting-started/cli",
+            text: "Full Workflow",
+            link: "/building/example/workflow",
           },
         ],
       },
@@ -184,6 +172,10 @@ export default defineConfig({
         link: "/building/circuits",
         collapsed: false,
         items: [
+          {
+            text: "Introduction",
+            link: "/building/circuits/introduction",
+          },
           {
             text: "Gadgets",
             link: "/building/circuits/gadgets",

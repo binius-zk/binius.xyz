@@ -1,0 +1,18 @@
+# End-to-End Example [The full lifecycle of a SHA-256 commitment proof]
+
+In this section, we showcase the full end-to-end flow of a Binius64 example, from setting up a project, to writing a circuit, to generating and verifying proofs over that circuit.
+
+One of the simplest possible [commitment schemes](https://en.wikipedia.org/wiki/Commitment_scheme)—which was actually used in early versions of ZCash—just sets
+
+```
+commitment ≔ SHA-256(content || nonce),
+```
+where `content` is an arbitrary, 32-byte message and `nonce` is a random, 32-byte string. To _open_ `commitment` to `content`, the prover simply reveals `content` and `nonce`; the verifier reruns the hash.
+
+Here, we're going to write a real application that lets the prover _prove knowledge_ of an opening of some public `commitment`, without revealing that opening to the verifier.
+
+We split this project into a few steps.
+
+- [**Building a Circuit.**](circuit) We begin by setting up an empty project and writing our first circuit, using our SHA-256 _[gadget](/building/circuits/gadgets)_ in the process. We also explain how to populate our circuit's wires with real values, and to check whether the circuit's constraints hold over those populated values.
+- [**Proving Workflow.**](proving) Next, we explain how the prover and the verifier can use this circuit in real life. That is, we show how the prover can generate real proofs—pertaining to particular witness values it knows—and how the verifier can verify them.
+- [**CLI Framework.**](cli) Here, extending the last page, we turn everything into a CLI-based utility.
