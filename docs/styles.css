@@ -252,6 +252,10 @@ h2 {
   grid-row-gap: 0px;
 }
 
+.vocs_Callout_content .vocs_CodeBlock {
+  margin: unset !important;
+}
+
 .vocs_Callout_note {
   background-color: #1d272a0a;
   border-color: #ddd;
