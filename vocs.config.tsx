@@ -193,10 +193,6 @@ export default defineConfig({
             link: "/building/circuits/control-flow",
           },
           {
-            text: "Data Structures",
-            link: "/building/circuits/data-structures",
-          },
-          {
             text: "Circuit Composition",
             link: "/building/circuits/composition",
           },

@@ -8,6 +8,5 @@ Here are the pages in this section:
 - [**Introduction.**](introduction) Here, we set up basic notions, like _wires_, and explain the distinction between _witness_ and _public_ wires. We also talk about _gates_ and _gadgets_.
 - [**Gadgets.**](gadgets) _Gadgets_ are reusable components designed to achieve common operations (like byte-manipulation and hashing). By composing these and wiring them together, we can quickly build complex cryptographic circuits.
 - [**Control Flow.**](control-flow) Circuits can't run if-statements and loops, like classic imperative programs can. Here, we explain how to port these patterns into the language of circuits. _Multiplexers_ will prove to be a key tool.
-- [**Data Structures.**](data-structures) Because we can't branch, we need to design our datastructures differently too. Here, we explain a few techniques, mainly focusing on the concatenation of bytestrings.
-- [**Composition.**](composition) Circuit building patterns and organization for larger systems. Organize complex circuits through consistent function patterns, wire ownership, and hierarchical design.
+- [**Composition.**](composition) _Composition_ is a key idea that lets us build large, complex circuits out of smaller ones by using smaller circuits as reusable components.
 - [**Performance.**](performance) Here, we sketch how to understand the costs of the circuits you build. We explain the various cost metrics that circuits have, like _number of witness values_ and _number of constraints_.
