@@ -206,6 +206,10 @@ export default defineConfig({
           },
         ],
       },
+      {
+        text: "Tutorials",
+        link: "/building/tutorials",
+      }
     ],
     "/blueprint": [
       {

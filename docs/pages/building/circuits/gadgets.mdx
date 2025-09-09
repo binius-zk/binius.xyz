@@ -21,10 +21,13 @@ let count = popcount(builder, x);                  // Gadget: ~20 gates
 
 The framework provides these gadgets so you don't need to implement common operations from scratch using individual gates. Let's look at some specific gadget categories and their uses.
 
-**Try it:**
+:::info
+**Try It.** In the `binius64` directory, run:
+<br/>
 ```bash
 RUSTFLAGS="-C target-cpu=native" cargo run --release --example circuits_gadgets
 ```
+:::
 
 ### Byte Operations
 

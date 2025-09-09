@@ -4,13 +4,13 @@ import { Callout } from 'vocs/components';
 
 In this page, we collect in one place the project that we constructed piecemeal throughout the previous pages in this section (i.e., throughout our [circuit-building](/building/example/circuit) and [proof-related](/building/example/proofs) pages). This should give you something that you can run off the shelf.
 
-<Callout type="tip">
-**Try it now:**
-
+:::info
+**Try It.** In the `binius64` directory, run:
+<br/>
 ```bash
 RUSTFLAGS="-C target-cpu=native" cargo run --release --example end_to_end_example
 ```
-</Callout>
+:::
 
 ## Cargo Manifest
 
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Running Everything
 
-We once again have the following command, whose effect should be to run the entire project end-to-end.
+We once again have the following command. Executing this in `/my-circuit` should have the effect of running your project end-to-end.
 
 ```bash
 RUSTFLAGS="-C target-cpu=native" cargo run --release

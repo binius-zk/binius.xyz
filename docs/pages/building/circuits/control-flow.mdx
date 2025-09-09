@@ -4,10 +4,13 @@ Here, we explore how circuits handle conditional logic. Unlike traditional progr
 
 When you write conditional logic in a circuit, both paths execute simultaneously. The circuit then selects the correct result using masking. Similarly, loops must unroll at compile time, and array access requires multiplexing to select elements. Let's see how these patterns work in practice.
 
-**Try it:**
+:::info
+**Try It.** In the `binius64` directory, run:
+ <br/>
 ```bash
 RUSTFLAGS="-C target-cpu=native" cargo run --release --example circuits_control_flow
 ```
+:::
 
 ## Conditional Selection
 
