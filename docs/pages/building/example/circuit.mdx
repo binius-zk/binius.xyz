@@ -7,6 +7,7 @@ Here, we start from scratch, and explain how to set up a working project.
 Run the following code in your home directory `~` to set up our project. The `cargo add` commands below will import the Binius crates that we need into our new project.
 
 ```bash
+rustup update
 cargo new my-circuit
 cd my-circuit
 
@@ -14,7 +15,7 @@ cargo add binius-frontend --git https://github.com/IrreducibleOSS/binius64
 cargo add binius-core --git https://github.com/IrreducibleOSS/binius64
 cargo add binius-circuits --git https://github.com/IrreducibleOSS/binius64
 cargo add sha2@0.10
-cargo add rand@0.9 --no-default-features --features std,std_rn
+cargo add rand@0.9 --no-default-features --features std
 ```
 
 ## Building the Circuit
@@ -26,7 +27,7 @@ use binius_circuits::sha256::Sha256;
 use binius_core::{word::Word, verify::verify_constraints};
 use sha2::{Digest, Sha256 as StdSha256};
 ```
-Now, change the signature of `fn main()` to `fn main() -> Result<(), Box<dyn std::error::Error>>`, and add the following lines to its body:
+Now, put the following lines in the body of `fn main()`:
 
 ```rust
     let builder = CircuitBuilder::new();
@@ -63,7 +64,7 @@ Our next step will be to try inscribing actual values into our circuit's wires. 
 
     let digest = StdSha256::digest(&message_bytes);
     let mut digest_bytes = [0u8; 32];
-    digest_bytes.copy_from_slice(&digest);    
+    digest_bytes.copy_from_slice(&digest);
     sha256.populate_digest(&mut witness, digest_bytes);
 
     circuit.populate_wire_witness(&mut witness)?;
@@ -85,6 +86,7 @@ Add the following further lines to `fn main()`:
     
     Ok(())
 ```
+To make this very last step work, you will also need to change the signature of `fn main()` to `fn main() -> Result<(), Box<dyn std::error::Error>>`.
 
 ## Running Everything
 
