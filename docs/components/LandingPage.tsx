@@ -58,7 +58,7 @@ const LandingPage = () => {
 
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ["class"],
     });
 
     return () => {
@@ -68,12 +68,13 @@ const LandingPage = () => {
 
   return (
     <div>
-      <h1 className="text-center mt-24 mb-6">
-        Binary Proofs, <br className="lg:hidden"/>Blazing Fast
+      <h1 className="text-center !mt-24 !mb-6">
+        Binary Proofs, <br className="lg:hidden" />
+        Blazing Fast
       </h1>
 
       <p className="text-center text-[20px]">
-        Unlock the full potential of high-performance ZK with Binius      
+        Unlock the full potential of high-performance ZK with Binius
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-16">
@@ -83,7 +84,7 @@ const LandingPage = () => {
               src="books-icon.svg"
               alt="Books Icon"
               className="mb-6"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: "40px", height: "40px" }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Basics</h2>
@@ -101,7 +102,7 @@ const LandingPage = () => {
               src="power-button-icon.svg"
               alt="Building Icon"
               className="mb-6"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: "40px", height: "40px" }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Building</h2>
@@ -117,7 +118,7 @@ const LandingPage = () => {
               src="blueprint-icon.svg"
               alt="Blueprint Icon"
               className="mb-6"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: "40px", height: "40px" }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Blueprint</h2>
@@ -135,7 +136,7 @@ const LandingPage = () => {
               src="chart-icon.svg"
               alt="Chart Icon"
               className="mb-6"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: "40px", height: "40px" }}
             />
             <div className="flex flex-col gap-4 flex-grow">
               <h2>Benchmarks</h2>
@@ -144,7 +145,6 @@ const LandingPage = () => {
             <ArrowIcon />
           </div>
         </a>
-
       </div>
 
       <footer className="w-screen absolute left-1/2 -translate-x-1/2 mt-20">
@@ -168,9 +168,9 @@ const LandingPage = () => {
           ))}
         </div>
 
-        <div className="lp-footer flex flex-col mb-6 md:flex-row py-6 justify-center md:justify-between my-8">
+        <div className="lp-footer flex flex-col md:flex-row justify-center md:justify-between mt-8 md:px-8">
           {" "}
-          <p className="text-sm text-gunmetal pl-6">
+          <div className="text-sm text-gunmetal md:text-left text-center mb-2 md:mb-0">
             Binius is developed by{" "}
             <a
               href="https://www.irreducible.com/"
@@ -179,14 +179,22 @@ const LandingPage = () => {
             >
               Irreducible.
             </a>{" "}
+            <br className="lg:hidden" />
             &copy; 2025 Irreducible, Inc. All rights reserved.
-          </p>
-          <div className="flex pr-6 md:justify-end justify-center mt-6 md:mt-0">
+          </div>
+          <div className="flex md:justify-end justify-center md:mb-0 mb-4">
             <a href="https://x.com/IrreducibleHW" target="_blank">
-              <SVG src="x-icon.svg" className="mr-6" style={{ width: '20px', height: '20px' }} />
+              <SVG
+                src="x-icon.svg"
+                className="mr-6"
+                style={{ width: "20px", height: "20px" }}
+              />
             </a>
             <a href="https://github.com/IrreducibleOSS" target="_blank">
-              <SVG src="github-icon.svg" style={{ width: '20px', height: '20px' }} />
+              <SVG
+                src="github-icon.svg"
+                style={{ width: "20px", height: "20px" }}
+              />
             </a>
           </div>
         </div>
