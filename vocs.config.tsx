@@ -270,7 +270,7 @@ export default defineConfig({
           {
             text: "The Shift Indicators",
             link: "/blueprint/backend/shifts",
-            collapsed: false,
+            collapsed: true,
             items: [
               {
                 text: "Shifted Witness Polynomials",
@@ -289,7 +289,7 @@ export default defineConfig({
           {
             text: "The AND Reduction",
             link: "/blueprint/backend/ands",
-            collapsed: false,
+            collapsed: true,
             items: [
               {
                 text: "The Rijndael Field",
@@ -308,7 +308,7 @@ export default defineConfig({
           {
             text: "The MUL Reduction",
             link: "/blueprint/backend/muls",
-            collapsed: false,
+            collapsed: true,
             items: [
               {
                 text: "Multiplying in the Exponent",
@@ -327,7 +327,7 @@ export default defineConfig({
           {
             text: "The Shift Reduction",
             link: "/blueprint/backend/reduction",
-            collapsed: false,
+            collapsed: true,
             items: [
               {
                 text: "Mathematizing Constraint Arrays",
@@ -343,6 +343,10 @@ export default defineConfig({
               },
             ],
           },
+          {
+            text: "Public Input Check",
+            link: "/blueprint/backend/public",
+          }
         ],
       },
       {

@@ -23,9 +23,9 @@ Start here if you're new. We can't promise to cover everything, but it'll be a u
 <Collapsible>
 [**Constraint Systems.**](constraints) _Constraint systems_ are how we specify the computations we set about proving and verifying. Think somewhere in between "circuits" and "R1CS".
 
-Binius64 introduces a new constraint system framework. Our constraint system basically takes R1CS, makes it operate fundamentally on 64-bit unsigned integers, and moreover enriches it by natively supporting constraints that act upon (logical, arithmetic, etc.) _bitshifts_ of this witness data. We also bake in support for unsigned, 64-bit integer multiplication.
+Binius64 introduces a new _constraint system language_ (i.e., a framework within which to specify constraint systems). Our constraint system language basically takes R1CS, makes it operate fundamentally on 64-bit unsigned integers, and moreover enriches it by natively supporting constraints that act upon (logical, arithmetic, etc.) _bitshifts_ of the available witness data. We also bake in support for unsigned, 64-bit integer multiplication.
 
-The constraint system we get out is predictable and simple, but much more useful and efficient than plain, vanilla R1CS in characteristic 2.
+The constraint system language we get out is predictable and simple, but much more useful and efficient than plain, vanilla R1CS in characteristic 2.
 </Collapsible>
 </Callout>
 

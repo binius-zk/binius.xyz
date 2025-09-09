@@ -1,0 +1,58 @@
+# Public Input Check [Validating the prover's data's public part]
+
+The [prover's data](/blueprint/constraints/indices#prover-data) will consist of a long, length-$n_\text{words}$ vector of 64-bit words. By definition of our constraint system language, the _constant_ and _input–output_ segments of the prover's witness need to match public values known to the verifier, if that witness is to be considered valid.
+
+Up to this point, we've postponed the verifier's actually checking the public portion of this data. Of course, we expect the verifier to have to do work proportional to the statement length, at the very least, if he is to verify the prover's proof about that statement. Here, we explain what our verifier does.
+
+[As usual](/blueprint/constraints/indices#prover-data), we write $n_\text{const}$, $n_\text{inout}$ and $n_\text{witness}$ for the lengths—specified by the constraint system—of the prover's _constant_, _public_, and _witness_ stretches of data, respectively. We abbreviate $n_\text{public} \coloneqq n_\text{const} + n_\text{inout}$, and write $\textsf{public}$—a vector of length $n_\text{public}$ words—for the values that the first $n_\text{public}$ entries of $w$ _should_ take on, from the verifier's view. We assume that $n_\text{words} = 2^{\ell_\text{words}}$ and $n_\text{public} = 2^{\ell_\text{public}}$ are both powers of 2.
+
+## The Naïve Way
+
+We've already agreed to work within a [framework](/blueprint/commitment/) in which the verifier can read the prover's committed data $w$ at arbitrary positions. The most naïve possible public input check would direct the verifier to fully read the first $n_\text{public}$ words of $w$, and check whether they match $\textsf{public}$.
+
+To achieve this, the verifier would need to query
+
+$$
+\begin{equation*}\widetilde{w}(j_0, \ldots , j_5, y_0, \ldots , y_{\ell_\text{public} - 1}, 0, \ldots , 0)\end{equation*}
+$$
+
+for _each_ $j \in \mathcal{B}_6$ and each $y \in \mathcal{B}_{\ell_\text{public}}$. This would be far too much. [As always](/blueprint/backend/shifts/polynomials#as-polynomials), we write $\widetilde{w}(J_0, \ldots , J_5, Y_0, \ldots , Y_{\ell_\text{words}})$ for the multilinear extension of $w$.
+
+## Just One Query
+
+The following idea brings the number of queries the verifier must make down to just one. We write $\widetilde{\textsf{public}}(J_0, \ldots , J_5, Y_0, \ldots Y_{\ell_\text{public} - 1})$ for $\textsf{public}$'s multilinear extension.
+
+If and only if the prover's public input is correct, the $6 + \ell_\text{words}$-variate multilinear
+$$
+\begin{equation*}\widetilde{w}^*(J, Y) \coloneqq \widetilde{\textsf{public}}(J_0, \ldots , J_5, Y_0, \ldots , Y_{\ell_\text{public} - 1}) - \widetilde{w}(J_0, \ldots , J_5, Y_0, \ldots , Y_{\ell_\text{words} - 1}),\end{equation*}
+$$
+
+vanishes at each point of $\mathcal{B}_6 \times \mathcal{B}_{\ell_\text{words}}$ of the form $(j_0, \ldots , j_5, y_0, \ldots , y_{\ell_\text{public} - 1}, 0, \ldots , 0)$. It would thus suffice for the verifier to sample $r_j$ and $r_p$—both random, and $6$-dimensional and $\ell_\text{public}$-dimensional, respectively—and to check whether
+
+$$
+\begin{equation*}\widetilde{w}^*(r_j, r_p, 0) \stackrel{?}= 0\end{equation*}
+$$
+held. To evaluate _this_ check, the verifier would need to evaluate $\widetilde{\textsf{public}}(r_j, r_p)$—which it can do itself in $O(n_\text{public})$ time—as well as query $\widetilde{w}$ once, namely at the point $(r_j, r_p, 0)$.
+
+## Homogenizing Query Point
+
+At the [very end of the shift reduction](/blueprint/backend/reduction/sumchecks#the-end), the verifier outputs a single evaluation claim on $\widetilde{w}(J, Y)$. Set alongside that evaluation claim, the above technique would add a further evaluation claim on top. We would like to get away with just a single evaluation claim on $\widetilde{w}(J, Y)$, overall.
+
+To do this, we use another sumcheck-based technique. First of all, we write $r_j$ for the variable of that name sampled by the verifier during the course of the [first phase of the shift reduction](/blueprint/backend/reduction/sumchecks#the-first-phase). Since $r_j$ is sampled after $\widetilde{w}(J, Y)$ is committed, we can freely reuse that randomness for our purposes here. We moreover stipulate that the verifier freshly sample $r_p$, an $\ell_\text{public}$-dimensional, fresh random challenge, at this point.
+
+To check the prover's public input, it thus suffices for the verifier to check whether
+$$
+\begin{align*}
+0 &\stackrel{?}= \widetilde{w}^*(r_j, r_p, 0) \\
+&= \sum_{y \in \mathcal{B}_{\ell_\text{words}}} \widetilde{w}^*(r_j, y) \cdot \widetilde{\texttt{eq}}(r_{p, 0}, \ldots, r_{p, \ell_\text{public} - 1}, 0, \ldots , 0, y_0, \ldots , y_{\ell_\text{words} - 1}).
+\end{align*}
+$$
+
+Upon being sumchecked, this claim will resolve to a claim on the value of 
+$$
+\begin{equation*}
+\widetilde{w}^*(r_j, r_y) \cdot \widetilde{\texttt{eq}}(r_{p, 0}, \ldots, r_{p, \ell_\text{public} - 1}, 0, \ldots , 0, r_{y, 0}, \ldots , r_{y, \ell_\text{words} - 1}),\end{equation*}
+$$
+where $r_y$, fully random and $\ell_\text{words}$-dimensional, is sampled during the sumcheck. The verifier can evaluate this thing himself, up to making the single query $\widetilde{w}^*(r_j, r_y)$.
+
+The point of doing this is that the above sumcheck can be batched with the one we're already running during the [second phase of the shift reduction](/blueprint/backend/reduction/sumchecks#the-second-phase). This lets us wind up with the same random value $r_y$ in both sumchecks; it follows that we can get away with just one query to the witness at the very end.
