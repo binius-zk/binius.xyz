@@ -26,7 +26,7 @@ use binius_circuits::sha256::Sha256;
 use binius_core::{word::Word, verify::verify_constraints};
 use sha2::{Digest, Sha256 as StdSha256};
 ```
-Now, add the following code to `fn main()`:
+Now, change the signature of `fn main()` to `fn main() -> Result<(), Box<dyn std::error::Error>>`, and add the following lines to its body:
 
 ```rust
     let builder = CircuitBuilder::new();
@@ -59,7 +59,7 @@ Our next step will be to try inscribing actual values into our circuit's wires. 
     let mut message_bytes = [0u8; 64];
     message_bytes[..32].copy_from_slice(&content_bytes);
     message_bytes[32..].copy_from_slice(&nonce_bytes);
-    sha256.populate_message(&mut w, &message_bytes);
+    sha256.populate_message(&mut witness, &message_bytes);
 
     let digest = StdSha256::digest(&message_bytes);
     let mut digest_bytes = [0u8; 32];
@@ -78,9 +78,10 @@ Finally, we can now check whether the values above we just populated actually sa
 Add the following further lines to `fn main()`:
 ```rust
     let cs = circuit.constraint_system();
-    verify_constraints(cs, &witness.into_value_vec())?;
+    let witness_vec = witness.into_value_vec();
+    verify_constraints(cs, &witness_vec)?;
     
-    println!("✓ the wire values you populated satisfy the circuit's constraints");
+    println!("✓ the wire values you populated satisfy the circuit's constraints.");
     
     Ok(())
 ```
@@ -95,6 +96,6 @@ RUSTFLAGS="-C target-cpu=native" cargo run --release
 
 You should get the following output:
 ```
-✓ the wire values you populated satisfy the circuit's constraints
+✓ the wire values you populated satisfy the circuit's constraints.
 ```
 This very satisfaction is what we're about to generate and verify proofs about. We'll cover that in the [next page](/building/example/workflow).
