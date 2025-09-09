@@ -41,9 +41,9 @@ Now, change the signature of `fn main()` to `fn main() -> Result<(), Box<dyn std
     let circuit = builder.build();
 ```
 
-The code above first creates a simple `circuit`. That circuit first declares `content` and `nonce` witness values. Each of these is a bundle of 4 wires, so 32 total bytes. It also declares `commitment` as _input–output_, i.e. public, wires. Finally, it wires all three of these into a `sha256` gadget.
+The code above first creates a simple `circuit`. That circuit first declares `content` and `nonce` witness values. Each of these is 32 bytes, and so takes 4 wires to represent. It also declares `commitment` as _input–output_—i.e. public—wires. Finally, it wires all three of these into a `sha256` gadget.
 
-This is our circuit.
+This already gives the circuit we wanted to build.
 
 ## Populating Wire Values
 
