@@ -48,11 +48,11 @@ $$
 \end{align*}
 $$
 
-Upon being sumchecked, this claim will resolve to a claim on the value of 
+Upon being sumchecked, this claim will resolve to a further claim, now on the value of 
 $$
 \begin{equation*}
 \widetilde{w}^*(r_j, r_y) \cdot \widetilde{\texttt{eq}}(r_{p, 0}, \ldots, r_{p, \ell_\text{public} - 1}, 0, \ldots , 0, r_{y, 0}, \ldots , r_{y, \ell_\text{words} - 1}),\end{equation*}
 $$
-where $r_y$, fully random and $\ell_\text{words}$-dimensional, is sampled during the sumcheck. The verifier can evaluate this thing himself, up to making the single query $\widetilde{w}^*(r_j, r_y)$.
+where $r_y$, a fully random and $\ell_\text{words}$-dimensional point, is sampled during the sumcheck. The verifier can evaluate the above quantity himself, up to exerting $O(\ell_\text{words})$ + $O(n_\text{public})$ work and making the single query $\widetilde{w}(r_j, r_y)$.
 
-The point of doing this is that the above sumcheck can be batched with the one we're already running during the [second phase of the shift reduction](/blueprint/backend/reduction/sumchecks#the-second-phase). This lets us wind up with the same random value $r_y$ in both sumchecks; it follows that we can get away with just one query to the witness at the very end.
+The point of doing this is that the above sumcheck can be batched with the one we're already running during the [second phase of the shift reduction](/blueprint/backend/reduction/sumchecks#the-second-phase). Doing exactly this lets us wind up with the same random value $r_y$ in both sumchecks; it follows that we can get away with just one query to the witness at the very end, namely at $\widetilde{w}(r_j, r_y)$.

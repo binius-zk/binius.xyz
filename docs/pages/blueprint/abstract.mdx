@@ -1,0 +1,45 @@
+# Abstract [Relation of Binius64 to existing works]
+
+_Binius64_ is a simple SNARK designed to efficiently prove statements about 64-bit words. At a very high level, Binius64's power comes from its new constraint system language, which adapts _SuperSpartan_'s [[STW23](https://eprint.iacr.org/2023/552)]. We enrich that framework using what we call _shifted value indices_, data that combine value references with logical and arithmetic shifts. Our design yields constraint systems that are 64-fold smaller than those based on bits alone can deliver; on the other hand, we also fully exploit binary field arithmetic.
+
+Our constraint system acts natively on on 64-bit words. To prove bitwise-AND constraints on these words, we devise an advanced _univariate skip_ variant, building on ideas of Gruen [[Gru24](https://eprint.iacr.org/2024/108), § 5.1] and Hu et al. [[Hu+25](https://eprint.iacr.org/2025/717)]. We also support constraints about the products—as unsigned, 64-bit integers—of prover words; to handle these, we use a GKR-based technique. We handle shifts by arithmetizing them, adapting an idea of Diamond and Posen [[DP25](https://eprint.iacr.org/2023/1784), § 4.3]. We use the small-field multilinear polynomial commitment scheme of Diamond and Posen [[DP24](https://eprint.iacr.org/2024/504)].
+
+Our protocol targets modern 64-bit CPUs with SIMD instructions, making it practical for real-world applications that require zero-knowledge proofs.
+
+## Introduction
+
+A fundamental tradeoff—between expressiveness and efficiency—besets modern cryptographic proof systems. While general-purpose SNARKs can treat arbitrary programs, many face steep overheads upon being applied to programs that deal extensively with machine words. This site presents _Binius64_, a specialized SNARK that achieves excellent proving performance in practice, by exploiting a natural alignment between binary field arithmetic and 64-bit word operations.
+
+The original Binius framework [[DP25](https://eprint.iacr.org/2023/1784)] pioneered the use of binary tower fields for efficient polynomial commitments. However, its reliance on AIR tables and multi-field arithmetization introduced complexity that hindered both implementation and analysis. Binius64 takes a different approach: we design a constraint system specifically for 64-bit word operations, drawing inspiration from the _customizable constraint systems_ of SuperSpartan [[STW23](https://eprint.iacr.org/2023/552)].
+
+Our key technical contribution is the concept of _shifted value indices_, objects that unify value references with bitwise shift operations. This innovation lets us apply our AND and multiplication constraints directly on _shifts_ of the prover's raw witness data, without demanding that these shifted data be separately committed or constrained. By operating at the word level, as opposed to the bit level, we achieve a 64-fold reduction in the number of constraints compared to naive binary approaches, while maintaining the efficiency benefits of binary field arithmetic.
+
+Beyond efficiency, Binius64 is designed with simplicity as a primary goal. We target modern 64-bit CPUs with SIMD instructions, particularly ARM64 processors with NEON extensions, enabling practical deployment on commodity hardware.
+
+## Why Not Binary Spartan?
+
+A natural starting point for a multilinear SNARK over binary fields would be to adapt _Spartan_ [[Set20](https://eprint.iacr.org/2019/550)] to work over $\mathbb{F}_2$. That approach seems attractive: the witness would be a single multilinear polynomial over $\mathbb{F}_2$, making the efficient _FRI-Binius_ commitment scheme available; nonlinear constraints could be verified using binary-optimized sumcheck protocols.
+
+However, this approach suffers from a critical efficiency bottleneck in the wiring check. The R1CS matrices $A$, $B$, and $C$ would contain $O(n)$ entries for $n$ witness bits. During the proving protocol, computing partially evaluated matrices would require $O(n)$ multiplications between elements of a large extension field and $\mathbb{F}_2$, resulting in $O(\lambda \cdot n)$ bit operations, where $\lambda \approx 128$ is the security parameter. Additionally, proving the sparse matrix openings would incur another $O(\lambda n)$ factor.
+
+Binius64 addresses this bottleneck using word-level parallelism. By operating on 64-bit words rather than individual bits, we reduce the number of constraint matrix entries by up to 64-fold. Even though the word size is a constant (namely 64), if we model it as proportional to the security parameter (i.e., as $O(\lambda)$), then our approach transforms the prover complexity from $O(\lambda n)$ to $O(n)$ bit operations, achieving the desired scaling goal.
+
+## Shifted Value Indices
+
+We explain [shifted value indices](/blueprint/constraints/indices) more thoroughly in the body of this site. For now, we record a helpful diagram.
+
+<img src="/diagram.svg" alt="Shifted value indices diagram" style={{ width: "100%", height: "auto" }} />
+
+On the very left, we have the prover's data, a long array, written vertically. On the right, we have a number of cells, each defined to be an _XOR-of-shifts_ of the prover's data—i.e., an XOR of _shifted value indices_. On the top right, we demand that various triples $(a[x], b[x], c[x])$ of cells constructed in this way satisfy the AND relationship $a[x] \mathbin{\&} b[x] \stackrel{?}= c[x]$. Lower down, we do a similar thing, now for multiplication constraints. Here, we demand that various quadruples $(p[x], q[x], \text{lo}[x], \text{hi}[x])$ satisfy $p[x] \cdot q[x] \stackrel{?}= 2^{64} \cdot \text{hi}[x] + \text{lo}[x]$ (all products here take place over the integers).
+
+At the bottom, we describe how the _unsigned addition_ of 64-bit integers can be carried out using ANDs and shifts. In short, provided that the prover nondeterministically supplies the 64-bit _carry-out_ word `cout`, the constraint system can define `cin ≔ cout << 1`. The single AND constraint
+
+```
+(x ⊕ cin) & (y ⊕ cin) == (cout ⊕ cin)
+```
+exactly captures the relationship whereby, bitwise, `cout` is 1 precisely when at least 2 among the three relevant bits of `x`, `y` and `cin` are 1. Provided that this relationship is enforced, the gadget can return the XOR-of-shifts
+
+```
+z ≔ x ⊕ y ⊕ cin,
+```
+or in other words the unsigned addition of `x` and `y`.

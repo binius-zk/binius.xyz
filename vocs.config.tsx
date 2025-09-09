@@ -213,6 +213,10 @@ export default defineConfig({
         link: "/blueprint",
       },
       {
+        text: "Abstract",
+        link: "/blueprint/abstract",
+      },
+      {
         text: "Math Background",
         link: "/blueprint/math",
         collapsed: false,
