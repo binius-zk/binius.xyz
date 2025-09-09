@@ -10,7 +10,9 @@
     "build": "vocs build",
     "preview": "vocs preview",
     "prepare": "husky",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "pdf:blueprint": "bash scripts/build-blueprint-pdf.sh",
+    "pdf:chrome": "node scripts/print-blueprint.mjs"
   },
   "dependencies": {
     "@types/react": "^19.1.12",
@@ -27,6 +29,8 @@
     "@tailwindcss/cli": "^4.0.0",
     "@tailwindcss/upgrade": "^4.0.6",
     "husky": "^9.1.7",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "puppeteer": "^24.19.0",
+    "mime-types": "^2.1.35"
   }
 }
