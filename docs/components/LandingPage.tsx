@@ -147,7 +147,7 @@ const LandingPage = () => {
 
       </div>
 
-      <footer className="w-full absolute left-0 mt-20">
+      <footer className="w-screen absolute left-1/2 -translate-x-1/2 mt-20">
         <div className="shape-grid">
           {footerShapes.map((shape, index) => (
             <div
