@@ -188,14 +188,14 @@ h2 {
   margin-bottom: 0;
 }
 
-.lp-footer {
-  padding-left: calc(
-    var(--vocs_DocsLayout_leftGutterWidth) - var(--vocs-sidebar_width)
-  );
-  padding-right: calc(
-    var(--vocs_DocsLayout_leftGutterWidth) - var(--vocs-sidebar_width)
-  );
-}
+/* .lp-footer { */
+/*   padding-left: calc( */
+/*     var(--vocs_DocsLayout_leftGutterWidth) - var(--vocs-sidebar_width) */
+/*   ); */
+/*   padding-right: calc( */
+/*     var(--vocs_DocsLayout_leftGutterWidth) - var(--vocs-sidebar_width) */
+/*   ); */
+/* } */
 
 .vocs_Sidebar_logo {
   margin: 0 0 40px 0;
@@ -350,7 +350,7 @@ h2 {
 }
 
 @media (max-width: 1359px) {
-  .vocs_DocsLayout {
+  .vocs_DocsLayout[data-layout="docs"] {
     background: #fff;
   }
 
@@ -385,9 +385,9 @@ h2 {
   }
 
   /* Tailwind wasn't applying this on mobile with sm: for some reason */
-  .lp-footer {
-    padding: 0 20px;
-  }
+  /* .lp-footer { */
+  /*   padding: 0 20px; */
+  /* } */
 
   .dark .vocs_MobileTopNav_curtain {
     background-color: #161d20;
