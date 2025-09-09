@@ -2,7 +2,7 @@
 
 Here, we start from scratch, and explain how to set up a working project.
 
-## Initializing Project
+## Initializing the Project
 
 Run the following code in your home directory `~` to set up our project. The `cargo add` commands below will import the Binius crates that we need into our new project.
 
@@ -54,7 +54,7 @@ Our next step will be to try inscribing actual values into our circuit's wires. 
     witness[len_bytes] = Word(64); // feed the circuit a wire containing the preimage length, in bytes.
     
     let mut content_bytes = [0u8; 32];
-    content_bytes[..32].copy_from_slice(&b"A sample, exactly 32 bytes long."[..]);
+    content_bytes[..32].copy_from_slice(&b"A secret, exactly 32 bytes long."[..]);
     let nonce_bytes: [u8; 32] = rand::random();
     let mut message_bytes = [0u8; 64];
     message_bytes[..32].copy_from_slice(&content_bytes);
@@ -80,8 +80,8 @@ Add the following further lines to `fn main()`:
     let cs = circuit.constraint_system();
     let witness_vec = witness.into_value_vec();
     verify_constraints(cs, &witness_vec)?;
-    
-    println!("✓ the wire values you populated satisfy the circuit's constraints.");
+
+    println!("✓ the wire values you populated satisfy the circuit's constraints");
     
     Ok(())
 ```
@@ -96,6 +96,6 @@ RUSTFLAGS="-C target-cpu=native" cargo run --release
 
 You should get the following output:
 ```
-✓ the wire values you populated satisfy the circuit's constraints.
+✓ the wire values you populated satisfy the circuit's constraints
 ```
-This very satisfaction is what we're about to generate and verify proofs about. We'll cover that in the [next page](/building/example/workflow).
+This very satisfaction is what we're about to generate and verify proofs about. We'll cover that in the [next page](/building/example/proofs).

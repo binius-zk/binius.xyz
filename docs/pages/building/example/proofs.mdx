@@ -1,0 +1,62 @@
+# Proving and Verifying [Generating and verifying zero-knowledge proofs about our circuit]
+
+Once you've [constructed your circuit](/building/example/circuit#building-the-circuit) and have figured out out how the prover should [populate that circuit's wire values](/building/example/circuit#populating-wire-values), you will be ready to actually generate and verify real proofs on that circuit. 
+
+## New Dependencies
+
+At this point, we need to import the actual Binius64 prover and verifier crates into our project. Run:
+
+```bash
+cargo add binius-verifier --git https://github.com/IrreducibleOSS/binius64
+cargo add binius-prover --git https://github.com/IrreducibleOSS/binius64
+cargo add binius-transcript --git https://github.com/IrreducibleOSS/binius64
+```
+in `/my-circuit/`. Moreover, add the following imports to the top of `main.rs`:
+
+```rust
+use binius_prover::{
+    hash::parallel_compression::ParallelCompressionAdaptor, OptimalPackedB128, Prover,
+};
+use binius_transcript::{ProverTranscript, VerifierTranscript};
+use binius_verifier::{config::StdChallenger, hash::{StdCompression, StdDigest}, Verifier};
+```
+Now, add the following new code to `fn main()`, just above the `Ok(())`:
+
+```rust
+    let log_inv_rate = 1;
+
+    let verifier =
+        Verifier::<StdDigest, _>::setup(cs.clone(), log_inv_rate, StdCompression::default())?;
+
+    let prover = Prover::<OptimalPackedB128, _, StdDigest>::setup(
+        verifier.clone(),
+        ParallelCompressionAdaptor::new(StdCompression::default()),
+    )?;
+
+    let challenger = StdChallenger::default();
+    let mut prover_transcript = ProverTranscript::new(challenger.clone());
+    let public_words = witness_vec.public().to_vec();
+    prover.prove(witness_vec, &mut prover_transcript)?;
+    let proof = prover_transcript.finalize();
+
+    let mut verifier_transcript = VerifierTranscript::new(challenger, proof);
+    verifier.verify(&public_words, &mut verifier_transcript)?;
+    verifier_transcript.finalize()?;
+
+    println!("✓ proof successfully verified");
+```
+
+The above code sets up the prover and the verifier; it also generates a proof and verifies it.
+
+:::info
+The parameter `log_inv_rate` is an internal value that trades off between prover cost and proof size. As that value goes up, the prover will get slower, but the resulting proofs it generates will be smaller. In real applications, we almost always want `log_inv_rate` to be `1` or `2` .
+:::
+
+
+## Proving and Verifying
+
+You can now run everything, again using
+
+```bash
+RUSTFLAGS="-C target-cpu=native" cargo run --release
+```

@@ -162,8 +162,12 @@ export default defineConfig({
             link: "/building/example/circuit",
           },
           {
-            text: "Full Workflow",
-            link: "/building/example/workflow",
+            text: "Proving and Verifying",
+            link: "/building/example/proofs",
+          },
+          {
+            text: "Runnable Project",
+            link: "/building/example/runnable",
           },
         ],
       },
