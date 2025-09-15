@@ -23,7 +23,7 @@ At this point, it would be correct to just tell the prover to "run the sumcheck 
 
 The essential point for us is that not all variables appear in all functions. If they did, we'd have no choice but to run the standard algorithm. As it happens, though, each function has only some of the variables $I$, $J$, $S$, and $Y$. Moreover, the way that these variables are "distributed" allows some very interesting things to happen.
 
-First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, the $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, while $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$ contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we factorize the above claim as follows:
+First, note that in each of the three sum expressions above, for each $j$, $s$ and $\text{op}$, among the four resulting inner polynomials, $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\widetilde{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, while $\widetilde{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\widetilde{w}(j, y)$ contain $y$ but not $i$. Because of this, we can factor the innermost nested sums over $i$ and $y$ into a product of two sums, for each $j$, $s$ and $\text{op}$. In this way, we factorize the above claim as follows:
 
 $$
 \begin{equation*}
