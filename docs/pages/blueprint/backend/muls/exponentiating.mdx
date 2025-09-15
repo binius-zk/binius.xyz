@@ -113,10 +113,10 @@ $$
 In this way, they can further reduce all 64 claims to a further claim of the form
 
 $$
-\begin{equation*}s_\text{end} \stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right) \cdot \left( 1 + z_i(r'_x) \cdot \left( \widetilde{V}(r'_x) - 1 \right) \right),\end{equation*}
+\begin{equation*}s_\text{end} \stackrel{?}= \sum_{i = 0}^{63} \gamma_i \cdot \widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right) \cdot \left( 1 + \widetilde{z_i}(r'_x) \cdot \left( \widetilde{V}(r'_x) - 1 \right) \right),\end{equation*}
 $$
 
-for some challenge $r'_x$ sampled during the sumcheck. The verifier can evaluate each quantity $\widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right)$ himself. As a practical matter, we note that $\varphi^{-i} = \varphi^{128 - i}$—since the order of $\varphi$ as an operator is 128—so the verifier can always evaluate $\varphi^{-i}$ using a few squarings. As for the rest, the prover can nondeterministically send evaluation claims $\alpha_V \stackrel{?}= \widetilde{V}(r'_x)$ and $\alpha_{z, i} \stackrel{?}= z_i(r'_x)$ for each $i \in \{0, \ldots , 63\}$, say. Pending the correctness of these, the verifier can close out the above sumcheck.
+for some challenge $r'_x$ sampled during the sumcheck. The verifier can evaluate each quantity $\widetilde{\texttt{eq}}\left(\varphi^{-i} \left( r_x \right), r'_x \right)$ himself. As a practical matter, we note that $\varphi^{-i} = \varphi^{128 - i}$—since the order of $\varphi$ as an operator is 128—so the verifier can always evaluate $\varphi^{-i}$ using a few squarings. As for the rest, the prover can nondeterministically send evaluation claims $\alpha_V \stackrel{?}= \widetilde{V}(r'_x)$ and $\alpha_{z, i} \stackrel{?}= \widetilde{z_i}(r'_x)$ for each $i \in \{0, \ldots , 63\}$, say. Pending the correctness of these, the verifier can close out the above sumcheck.
 
 ## Oblong-Multilinearizing
 
