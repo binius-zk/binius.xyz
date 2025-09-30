@@ -2,7 +2,8 @@ name: Build site
 
 on:
   pull_request:
-    branches: ["main"]
+    # Trigger on pull requests to main, or a stack on main
+    branches: ["main", "stack/main/**"]
 
 jobs:
   build:
