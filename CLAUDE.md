@@ -45,12 +45,17 @@ The documentation is organized into four main sections:
 
 ## Important Configuration
 
-### Pre-commit Hooks
-Husky is configured with:
+### Git Hooks
+The project uses [pre-commit](https://pre-commit.com) for managing git hooks:
 - **pre-commit**: Runs `npm test`
 - **pre-push**: Runs `npm run build`
 
 These ensure the site builds successfully before code is committed or pushed.
+
+To set up the hooks, install pre-commit and run:
+```bash
+pre-commit install --hook-type pre-commit --hook-type pre-push
+```
 
 ### Vocs Configuration Notes
 - Custom Vite plugin disables the `llms` plugin to avoid build errors
