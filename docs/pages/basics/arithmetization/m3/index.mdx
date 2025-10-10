@@ -1,0 +1,18 @@
+# Multi-Multiset Matching [A new arithmetization paradigm, based on the balancing of channels]
+
+Binius introduces a new arithmetization scheme called _M3_, short for _multi-multiset matching_. While M3 evokes various [prior designs](/basics/arithmetization/background), it extends those designs in various ways. Before we explain how it works, we mention a few of M3's interesting attributes:
+
+- **No main trace.** All previous schemes feature a "main" global trace table, representing the execution of some global VM or virtual CPU. Even when subtables are present, those subtables always serve the main table.
+- **No temporality.** All previous schemes feature trace tables with a notion of "sequentiality" built in (each row "comes after" the row before it, in time). M3 instances are purely declarative, with no time or temporality. (This fact leads to surprising consequences—for example, that our tables can be freely permuted, with no effect on their validity.)
+- **No fixed lengths.** In M3 instances, the prover is allowed to arbitrarily populate various prearranged tables. M3 works in such a way that the verifier simply doesn't care how long these tables are, so long as they cause the instance to be satisfied.
+
+We suggest letting these facts sink in! M3 _has_ polynomially-constrained tables, like prior schemes do. On the other hand, it uses them in a totally different way—merely as a means to an end, the _balancing of channels_, and not as vehicles for a global trace.
+
+## Subsection Directory
+
+In this subsection, we have the following pages:
+
+- [**A Toy Example.**](example) Suitable as a crash-course on M3, this example shows how M3 can be used to solve a simple, yet nontrivial, problem.
+- [**Definition of M3.**](definition) Here, we define the M3 framework abstractly and at a reasonable level of formality.
+- [**Proving Collatz Orbits.**](collatz) Here, we discuss a slightly more serious—but nonetheless pedagogical—example, related to the _Collatz conjecture_. This example is implemented in Binius's codebase.
+- [**Lasso lookup.**](lasso) The _Lasso_ lookup protocol [[STW23](https://eprint.iacr.org/2023/1216)], adapted for Binary fields in [[DP23, § 4.4](https://eprint.iacr.org/2023/1784.pdf)], can be viewed as an M3 instance in disguise. In fact, it's one of our most essential nontrivial applications of M3, and gets used extensively throughout Binius.

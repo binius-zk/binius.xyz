@@ -1,0 +1,120 @@
+# Definition of M3 [Including tables, constraints, flushing rules and channels]
+
+Here, we define M3 at a reasonable level of rigor, targeting a thorough conceptual understanding of what its instances look like. Throughout, we work with the binary [datatypes](/basics/arithmetization/types) we've already discussed.
+
+## Basic Objects
+
+A M3 instance consists of various objects, which interact.
+
+### Channels
+A _channel_ is simply an abstract, stateful bidirectional "receptacle" of data, which features a fixed width and type signature. That is, each channel exposes two methods, "push" and "pull". These methods have identical signatures; that is, both take a single _tuple_, with a fixed number of components, which themselves each have prescribed bit-widths. The tuple arity and type signature a channel features are durable, permanent properties of that channel.
+
+:::info
+For example, a channel's type signature might be $(\mathcal{T}_4, \mathcal{T}_5)$. In this case, both its _push_ and its _pull_ methods would take a single argument, itself a tuple consisting of a $\mathcal{T}_4$-element and a $\mathcal{T}_5$-element. Concretely, one such thing might look like `(0xd9de, 0x86cd91f4)`.
+:::
+
+Finally, a channel either is or isn't _balanced_ at any given time. To be _balanced_ entails simply that its pushes exactly match its pulls. That is, the respective _multisets_ of its pushed and pulled elements (i.e., ignoring order, but counting multiplicity) are equal.
+:::info
+For example, a channel with the following table of accumulated pushes and pulls:
+| Pushes                 | Pulls                  |
+| :---------------------:| :---------------------:|
+| `(0xd9de, 0x86cd91f4)` | `(0xd9de, 0x86cd91f4)` |
+| `(0xd9de, 0x86cd91f4)` | `(0xbd8f, 0x00000000)` |
+| `(0xd9de, 0x0000d9de)` | `(0xd9de, 0x86cd91f4)` |
+| `(0xbd8f, 0x00000000)` | `(0xd9de, 0x0000d9de)` |
+
+would be _balanced_. But if we changed any single character in this table, the channel would become unbalanced—as it likewise would if we, say, added an element to the left-hand side (but not the right).
+:::
+
+### Tables and constraints
+
+A _table_ is what it sounds like—an ordered list of rows, each with a fixed width and fixed cell-types. Indeed, like channels, M3 tables also have prescribed "signatures", fixed once and for all by the instance specification. Each table has a fixed _number of columns_; each column is itself of a fixed _type_ (one of the tower field heights).
+
+Moreover, to each table is associated a plurality of polynomial _constraints_. Each _constraint_ is a multivariate polynomial with as many variables as the table has columns. The polynomial's field of definition will itself be a tower-subfield.
+
+A table is said to _satisfy its constraints_ when each of its constraint polynomials vanishes identically on the table's rows. That is, for each of the table's constraint polynomials, for each row of the table, the polynomial, evaluated on the row, outputs 0.
+
+:::info
+For example, we can write down a table with three columns, $John$, $Mary$, and $Fred$, of types $\mathcal{T}_4$, $\mathcal{T}_5$, and $\mathcal{T}_5$, respectively. We are moreover going to impose the algebraic constraint whereby
+
+$$
+\begin{equation*}John \cdot Mary = Fred.\end{equation*}
+$$
+
+Here is an example of our table, populated with a few rows (which satisfy the constraint):
+
+| John ($\mathcal{T}_4$) | Mary ($\mathcal{T}_5$) | Fred ($\mathcal{T}_5$) |
+| :---------------------:| :---------------------:| :---------------------:|
+| `0xd9de`               | `0x5dd09445`           | `0x86cd91f4`           |
+| `0xd9de`               | `0x5dd09445`           | `0x86cd91f4`           |
+| `0xd9de`               | `0x00000001`           | `0x0000d9de`           |
+| `0xbd8f`               | `0x00000000`           | `0x00000000`           |
+:::
+
+The rough intuition is that the prover won't have _direct_ access to the instance's channels. He will, on the other hand, have direct access to its tables, in the sense that the prover will be at liberty to populate the tables arbitrarily—_subject_, of course, to the requirement whereby the rows it appends satisfy their tables' constraints.
+
+### Flushing rules
+
+Intuitively, flushing rules "wire" tables into channels. They can also be called "routing rules". Each flushing rule dictates that a _particular_ set of columns—themselves either transparent, committed or virtual columns, all associated with a single table—should be bundled into tuples, and _pushed_ or _pulled_ (as the case may be) into a particular channel. The intuition is that our tables will get "flushed" into our channels, and the flushing rules tell us how.
+
+More precisely, each flushing rule specifies:
+- An ordered sequence of columns, all drawn (either explicitly or virtually derived) from a single table.
+- A channel.
+- A direction (_push_ or _pull_).
+
+**Sanity check.** In order for this to typecheck, the "tuple type" represented by the flushing rule's column subset must _match_ the tuple type of the channel. That is, both its width (number of components) and its component types must match.
+
+:::info
+For example, a flushing rule might say that
+> The tuple $(John, Fred)$ should be _pushed_ to the above channel.
+
+Note that this typechecks; indeed, our channel above expects tuples of type $(\mathcal{T}_4, \mathcal{T}_5)$. Indeed, by looking back at the example channel state written down above, you will see that that channel's pushes are exactly what would come out of this flushing rule.
+
+Note that we could have also defined a flushing rule involving _virtual_ columns. For example, we could have declared that:
+> The tuple $(g \cdot Mary + John, Fred)$ should be _pulled_ from the above channel.
+
+Here, $g \in \mathcal{T}_4$ is some fixed, constant field element. The linear combination $g \cdot Mary + John$ is a perfectly good [virtual column](/blueprint/reductions/virtual), based on the above table, and is fair game to use in flushing rules.
+
+On the other hand, the flushing rule
+
+> The tuple $(John, Mary, Fred)$ should be _pushed_ to the above channel.
+
+wouldn't make sense / typecheck, since there would be too many components for the channel (3, instead of 2).
+:::
+
+### Boundary conditions
+
+Finally, we will in general want to allow the "preseeding" of channels with statement-dependent data. The idea here is that before populate the tables and apply the flushing rules, we initialize the channels with some statement-dependent initial state. What this means is that we will take certain values and "manually" push or pull them _directly_ to certain channels. An example of this can be seen in our [M3 example](/basics/arithmetization/m3/example), where the verifier started things off by _pushing_ 3,135 (the statement) and _pulling_ 1 (a null / terminal value).
+
+There is a further slight subtlety. Even standard flushing rules, which _do_ involve tables, can _either_ involve "statement" columns—which capture the what prover is trying to show in the first place—or "witness" columns, which are merely auxiliary, and serve only to cause the instance's channels to balance. For example, in [Lasso](/basics/arithmetization/m3/lasso), the lookup table $T$ and the looked-up column $U$ are "statement columns", while the read counts $R$ and the final counts $F$ are "witness columns".
+
+## Instances and Attempts
+
+We will use the term _M3 instance_ to refer to a _general_ specification of channels, tables, flushing rules, and boundary conditions. An _instance_ describes how many channels there are (and what their type signatures are), how many tables there are (and what their type signatures are), what the flushing rules are, and finally how channels should be pre-seeded using statement-dependent data.
+
+:::info
+For example, an instance might declare that there be _two_ channels, one of type $(\mathcal{T}_0, \mathcal{T}_3, \mathcal{T}_4)$ and the other of type $(\mathcal{T}_4, \mathcal{T}_5)$, and _two_ tables, one of type $(\mathcal{T}_4, \mathcal{T}_5, \mathcal{T}_5)$, and one of type $(\mathcal{T}_0, \mathcal{T}_3)$. These tables might be respectively _constrained_ by the polynomials $X_0 \cdot X_1 = X_2$ and $X_0^3 = X_1$, say. It might finally declare that the first two columns of its first table be pushed to its second channel, and that table's first and third columns be pulled from it, as well as that both columns of its second table _and_ the first column of its first table be pushed to its first channel. Finally, it might pre-push the statement—of type $(\mathcal{T}_0, \mathcal{T}_3, \mathcal{T}_4)$—to its first channel, and pre-pull `(0x0, 0x00, 0x0000)`.
+
+Of course, this makes no sense, but it's merely an example of what an M3 _instance specification_ might look like. We'll see "real" examples [soon](/basics/arithmetization/mpt).
+:::
+
+We will distinguish between _instances_, defined above, and _attempts_. An _attempt_ at an M3 instance is a _particular value_ for the statement, as well as an _actual_ population of the instance's tables with appropriately-typed values.
+
+## Satisfaction
+
+We're finally ready to say what it means for an _attempt_ to satisfy an _instance_. To define satisfaction, we will go through the following algorithm.
+
+1. All of the instance's channels begin in the empty state.
+2. If called for by the instance specification, certain channels are prepopulated with the appropriate statement-dependent data.
+3. All of the attempt's tables are flushed into the instance's channels, per the instance's flushing rules.
+4. The attempt _satisfies_ the instance if all of the instance's channels are now balanced.
+
+This completes our definition of M3 in the abstract. Soon, we will see various real-life [examples](/basics/arithmetization/mpt).
+
+## Push or Pull?
+
+We end this section by remarking on the _directionality_ of channels. Thus far, the terms "pushing" and "pulling" have been arbitrary, and could have been freely reversed throughout. As it happens in practice, these directions _matter_, and cannot in general be interchanged. Roughly, "pushing" a tuple to a channel corresponds to "registering it as a new, pending, unresolved liability". In contrast, "pulling" a tuple from a channel corresponds to "declaring it as stricken, accounted for and resolved". In practice, M3 instances tend to operate by allowing the prover to _pull_ large claims, but only if he simultaneously _pushes_ various smaller claims, whose collective truth moreover implies the large claim. Indeed, this was more-or-less the pattern visible in our [toy example](/basics/arithmetization/m3/example).
+
+:::note
+If it helps, you can think of each channel as a sort of _ledger_, containing a _liabilities_ side and an _assets_ side. Every time a tuple is _pushed_ to the channel, it is written into the _liabilities_ list. Every time something is _pulled_, it is written into the _assets_ list. The channel is _balanced_ if its assets equal its liabilities (as multisets).
+:::

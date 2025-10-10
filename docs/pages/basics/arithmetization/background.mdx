@@ -1,0 +1,37 @@
+# Background [Review of previous arithmetization techniques]
+
+The most conceptually simple SNARK arithmetization technique involves what's called a _computational trace_—essentially a register dump over time.
+
+This means that we set up a virtual CPU or VM, with some _registers_—stateful places where data can be stored—and various _instructions_. Each _cycle_, we must mutate the registers, in whatever way the current instruction tells us to. We let our machine run for a couple million cycles. Finally, we're interested in peeking at our machine's initial and final states.
+
+The object that arises from this procedure is a _computational trace table_. Each _row_ of the table represents a clock cycle, a slice in time. Each _column_ represents some register (or represents the current instruction, say). Each _cell_, then, gives us the value of a certain register at a certain time. To check whether the trace is valid, we need to check whether the register state updates were performed correctly. That is, we must compare each positive-indexed row with the one before it, and check whether the relevant registers relate to each other in the right way, making reference to the instruction at hand. (We also need to handle instruction-fetching logic; we ignore this for now.) Mathematically, the above task amounts to writing down a polynomial constraint for _each_ instruction—which captures whether that instruction was applied correctly—and then "multiplexing" these constraints using selectors. This is roughly the flavor that Starkware's and Plonky3's _AIR_ (_Algebraic Intermediate Representation_) and Plonky2 and halo2's _PLONKish_ arithmetization schemes take.
+
+## More Advanced Ideas
+
+Various teams working in SNARK design have managed to extend this model. For example, Polygon's zkEVM has introduced [a technique](https://docs.polygon.technology/zkEVM/architecture/proving-system/secondary-sms-lookup-tables/?h=lookup#linking-execution-traces-via-lookup-arguments) which allows a main table to invoke a _subtable_. Specifically, let's fix some complex instruction that _can't_ be dealt with using a polynomial constraint (for example, _exponentiation_). We can allow the main table to execute that complex instruction in one shot after all—i.e., in one row—by deferring the actual computation it entails into a subtable. Using a lookup (mediated by a selector column), the main table "injects" each row containing this instruction into a subtable, to check whether it's actually present in that subtable. That subtable can itself obtain each required result in _many_ steps, as opposed to in just one.
+
+We also mention [SP1](https://github.com/succinctlabs/sp1)'s _bus argument_, which itself adapts a similar idea from [Valida](https://github.com/valida-xyz/valida). In SP1's zkVM, multiple virtual _chips_ communicate over a virtual _bus_. The main chip is a "CPU", which is responsible for verifying RISC-V instructions, as well as for delegating work to other chips.
+
+:::note
+SP1's other chips handle, for example, arithmetic and logic (ALU), memory, range-checking, and precompiles like Keccak and SHA-2.
+:::
+
+The conceptual model is that for every event "sent" to the bus, another chip must "receive" the event. For example, when the CPU must check an integer addition, it sends an `ADD` event to the bus, which the ALU chip receives. The ALU’s act of receiving the event attests to the validity of the `ADD` event (the ALU would not be able to receive an invalid addition operation).
+
+## Drawbacks
+
+While these paradigms are conceptually straightforward and powerful, they have various drawbacks, as we now explain.
+
+When just _a single_ table is used, the multiplexed, master constraint polynomial that results is liable to be complicated—with a huge number of variables, and maybe even a high degree. Indeed, this polynomial must, at once, handle _all possible_ instructions that the VM is capable of executing. This seems intuitively wasteful, since only one instruction will execute in each given cycle; on the other hand, we are being forced to "pay the cost" of _all instructions_ at each cycle.
+
+When subtables or "subchips" are instead used, a different sort of overhead arises. In that setting, the main global trace table must use selectors to indicate _which_ rows must be checked against subtables or sent into chips (these selectors must moreover distinguish _between_ subtables, when many are present). This fact makes the ensuing lookups more costly, since the columns that are being looked up are "selected", not plain.
+
+## Desiderata
+
+To hint at what's to come, we suggest a few desiderata that an ideal arithmetization scheme should possess.
+
+- **Separation of concerns.** It should allow different functionalities to be "broken apart" into different tables, themselves subject to _different_ polynomial constraints.
+- **Elimination of multiplexing overhead.** We would like to entirely get rid of selectors, since they "needlessly" increase the degrees of our constraint polynomials and looked-up columns.
+- **Flexibility.** We would rather not pick a CPU / VM architecture once and for all, and arithmetize that. That approach threatens to impose a sort of efficiency overhead whereby we must run all the programs we care about _through_ this fixed VM. Rather, we want a "meta-template" which yields direct, efficient arithmetizations for _many different_ problems of interest.
+
+Throughout the rest of this section—beginning with our [M3 page](/basics/arithmetization/m3)—we explain our approach to arithmetization, and why it achieves the above desiderata.

@@ -1,0 +1,126 @@
+# Proving Collatz Orbits [Another example from elementary number theory]
+
+Here, we discuss another example, based on the famous _Collatz conjecture_. This thing isn't _quite_ suitable as written for a real-life M3 instance, since Binius doesn't have natural-number-valued datatypes (rather, everything is over binary tower fields). On the other hand, this is close to something that could be used, and conveys a clear idea.
+
+:::note
+It's _possible_ to refine this into a real-life example, by instead using fixed-width unsigned integer datatypes and appropriately rangechecking everything (i.e., prohibiting overflows). We actually have an end-to-end Collatz example implemented in Binius.
+:::
+
+The _[Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture)_ would have it that for any starting positive integer $x \in \mathbb{N}$, the procedure which sends:
+
+$$
+\begin{equation*}
+x \mapsto \begin{cases}
+\frac{x}{2} & \text{if $x$ is even} \\
+3 \cdot x + 1 & \text{if $x$ is odd}
+\end{cases}
+\end{equation*}
+$$
+
+eventually reaches 1. We're going to sketch an M3-based proof that some _particular_ public number, say $x$, satisfies the hypothesis of the Collatz conjecture (that is, its orbit under the Collatz function eventually terminates at 1). For example, if we start with the number 6, we will end up with the sequence 6, 3, 10, 5, 16, 8, 4, 2, 1—which ends at 1, sure enough.
+
+## The Instance Specification
+
+Here, we sketch the appropriate M3 instance, generally taking for granted [the definition of M3](/basics/arithmetization/m3/definition). Our statement looks like:
+
+:::note
+You are going to convince me that some given integer satisfies the hypothesis of the Collatz conjecture (that is, its orbit under the Collatz function terminates at 1).
+:::
+
+For example, let's pick 6 as our number.
+
+### Channels
+I, the verifier, am going to set up a single channel, with a simple positive-integer value (just like in the [previous toy example](/basics/arithmetization/m3/example)).
+
+### Boundary Conditions
+
+As my boundary condition, I am going to _push_ the initial statement and _pull_ the terminal number 1.
+
+Upon doing this, I wind up with the following initial channel state:
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+      6       :   :           :      1
+               \_/___________/
+```
+
+### Tables
+I'm now going to set up _two tables_, let's say $T_{\text{even}}$ and $T_{\text{odd}}$.
+
+The first table, $T_{\text{even}}$, will have two columns:
+
+| Even Number $E$ | Half $H$ |
+| --------------: | -------: |
+
+Both will be positive-integer-valued. The second, $T_{\text{odd}}$, will have three columns:
+
+| Odd Number $O$ | Rounded-Down Half $R$ | Output $P$ |
+| -------------: | --------------------: | ---------: |
+
+### Constraints
+
+You probably see where this is going. We now need to specify what our _constraints_ are going to be.
+- For $T_{\text{even}}$, we are going to require that $E = 2 \cdot H$ (as natural numbers). Note that this has the effect of ensuring that $E$ is even.
+- For $T_{\text{odd}}$, we are going to have two constraints: first, $O = 2 \cdot R + 1$ (this ensures that $O$ is odd) and finally that $P = 3 \cdot O + 1$.
+
+Putting the above two rules together, we see that for each input on the left, we are getting the output of the Collatz function on the right.
+
+### Flushing rules
+
+I, the verifier, am going to flush in the following way:
+
+- **Pull $(E)$.** The even _input_ gets pulled.
+- **Push $(H)$.** We _push_ the result, half of the even input.
+- **Pull $(O)$.** The odd _input_ gets pulled.
+- **Push $(P)$.** We _push_ the result of that odd thing under the Collatz function.
+
+
+## The Claim
+
+The claim here is as before: if you, the prover, manage to populate the above tables in such a way that my channel becomes balanced, then I, the verifier, become convinced that 6 terminates at 1 under the Collatz function.
+
+We begin in the obvious way. The only way that you, the prover, can hope to nullify my initial push of 6 is to append some row containing 6 in the left-hand column. We won't be able to do this on the odd table (because of the constraint). So we go for the even table:
+
+| Even Number $E$ | Half $H$ |
+| --------------: | -------: |
+|               6 |        3 |
+
+Now, my channel state has been affected:
+
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+      3       :   :           :      1
+               \_/___________/
+```
+
+The pattern is clear: you, the prover, need to keep appending rows with the "outstanding liability" in the leftmost cell. At the very end, your table state will look like:
+
+| Even Number $E$ | Half $H$ |
+| --------------: | -------: |
+|               6 |        3 |
+|              10 |        5 |
+|              16 |        8 |
+|               8 |        4 |
+|               4 |        2 |
+|               2 |        1 |
+
+
+| Odd Number $O$ | Rounded-Down Half $R$ | Output $P$ |
+| -------------: | --------------------: | ---------: |
+|              3 |                     1 |         10 |
+|              5 |                     2 |         16 |
+
+At this point my channel has been balanced.
+
+## Some Remarks
+
+It should be intuitively clear that this thing is correct and secure. (In particular, the only way to make this thing balance is by actually knowing the Collatz orbit.)
+
+This M3 sketch illustrates something interesting: we let the _choice of_ progression rule become completely nondeterministic, put on the prover. That is, we let the _prover_ deal with the problem of deciding _which_ case we're in: whether we're at an even number, which we must halve, or an odd number, which we must triple and add one to.
+
+If we had tried to attack the Collatz problem using a more classical arithmetization scheme—like AIR—then, most likely, we would have had to write down _two_ polynomial constraints (or perhaps more), and then _select_ between those two on the basis of parity. In particular, we would have been doing the work of _both_ Collatz transition functions at every step. Above, on the other hand, we were able to "break apart" the two different algebraic operations into separate tables, which had just one constraint each (and no selectors!). The key part was to link those two tables together in a secure way; we achieved that using flushing rules and our channel.
+
+We didn't need a global execution trace to orchestrate these individual, primitive function calls. Rather, each primitive operation had its own table, and we just needed to link them with channels.

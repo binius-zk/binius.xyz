@@ -1,0 +1,29 @@
+# Data Types [The fundamental objects in our arithmetization scheme]
+
+Before we can explain [M3](/basics/arithmetization/m3), we need to explain the fundamental data types that it works with. Here, we take a bit of time to do this, even though the story is pretty simple.
+
+Roughly, our fundamental datatypes are bitstrings of power-of-two width. Thus, we allow 128-bit binary strings, 64-bit strings, 32-bit strings, 16-bit strings, and 8-bit bytes. We also allow 1-bit values. For technical reasons, we skip the 4-bit and 2-bit widths.
+
+:::info
+For example, a 128-bit string looks something like `732dda5087d5a846519178069246d7ea`, provided that it is hex encoded. A 64-bit string looks like `0fb52f64e0b53e23`. An 8-bit string looks like `a2`. A _bit_ is of course just 0 or 1!
+:::
+
+For notational convenience, we will use the script-T symbols $\mathcal{T}_0, \ldots , \mathcal{T}_7$ to refer to these datatypes. That is, for each $\iota \in \{0, 3, 4, 5, 6, 7\}$, we will write $\mathcal{T}_\iota$ for the datatype consisting of binary strings of length $2^\iota$.
+
+:::info
+For example, $\mathcal{T}_7$ is the datatype consisting of 128-bit binary strings. We will often refer to this as the "cryptographically large field" or the "huge field". $\mathcal{T}_0$ is the datatype consisting of 1-bit values (bits). $\mathcal{T}_3$ is the datatype of bytes.
+:::
+
+## Arithmetic Operations
+
+We also need to be able to talk about _adding_ and _multiplying_ strings like these. For us, addition is just bitwise XOR. This is a basic operation that you can do on two bitstrings of equal length. You go position by position, and write a 1 if and only if exactly one of the two arguments is 1 at that position, and 0 otherwise.
+
+As it turns out, we also have a way of "multiplying" our binary strings together. We will skip the full description now, and defer to our [blueprint](/blueprint/background/towers). But in the important 1-bit special case, we can say exactly what multiplication is: it's just AND. For example, $1 \times 1 = 1$, and $1 \times 0 = 0$.
+
+## Comparison to Prime Fields
+
+We note that our binary datatypes are arguably _simpler_ than those associated with prime fields, which are much more typical in SNARKs. For example, [RISC Zero](https://risczero.com/)'s arithmetization uses the _Baby Bear_ prime field $\mathbb{F}_p$, where $p = 2^{31} - 2^{27} + 1$. Concretely, element of $\mathbb{F}_p$ look like integers in the range $\{0, \ldots , p - 1\}$; arithmetic is done modulo $p$.
+
+These integers take _almost_ 32 bits to represent—but not quite. Indeed, at the level of bits, these integers look essentially like 32-bit binary strings—with the caveat that strings representing integers in the upper range $\{p, \ldots , 2^{32} - 1\}$ are not allowed. Elements in this range are called "non-canonical", since by subtracting off some multiples of $p$, we can replace them with elements of the canonical range $\{0, \ldots , p - 1\}$.
+
+In Binius, the field $\mathcal{T}_\iota$'s elements map _exactly_ to the set of length-$2^\iota$ bitstrings, in a perfect one-to-one correspondence. There are no "forbidden" or "non-canonical" bitstrings.
