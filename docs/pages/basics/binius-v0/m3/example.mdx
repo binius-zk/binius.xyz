@@ -98,7 +98,7 @@ Before we proceed to full-blown M3, we distill a few principles from the above e
 
 First, we note that the verifier made pushes and pulls that were _uniform across rows_; i.e., the verifier did the exact same thing to each row (push $a$ and pull $b$, in our case). As we'll see below, these pushes and pulls were what we'll call _flushing rules_. In general, flushing rules have to be row-uniform—though they _can_ entail virtual columns, derived indirectly from the table's committed columns. Separately, the prover's freedom was restricted in an important way: he was only allowed to append pairs $(a, b, p)$ for which $a = b \cdot p$ held and $p$ was prime. (If either of these rules were relaxed, then the protocol would have become completely insecure.) As we will see soon, these were examples of _constraints_ that applied to the prover's table. In general, our constraints will be _algebraic_, formulated in terms of polynomial relations (so for example, "$p$ is prime" is off the table—unless you can come with an M3 instance for it!).
 
-In general M3 instances, we will have _a number of channels_, as well as a plurality of tables. Moreover, these tables will interact with the channels according to generally complex flushing rules. For some "real" examples of M3, we refer to the [M3 Examples](/basics/arithmetization/mpt) subsection of this site.
+In general M3 instances, we will have _a number of channels_, as well as a plurality of tables. Moreover, these tables will interact with the channels according to generally complex flushing rules. (Note: The MPT (Merkle-Patricia Inclusion) examples were not included in the recovered V0 documentation.)
 
 ## The Primality Constraint
 

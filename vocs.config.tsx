@@ -117,7 +117,7 @@ export default defineConfig({
       },
       {
         text: "Binius64 vs. V0",
-        link: "/basics/binius-v0",
+        link: "/basics/binius64-vs-v0",
       },
       {
         text: "Roadmap",
@@ -126,6 +126,48 @@ export default defineConfig({
       {
         text: "Licensing",
         link: "/basics/licensing",
+      },
+      {
+        text: "Binius V0",
+        link: "/basics/binius-v0/",
+        collapsed: false,
+        items: [
+          {
+            text: "Arithmetization Background",
+            link: "/basics/binius-v0/background",
+          },
+          {
+            text: "Tower Fields",
+            link: "/basics/binius-v0/towers",
+          },
+          {
+            text: "Data Types",
+            link: "/basics/binius-v0/types",
+          },
+          {
+            text: "M3 Arithmetization",
+            link: "/basics/binius-v0/m3",
+            collapsed: false,
+            items: [
+              {
+                text: "Toy Example",
+                link: "/basics/binius-v0/m3/example",
+              },
+              {
+                text: "Definition",
+                link: "/basics/binius-v0/m3/definition",
+              },
+              {
+                text: "Collatz Orbits",
+                link: "/basics/binius-v0/m3/collatz",
+              },
+              {
+                text: "Lasso Lookup",
+                link: "/basics/binius-v0/m3/lasso",
+              },
+            ],
+          },
+        ],
       },
       {
         text: "Further Resources",

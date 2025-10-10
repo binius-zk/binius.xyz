@@ -1,6 +1,6 @@
 # Definition of M3 [Including tables, constraints, flushing rules and channels]
 
-Here, we define M3 at a reasonable level of rigor, targeting a thorough conceptual understanding of what its instances look like. Throughout, we work with the binary [datatypes](/basics/arithmetization/types) we've already discussed.
+Here, we define M3 at a reasonable level of rigor, targeting a thorough conceptual understanding of what its instances look like. Throughout, we work with the binary [datatypes](/basics/binius-v0/types) we've already discussed.
 
 ## Basic Objects
 
@@ -73,7 +73,7 @@ Note that this typechecks; indeed, our channel above expects tuples of type $(\m
 Note that we could have also defined a flushing rule involving _virtual_ columns. For example, we could have declared that:
 > The tuple $(g \cdot Mary + John, Fred)$ should be _pulled_ from the above channel.
 
-Here, $g \in \mathcal{T}_4$ is some fixed, constant field element. The linear combination $g \cdot Mary + John$ is a perfectly good [virtual column](/blueprint/reductions/virtual), based on the above table, and is fair game to use in flushing rules.
+Here, $g \in \mathcal{T}_4$ is some fixed, constant field element. The linear combination $g \cdot Mary + John$ is a perfectly good virtual column (for more on virtual polynomials, see Definition 4.6 in [Succinct Arguments over Towers of Binary Fields](https://link.springer.com/chapter/10.1007/978-3-031-91134-7_4)), based on the above table, and is fair game to use in flushing rules.
 
 On the other hand, the flushing rule
 
@@ -84,9 +84,9 @@ wouldn't make sense / typecheck, since there would be too many components for th
 
 ### Boundary conditions
 
-Finally, we will in general want to allow the "preseeding" of channels with statement-dependent data. The idea here is that before populate the tables and apply the flushing rules, we initialize the channels with some statement-dependent initial state. What this means is that we will take certain values and "manually" push or pull them _directly_ to certain channels. An example of this can be seen in our [M3 example](/basics/arithmetization/m3/example), where the verifier started things off by _pushing_ 3,135 (the statement) and _pulling_ 1 (a null / terminal value).
+Finally, we will in general want to allow the "preseeding" of channels with statement-dependent data. The idea here is that before populate the tables and apply the flushing rules, we initialize the channels with some statement-dependent initial state. What this means is that we will take certain values and "manually" push or pull them _directly_ to certain channels. An example of this can be seen in our [M3 example](/basics/binius-v0/m3/example), where the verifier started things off by _pushing_ 3,135 (the statement) and _pulling_ 1 (a null / terminal value).
 
-There is a further slight subtlety. Even standard flushing rules, which _do_ involve tables, can _either_ involve "statement" columns—which capture the what prover is trying to show in the first place—or "witness" columns, which are merely auxiliary, and serve only to cause the instance's channels to balance. For example, in [Lasso](/basics/arithmetization/m3/lasso), the lookup table $T$ and the looked-up column $U$ are "statement columns", while the read counts $R$ and the final counts $F$ are "witness columns".
+There is a further slight subtlety. Even standard flushing rules, which _do_ involve tables, can _either_ involve "statement" columns—which capture the what prover is trying to show in the first place—or "witness" columns, which are merely auxiliary, and serve only to cause the instance's channels to balance. For example, in [Lasso](/basics/binius-v0/m3/lasso), the lookup table $T$ and the looked-up column $U$ are "statement columns", while the read counts $R$ and the final counts $F$ are "witness columns".
 
 ## Instances and Attempts
 
@@ -95,7 +95,7 @@ We will use the term _M3 instance_ to refer to a _general_ specification of chan
 :::info
 For example, an instance might declare that there be _two_ channels, one of type $(\mathcal{T}_0, \mathcal{T}_3, \mathcal{T}_4)$ and the other of type $(\mathcal{T}_4, \mathcal{T}_5)$, and _two_ tables, one of type $(\mathcal{T}_4, \mathcal{T}_5, \mathcal{T}_5)$, and one of type $(\mathcal{T}_0, \mathcal{T}_3)$. These tables might be respectively _constrained_ by the polynomials $X_0 \cdot X_1 = X_2$ and $X_0^3 = X_1$, say. It might finally declare that the first two columns of its first table be pushed to its second channel, and that table's first and third columns be pulled from it, as well as that both columns of its second table _and_ the first column of its first table be pushed to its first channel. Finally, it might pre-push the statement—of type $(\mathcal{T}_0, \mathcal{T}_3, \mathcal{T}_4)$—to its first channel, and pre-pull `(0x0, 0x00, 0x0000)`.
 
-Of course, this makes no sense, but it's merely an example of what an M3 _instance specification_ might look like. We'll see "real" examples [soon](/basics/arithmetization/mpt).
+Of course, this makes no sense, but it's merely an example of what an M3 _instance specification_ might look like. (Note: The MPT (Merkle-Patricia Inclusion) examples were not included in the recovered V0 documentation.)
 :::
 
 We will distinguish between _instances_, defined above, and _attempts_. An _attempt_ at an M3 instance is a _particular value_ for the statement, as well as an _actual_ population of the instance's tables with appropriately-typed values.
@@ -109,11 +109,11 @@ We're finally ready to say what it means for an _attempt_ to satisfy an _instanc
 3. All of the attempt's tables are flushed into the instance's channels, per the instance's flushing rules.
 4. The attempt _satisfies_ the instance if all of the instance's channels are now balanced.
 
-This completes our definition of M3 in the abstract. Soon, we will see various real-life [examples](/basics/arithmetization/mpt).
+This completes our definition of M3 in the abstract. (Note: The MPT (Merkle-Patricia Inclusion) examples were not included in the recovered V0 documentation.)
 
 ## Push or Pull?
 
-We end this section by remarking on the _directionality_ of channels. Thus far, the terms "pushing" and "pulling" have been arbitrary, and could have been freely reversed throughout. As it happens in practice, these directions _matter_, and cannot in general be interchanged. Roughly, "pushing" a tuple to a channel corresponds to "registering it as a new, pending, unresolved liability". In contrast, "pulling" a tuple from a channel corresponds to "declaring it as stricken, accounted for and resolved". In practice, M3 instances tend to operate by allowing the prover to _pull_ large claims, but only if he simultaneously _pushes_ various smaller claims, whose collective truth moreover implies the large claim. Indeed, this was more-or-less the pattern visible in our [toy example](/basics/arithmetization/m3/example).
+We end this section by remarking on the _directionality_ of channels. Thus far, the terms "pushing" and "pulling" have been arbitrary, and could have been freely reversed throughout. As it happens in practice, these directions _matter_, and cannot in general be interchanged. Roughly, "pushing" a tuple to a channel corresponds to "registering it as a new, pending, unresolved liability". In contrast, "pulling" a tuple from a channel corresponds to "declaring it as stricken, accounted for and resolved". In practice, M3 instances tend to operate by allowing the prover to _pull_ large claims, but only if he simultaneously _pushes_ various smaller claims, whose collective truth moreover implies the large claim. Indeed, this was more-or-less the pattern visible in our [toy example](/basics/binius-v0/m3/example).
 
 :::note
 If it helps, you can think of each channel as a sort of _ledger_, containing a _liabilities_ side and an _assets_ side. Every time a tuple is _pushed_ to the channel, it is written into the _liabilities_ list. Every time something is _pulled_, it is written into the _assets_ list. The channel is _balanced_ if its assets equal its liabilities (as multisets).

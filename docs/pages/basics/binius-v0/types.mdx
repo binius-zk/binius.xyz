@@ -1,6 +1,6 @@
 # Data Types [The fundamental objects in our arithmetization scheme]
 
-Before we can explain [M3](/basics/arithmetization/m3), we need to explain the fundamental data types that it works with. Here, we take a bit of time to do this, even though the story is pretty simple.
+Before we can explain [M3](/basics/binius-v0/m3), we need to explain the fundamental data types that it works with. Here, we take a bit of time to do this, even though the story is pretty simple.
 
 Roughly, our fundamental datatypes are bitstrings of power-of-two width. Thus, we allow 128-bit binary strings, 64-bit strings, 32-bit strings, 16-bit strings, and 8-bit bytes. We also allow 1-bit values. For technical reasons, we skip the 4-bit and 2-bit widths.
 
@@ -18,7 +18,7 @@ For example, $\mathcal{T}_7$ is the datatype consisting of 128-bit binary string
 
 We also need to be able to talk about _adding_ and _multiplying_ strings like these. For us, addition is just bitwise XOR. This is a basic operation that you can do on two bitstrings of equal length. You go position by position, and write a 1 if and only if exactly one of the two arguments is 1 at that position, and 0 otherwise.
 
-As it turns out, we also have a way of "multiplying" our binary strings together. We will skip the full description now, and defer to our [blueprint](/blueprint/background/towers). But in the important 1-bit special case, we can say exactly what multiplication is: it's just AND. For example, $1 \times 1 = 1$, and $1 \times 0 = 0$.
+As it turns out, we also have a way of "multiplying" our binary strings together. We will skip the full description now, and defer to our [tower fields page](/basics/binius-v0/towers). But in the important 1-bit special case, we can say exactly what multiplication is: it's just AND. For example, $1 \times 1 = 1$, and $1 \times 0 = 0$.
 
 ## Comparison to Prime Fields
 

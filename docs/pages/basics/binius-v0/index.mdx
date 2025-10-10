@@ -1,0 +1,63 @@
+# Binius V0
+
+## Overview
+
+This section documents the historical Binius V0 system, which has been sunset in favor of Binius64. Binius V0 was designed as a flexible toolkit for creating verifiable VMs, heavily inspired by Plonky3, and introduced several novel features that advanced the state of SNARK design.
+
+:::info
+**Note:** Binius V0 has been deprecated and is no longer actively developed. The code is archived at [github.com/IrreducibleOSS/binius](https://github.com/IrreducibleOSS/binius). All current development efforts are focused on [Binius64](/basics), which distills the best ideas from the original research while prioritizing simplicity and real-world performance.
+:::
+
+## Novel Features of Binius V0
+
+Binius V0 introduced two groundbreaking concepts to the SNARK ecosystem:
+
+### 1. Tower Field Data Types
+
+Unlike traditional SNARKs that use prime fields, Binius V0 pioneered the use of **binary tower fields** as fundamental data types. These towers provide:
+- Perfect correspondence between field elements and bitstrings
+- Natural support for binary operations (XOR, AND)
+- Efficient arithmetic without non-canonical field elements
+- A nested structure enabling powerful mathematical techniques
+
+Learn more about [tower fields](towers) and the [data types](types) built on them.
+
+### 2. M3 Arithmetization
+
+Binius V0 introduced **Multi-Multiset Matching (M3)**, a revolutionary arithmetization paradigm that departs from traditional trace-based approaches:
+
+- **No main trace**: Instead of a global execution trace, M3 uses independent tables connected through channels
+- **No temporality**: Tables have no inherent notion of time or sequentiality
+- **Flexible lengths**: The prover can populate tables of arbitrary length as needed
+- **Channel balancing**: Correctness is verified through the balancing of abstract data channels
+
+This approach eliminates multiplexing overhead and provides unprecedented flexibility in SNARK design.
+
+## Basic Concepts and Arithmetization
+
+In SNARK design, _arithmetization_ refers to techniques designed to reduce _computational problems_ to _mathematical problems_. Computational problems are the ones we care about in day-to-day life (like verifying an Ethereum block), while mathematical problems are the ones amenable to treatment by SNARKs (involving finite fields, tables, and polynomials).
+
+Binius V0's approach to arithmetization represents a significant departure from the status quo through its M3 framework, which we explain in detail in this section.
+
+## Section Contents
+
+This documentation covers:
+
+- **[Arithmetization Background](background)**: Review of previous approaches and M3's innovations
+- **[Tower Fields](towers)**: Mathematical foundation of binary tower fields
+- **[Data Types](types)**: The fundamental bitstring types used in Binius V0
+- **[M3 Arithmetization](m3)**: The Multi-Multiset Matching framework
+  - [Toy Example](m3/example): An accessible introduction through prime factorization
+  - [Formal Definition](m3/definition): Tables, channels, constraints, and flushing rules
+  - [Collatz Orbits](m3/collatz): Proving termination of Collatz sequences
+  - [Lasso Lookup](m3/lasso): Implementing lookups within the M3 framework
+
+## Comparison with Binius64
+
+For a detailed comparison between Binius V0 and the current Binius64 system, see [Binius64 vs. Binius V0](/basics/binius64-vs-v0). For the strategic decisions behind the transition, refer to our [announcement blog post](https://www.irreducible.com/posts/reinventing-irreducible).
+
+## Further Reading
+
+- **Paper**: [Succinct Arguments over Towers of Binary Fields](https://eprint.iacr.org/2023/1784.pdf)
+- **Blog Posts**: See our [blog posts collection](/basics/resources/posts) for articles about Binius V0
+- **GitHub**: [Archived Binius V0 repository](https://github.com/IrreducibleOSS/binius)
