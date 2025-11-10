@@ -124,10 +124,6 @@ export default defineConfig({
         link: "/basics/roadmap",
       },
       {
-        text: "Licensing",
-        link: "/basics/licensing",
-      },
-      {
         text: "Binius V0",
         link: "/basics/binius-v0/",
         collapsed: false,
