@@ -22,7 +22,7 @@ Our prover algorithm below makes use of the [constraint arrays](/blueprint/const
 
 ## Efficient Lookup-Based Extrapolation
 
-Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an arbitrary $6$-dimensional subspace. Now, we enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that $D' \subset \mathbb{F}_{2^{128}}$ too, so we have a chain of inclusions
+Thus far, we have let $D \subset \mathbb{F}_{2^{128}}$ be an arbitrary $6$-dimensional subspace. Now, we enforce that $D \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}$. We write $D' \subset \mathbb{F}_{2^{128}}$ for a further linear subspace, now of dimension 7 over $\mathbb{F}_2$. We require that $D' \subset \mathbb{F}_{2^8}$ too, so we have a chain of inclusions
 
 $$
 \begin{equation*}D \subset D' \subset \mathbb{F}_{2^8} \subset \mathbb{F}_{2^{128}}.\end{equation*}
@@ -53,7 +53,7 @@ Since $\text{Extrap}$ is $\mathbb{F}_2$-linear, we can implement it in the follo
 
 We have [already seen](/blueprint/backend/ands/univariate#protocol-description) that the prover must evaluate $g(\widehat{I})$ on $2^k - 1$ points outside of $D$. Thus it's enough for the prover to evaluate $g(\widehat{I})$ on $D' \setminus D$.
 
-We proceed with the prover's algorithm. The prover's inputs are the constraint arrays $a$, $b$ and $c$ and the verifier's partially-deterministic challenge $\overline{r_x} = (\sigma_0, \sigma_1, \sigma_2, \ldots , \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell_\text{and} - 4}})$, as well as the fixed Rijndael field [elements](/blueprint/backend/ands/rijndael#tensor-basis) $\rho_0$, $\rho_1$, $\rho_2$, and the precomputed mapping $\text{Extrap}$ above.
+We proceed with the prover's algorithm. The prover's inputs are the constraint arrays $a$, $b$ and $c$ and the verifier's partially-deterministic challenge $\overline{r_x} = (\sigma_0, \sigma_1, \sigma_2, \overline{r_{x, 0}}, \ldots , \overline{r_{x, \ell_\text{and} - 4}})$, as well as the fixed Rijndael field [elements](/blueprint/backend/ands/rijndael#tensor-basis) $\rho_0$, $\rho_1$, $\rho_2$, and the precomputed mapping $\text{Extrap}$ above.
 
 - initialize an empty accumulator array of $64$ $\mathbb{F}_{2^{128}}$-elements, say $\mathsf{g}$.
 - tensor-expand $\overline{r_x}$; i.e., compute the array $\left( \widetilde{\texttt{eq}}(\overline{r_x}, v) \right)_{v \in \mathcal{B}_{\ell_\text{and}} - 3}$.
