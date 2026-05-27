@@ -4,11 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a documentation website for Binius, built with [Vocs](https://vocs.dev) (a React-based documentation framework). The site is hosted on AWS Amplify and serves as the main documentation hub at binius.xyz.
+This repository contains two things:
+
+- A documentation website for Binius, built with [Vocs](https://vocs.dev) (a React-based documentation framework). The site is hosted on AWS Amplify and serves as the main documentation hub at binius.xyz.
+- The **Binius64 whitepaper**, a LaTeX document in `whitepaper/` (entry point `whitepaper/main.tex`) that is the canonical protocol specification. Eventually the `docs/pages/blueprint/` website pages will be an HTML render of the whitepaper, but that integration does not exist yet.
+
+**The whitepaper is currently more up-to-date and authoritative than the `docs/pages/blueprint/` markdown pages.** When the two disagree on protocol details (notation, constraint system, reductions, ZK construction), treat the whitepaper as the source of truth.
 
 ## Development Commands
 
 ```bash
+# --- Website ---
 # Start development server
 npm run dev
 
@@ -20,6 +26,10 @@ npm run preview
 
 # Run tests (currently just exits with 0)
 npm test
+
+# --- Whitepaper ---
+# Build the PDF (runs pdflatex + biber via the Makefile)
+cd whitepaper && make
 ```
 
 ## Architecture & Structure
@@ -29,6 +39,7 @@ npm test
 - **Math Rendering**: KaTeX for mathematical formulas via remark-math and rehype-katex
 - **Styling**: Tailwind CSS v4
 - **Build System**: Vite with custom plugins
+- **Whitepaper**: LaTeX, built with `pdflatex` and `biber` (a development dependency for the whitepaper only; e.g. from a TeX Live distribution)
 
 ### Documentation Organization
 The documentation is organized into four main sections:
@@ -42,6 +53,9 @@ The documentation is organized into four main sections:
 - `docs/pages/`: MDX documentation files organized by section
 - `docs/components/`: Custom React components (LandingPage, BenchmarkTable, Collapsible, ArrowIcon)
 - `docs/styles.css`: Global styles and Tailwind configuration
+- `whitepaper/main.tex`: The Binius64 whitepaper / canonical protocol specification
+- `whitepaper/bibliography.bib`: Whitepaper references
+- `whitepaper/Makefile`: Builds `main.pdf` via `pdflatex` and `biber`
 
 ## Important Configuration
 
