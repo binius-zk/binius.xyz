@@ -167,37 +167,6 @@ const LandingPage = () => {
             </div>
           ))}
         </div>
-
-        <div className="lp-footer flex flex-col md:flex-row justify-center md:justify-between mt-8 md:px-8">
-          {" "}
-          <div className="text-sm text-gunmetal md:text-left text-center mb-2 md:mb-0">
-            Binius is developed by{" "}
-            <a
-              href="https://www.irreducible.com/"
-              className="underline"
-              target="_blank"
-            >
-              Irreducible.
-            </a>{" "}
-            <br className="lg:hidden" />
-            &copy; 2025 Irreducible, Inc. All rights reserved.
-          </div>
-          <div className="flex md:justify-end justify-center md:mb-0 mb-4">
-            <a href="https://x.com/IrreducibleHW" target="_blank">
-              <SVG
-                src="x-icon.svg"
-                className="mr-6"
-                style={{ width: "20px", height: "20px" }}
-              />
-            </a>
-            <a href="https://github.com/IrreducibleOSS" target="_blank">
-              <SVG
-                src="github-icon.svg"
-                style={{ width: "20px", height: "20px" }}
-              />
-            </a>
-          </div>
-        </div>
       </footer>
     </div>
   );

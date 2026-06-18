@@ -105,6 +105,12 @@ export default defineConfig({
       match: "/benchmarks",
     },
   ],
+  socials: [
+    {
+      icon: 'github',
+      link: 'https://github.com/binius-zk',
+    }
+  ],
   sidebar: {
     "/basics": [
       {
