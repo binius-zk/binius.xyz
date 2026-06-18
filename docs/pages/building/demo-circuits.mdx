@@ -1,0 +1,123 @@
+# Demo Circuits [Ready-to-run example circuits for profiling and experimentation]
+
+The [`binius64`](https://github.com/binius-zk/binius64) repository ships with a collection of **demo circuits**: standalone, real-world circuits that you can build, prove, and verify from the command line. They exist mainly to **profile and benchmark** the prover and verifier on representative workloads, but they also double as worked references for how non-trivial circuits are structured.
+
+These demos live in the [`binius-examples`](https://github.com/binius-zk/binius64/tree/main/crates/examples) crate, with one source file per circuit under [`crates/examples/examples/`](https://github.com/binius-zk/binius64/tree/main/crates/examples/examples). They are distinct from the [tutorial examples](/building/tutorials) in `crates/examples/examples/tutorials/`, which are written to teach concepts rather than to profile performance.
+
+## Running an example
+
+Each demo is a standalone Cargo example. From the root of the `binius64` checkout, run one by name:
+
+```bash
+RUSTFLAGS="-C target-cpu=native" cargo run --release --example sha256
+```
+
+With no subcommand, the example **builds the circuit, generates a witness, creates a proof, and verifies it** — exercising the full pipeline end-to-end. Building in `--release` mode with `target-cpu=native` is important: the prover is heavily optimized and runs orders of magnitude slower in a debug build.
+
+Every example accepts `--help`, which lists both the shared options and the circuit-specific parameters:
+
+```bash
+cargo run --release --example sha256 -- --help
+```
+
+:::info
+**Try It.** In the `binius64` directory, run a hash circuit with a custom input size and see the circuit statistics:
+```bash
+cargo run --release --example sha256 -- stat --max-len-bytes 4096
+```
+:::
+
+### Circuit-specific parameters
+
+Each circuit defines its own parameters (circuit structure) and instance values (the data being proven). For example, `sha256` takes a maximum message length, and `ethsign` takes the number of signatures to validate:
+
+```bash
+# Hash a specific message
+cargo run --release --example sha256 -- --message-string "hello world"
+
+# Validate 4 Ethereum signatures over messages up to 256 bytes
+cargo run --release --example ethsign -- -n 4 -m 256
+```
+
+Use `--help` on any example to discover its parameters.
+
+## Available examples
+
+### Hash functions
+
+| Example | Description |
+| --- | --- |
+| `sha256` | SHA-256 compression function |
+| `sha512` | SHA-512 compression function |
+| `keccak` | Keccak-256 hash function |
+| `blake2b` | BLAKE2b hash function |
+| `blake2s` | BLAKE2s hash function |
+| `blake3_compress` | BLAKE3 compression (uses `blake3_compress_2x` under the hood) |
+
+### Signatures and elliptic-curve cryptography
+
+| Example | Description |
+| --- | --- |
+| `ethsign` | Ethereum-style (secp256k1) signature verification |
+| `hashsign` | Hash-based multi-signature (XMSS) verification |
+| `ec_msm` | secp256k1 multi-scalar multiplication (Straus fixed-window) |
+
+### Application circuits
+
+| Example | Description |
+| --- | --- |
+| `bitcoin_header_chain` | Validates a chain of Bitcoin block headers |
+| `bitcoin_p2pkh` | Bitcoin P2PKH address validation — proves knowledge of the private key without revealing it |
+| `zklogin` | Proves knowledge of a valid OpenID Connect (JWT) login |
+
+## Command-line features
+
+Beyond the per-circuit parameters, every example shares a common CLI.
+
+### Zero-knowledge proving
+
+By default the examples produce a plain (non-hiding) proof of knowledge. Pass `--zk` to switch to the **zero-knowledge proving configuration**, which hides the witness:
+
+```bash
+cargo run --release --example zklogin -- --zk
+```
+
+### Signatures of knowledge
+
+The `--sign-message` flag (which requires `--zk`) turns a proof of knowledge into a **signature of knowledge** over an arbitrary message. Instead of merely proving you know a satisfying witness, the resulting proof is cryptographically bound to the message you supply, so it acts as a signature that can only be produced by someone holding the witness:
+
+```bash
+cargo run --release --example zklogin -- --zk --sign-message "transfer 10 to alice"
+```
+
+### Other shared flags
+
+- `-l, --log-inv-rate <N>` — log of the inverse rate of the proof system (default `1`). A lower `log-inv-rate` makes the prover faster but yields a larger proof; a higher value trades proving time for a smaller proof.
+- `-c, --compression <TYPE>` — Merkle-tree compression function (default `sha256`).
+- `-o, --output <PATH>` — write the serialized proof to a file.
+
+## Subcommands
+
+The default behavior (no subcommand) is equivalent to `prove`. The examples also expose several other subcommands, which take the same circuit parameters:
+
+- `prove` *(default)* — build the circuit, generate the witness, and create and verify a proof.
+- `stat` — print circuit statistics (gate and constraint counts) without proving. Handy for sizing a circuit quickly.
+- `composition` — dump the circuit composition as JSON.
+- `save` — write selected artifacts to disk (`--cs-path` for the constraint system, `--pub-witness-path` and `--non-pub-data-path` for the witness, `--key-collection-path` for a prebuilt key collection). Nothing is written unless a path is given.
+- `load-prove` — load a constraint system and witness saved by `save` and prove from them, optionally reusing a saved key collection to skip the key-building phase.
+- `verify` — verify a proof previously written with `-o`/`--output`.
+- `check-snapshot` / `bless-snapshot` — compare current circuit statistics against the stored snapshot, or update it.
+
+## Profiling
+
+Because these circuits exist largely for performance work, the crate integrates tracing-based profiling. Set `RUST_LOG` to see per-phase timing for the build, witness generation, proving, and verification steps:
+
+```bash
+RUST_LOG=info cargo run --release --example sha256
+```
+
+For a detailed flamegraph-style trace, build with the `perfetto` feature, which writes a trace file (into `perfetto_traces/`) that you can open in the [Perfetto UI](https://ui.perfetto.dev):
+
+```bash
+cargo run --release --features perfetto --example sha256
+```

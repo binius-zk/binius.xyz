@@ -197,6 +197,10 @@ export default defineConfig({
         link: "/building",
       },
       {
+        text: "Demo Circuits",
+        link: "/building/demo-circuits",
+      },
+      {
         text: "End-to-End Example",
         link: "/building/example",
         collapsed: false,
