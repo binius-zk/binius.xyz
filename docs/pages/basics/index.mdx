@@ -4,11 +4,19 @@ import { Callout } from "vocs/components";
 
 # Basics [Welcome to Binius!]
 
-_Binius_ is a state-of-the-art cryptographic proof system that makes it possible to quickly and cheaply verify complex computations. In the world of cryptography, Binius is known as a _succinct, noninteractive argument_, or a _SNARK_, the key primitive required for _verifiable computing_. Though Binius proofs today do not guarantee privacy, we are actively extending it with _zero knowledge_ (ZK), making it a _ZK-SNARK_. Because Binius uses binary fields as a foundational primitive, we also sometimes refer to it as a _binary proof system_[^1].
+_Binius_ is a state-of-the-art cryptographic proof system that makes it possible to quickly and cheaply verify computations over sensitive data, in a privacy-preserving fashion. In the world of cryptography, Binius is known as a _zero-knowledge_ (ZK) proof system. Because Binius uses binary fields as foundational primitives, we also sometimes refer to it as a _binary proof system_[^1].
 
-The latest version of the project is called _Binius64_. Binius64 optimizes for proving computations over 64-bit words, making it the _fastest_ proof system for proving standard hash functions like SHA2 and SHA3. Moreover, the Binius64 prover delivers top-notch performance on ARM64 and x86-64 processors, including modern mobile CPUs, making it a perfect choice for local ZK proving. The construction is itself hash-based, meaning Binius has a transparent setup, is post-quantum secure, and only relies on conservative cryptographic assumptions.
+Zero-knowledge proofs are remarkable, almost magical, technology. They can be used to prove properties of encrypted data, without the verifier seeing the decryption, or properties of digitally signed data, without the verifier seeing the original message. They are used today for secure [age verification in Google Wallet](https://developers.google.com/wallet/identity/verify#privacy-forward_zero-knowledge_proofs_zkp) and private blockchain payments on [Zcash](https://z.cash/).
 
-The open source [Rust codebase](https://github.com/IrreducibleOSS/binius64) contains
+Binius optimizes for proving computations over 64-bit words, making it the _fastest_ proof system for proving standard hash functions like SHA2 and SHA3. Moreover, the Binius prover delivers top-notch performance on ARM64 and x86-64 processors, including modern mobile CPUs, making it a perfect choice for local ZK proving. The construction is itself hash-based, meaning Binius has a transparent setup, is post-quantum secure, and only relies on conservative cryptographic assumptions.
+
+The system features a few more attractive cryptographic properties:
+
+- **Succinct proof size**: proof sizes are generally in the range of 250 to 500 KiB, regardless of the size of the computation
+- **Post-quantum security**: security does not depend on any cryptographic primitives which are known to be broken by quantum computers
+- **Publicly verifiable**: proofs can be copied, shared, and verified by anyone
+
+The open source [Rust codebase](https://github.com/binius-zk/binius64) contains
 
 - a high-performance CPU prover,
 - a simple and secure verifier,
@@ -16,7 +24,7 @@ The open source [Rust codebase](https://github.com/IrreducibleOSS/binius64) cont
 - a standard library of common circuit components,
 - lots of examples to help get started!
 
-Binius is the product of [Irreducible's](https://www.irreducible.com/) research and development efforts, and builds directly on Irreducible's cryptography research into SNARKs over towers of binary fields [[DP24](https://eprint.iacr.org/2024/504)] [[DP25](https://dl.acm.org/doi/10.1007/978-3-031-91134-7_4)].
+Binius was originally developed by [Irreducible's](https://www.irreducible.com/), with funding from [Bain Capital Crypto](https://baincapitalcrypto.com/) and [Paradigm](https://www.paradigm.xyz/). Open source contributors now continue research and development. The system builds directly on Irreducible's cryptography research into SNARKs over binary fields [[DP26](https://link.springer.com/chapter/10.1007/978-3-032-25336-1_1)] [[DP25](https://dl.acm.org/doi/10.1007/978-3-031-91134-7_4)].
 
 ## Documentation
 
@@ -27,7 +35,7 @@ This documentation site has four high-level sections.
 * Our [Blueprint](/blueprint) provides a detailed description of the Binius64 cryptographic protocol. Go here for a peek under the hood.
 * Our [Benchmarks](/benchmarks) contain up-to-date performance measurements for key benchmarks on different hardware platforms.
 
-The code is available on GitHub at [IrreducibleOSS\/binius64](https://github.com/IrreducibleOSS/binius64), and the Rust docs are hosted at [docs.binius.xyz](https://docs.binius.xyz).
+The code is available on GitHub at [binius-zk\/binius64](https://github.com/binius-zk/binius64), and the Rust docs are hosted at [docs.binius.xyz](https://docs.binius.xyz).
 
 ## Site Directory
 
@@ -64,3 +72,4 @@ Here we lay out separate sections for Binius-related Irreducible blog posts, tal
 </Callout>
 
 [^1]: h/t Weikeng Chen for coining the term "binary proof".
+

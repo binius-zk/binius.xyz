@@ -6,14 +6,16 @@ SNARKs are a powerful cryptographic tool that unlocks [_verifiable computing_](h
 
 > _In this setup, a single reliable PC can monitor the operation of a herd of supercomputers working with possibly extremely powerful but unreliable software and untested hardware._ –Babai, Fortnow, Levin, Szegedy, 1991
 
-Roughly, a _SNARK_ (a _succinct, noninteractive argument of knowledge_) is a proof of a computation. Let's say you're interested in learning the output of some costly, long-running computation—for example, a query on a large authenticated database. Instead of forcing you to run the computation yourself, I, the prover, just declare the output to you and additionally give to you a short _proof_. You can think of the proof like an barcode on an event ticket: when you scan it you get a "good" result (one beep) or a "bad" one (two beeps).
+Roughly, a _SNARK_ (a _succinct, noninteractive argument of knowledge_) is a proof of a computation. Let's say you're interested in learning the output of some costly, long-running computation—for example, a financial query on a large database of historical market data. Instead of forcing you to run the computation yourself, I, the prover, just tell you the output and additionally give to you a small _proof_ file, which your computer can check very quickly.
 
 If this system is designed well, it should satisfy two properties:
 
-- **Soundness.** Checking the proof should alert you if my claimed output is wrong. If I try to trick you with a false output, then it should become impossible for me to create a proof (barcode) which causes your checker to accept (beep once). Put differently, if your proof does accept, then you should be as good as convinced that I was honest.
+- **Soundness.** Checking the proof alerts you if my claimed output is wrong. If I try to trick you with a false output, then your computer rejects it immediately. Consequently, if your computer does accept the proof, then you should be completely convinced that the output is correct.
 - **Succinctness.** The proof should be much smaller than the full size of the input data would have been. In this way, I can save in how much data I have to transmit to you. It should also be much more efficient to check it than to run the full-blown program.
 
-Taking these two attributes together, we see that SNARKs are a great tradeoff for you, the verifier. The amount of work you have to do is much less: you just check my small barcode, instead of running the full computation. On the other hand, the assuredness you get at the end of the day is essentially as good as if you had run the computation yourself. Better yet, a SNARK proof can be checked by anyone: you can pass the proof to your friends, who will be equally convinced that the computed result is correct.
+## What is a ZK-SNARK?
+
+Some SNARKs provide an additional guarantee, called _zero-knowledge_. This means that while you know the computation output that I claim, and some of the inputs, the prover can compute with additional private information, and the proof file doesn't leak any new information about it. In our example of a financial query, the prover could claim that they know a trading strategy that would have outperformed the market. They could provide a proof of the returns their strategy obtained, without giving away any other secrets.
 
 ## What Makes Binius Different?
 
