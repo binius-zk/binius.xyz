@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains two things:
 
-- A documentation website for Binius, built with [Vocs](https://vocs.dev) (a React-based documentation framework). The site is hosted on AWS Amplify and serves as the main documentation hub at binius.xyz.
+- A documentation website for Binius, built with [Vocs](https://vocs.dev) (a React-based documentation framework). The site is deployed to GitHub Pages and serves as the main documentation hub at binius.xyz.
 - The **Binius64 whitepaper**, a LaTeX document in `whitepaper/` (entry point `whitepaper/main.tex`) that is the canonical protocol specification. Eventually the `docs/pages/blueprint/` website pages will be an HTML render of the whitepaper, but that integration does not exist yet.
 
 **The whitepaper is currently more up-to-date and authoritative than the `docs/pages/blueprint/` markdown pages.** When the two disagree on protocol details (notation, constraint system, reductions, ZK construction), treat the whitepaper as the source of truth.
@@ -78,6 +78,6 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 - Content width set to 70ch for optimal reading
 
 ## Deployment
-- Merges to `main` branch trigger automatic deployment via AWS Amplify
-- Build and deployment logs available in AWS Amplify console (us-west-2 region)
-- Domain managed through AWS Route53
+- Pushes to the `main` branch trigger automatic deployment to GitHub Pages via the `.github/workflows/deploy.yml` workflow
+- The workflow builds the site (`npm run build`, uploading `docs/dist`) and separately builds the whitepaper PDF as a dated downloadable artifact
+- The `build` job installs TeX Live because `npm run build` compiles the whitepaper (`make -C whitepaper`) and copies it to `docs/public/spec.pdf`, served at `/spec.pdf`
