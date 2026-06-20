@@ -1080,19 +1080,15 @@ The first and third are intrinsic to the LIOP and are treated below; the second 
 \subsection{Zero-Knowledge Sumcheck Machinery}
 \label{sec:zk-sumcheck-machinery}
 
-IronSpartan's constraint check (\S\ref{sec:constraint-check-reduction}) is a sumcheck, and the standard sumcheck protocol is not zero-knowledge: each round polynomial is a partial sum of the witness-dependent summand and leaks information about it. We recall the masking technique of Libra~\cite{Xie:2019aa}, which restores zero knowledge in odd characteristic but \emph{fails} in characteristic $2$ -- the case of interest, since $K$ has characteristic $2$ -- and then show that the \emph{multilinear-extension-check} form of IronSpartan's constraint check repairs the masking in every characteristic. The honest-verifier zero-knowledge statement is Theorem~\ref{thm:zk-mle-check}, proved in Appendix~\ref{app:zk-sumcheck}.
-
-\begin{quote}
-\textbf{Note (Boolean-basis convention in this subsection).} The analysis below is stated over the Boolean hypercube $\set{0, 1}^n$ and predates the monomial-basis (infinity-hypercube) representation adopted in \S\ref{sec:notation}. Its central mechanism---the powers of two $2^{n - i - 1}$ that arise from summing constants over $\set{0, 1}^n$ and collapse to $0$ in characteristic $2$---does not appear under summation over the infinity hypercube $\set{0, \infty}^n$, where summing a constant over a coordinate contributes only its value at $0$ plus a vanishing leading coefficient. The masking analysis below, and the repair via the multilinear-extension check, therefore require re-derivation in the monomial basis---under which the characteristic-$2$ failure may no longer occur. Pending that re-derivation, we retain the original Boolean-basis treatment here.
-\end{quote}
+IronSpartan's constraint check (\S\ref{sec:constraint-check-reduction}) is a sumcheck, and the standard sumcheck protocol is not zero-knowledge: each round polynomial is a partial sum of the witness-dependent summand and leaks information about it. We recall the masking technique of Libra~\cite{Xie:2019aa} and apply it to the multilinear-extension-check form of IronSpartan's constraint check. Over the infinity hypercube (\S\ref{sec:notation}) the masking is uniform, and the masked protocol is honest-verifier zero-knowledge; the statement is Theorem~\ref{thm:zk-mle-check}, proved in Appendix~\ref{app:zk-sumcheck}.
 
 Throughout, $f \in K[X_0, \ldots, X_{n - 1}]$ is an $n$-variate polynomial of individual degree at most $d$, and we treat the sumcheck claim $\sum_{x \in \BB_n} f(x) = s_f$. In round $i = 0, \ldots, n - 1$ the prover binds $X_{n - i - 1}$ and sends the univariate \emph{round polynomial}
 \[
   R_f^{(i)}(X) \coloneqq \sum_{v \in \BB_{n - i - 1}} f(v, X, r_{n - i}, \ldots, r_{n - 1}), \qquad \deg R_f^{(i)} \le d,
 \]
-where $r_{n - i}, \ldots, r_{n - 1}$ are the prior challenges; the verifier checks $R_f^{(i)}(0) + R_f^{(i)}(1) = s^{(i)}$ against the running claim (with $s^{(0)} = s_f$), samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R_f^{(i)}(r_{n - i - 1})$. Transmitting $d$ of the $d + 1$ coefficients of each $R_f^{(i)}$ suffices, the last being fixed by the consistency check; these coefficients, with $s_f$, are the messages a zero-knowledge variant must hide.
+where $r_{n - i}, \ldots, r_{n - 1}$ are the prior challenges; the verifier checks $R_f^{(i)}(0) + R_f^{(i)}(\infty) = s^{(i)}$ against the running claim (with $s^{(0)} = s_f$), samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R_f^{(i)}(r_{n - i - 1})$. Transmitting $d$ of the $d + 1$ coefficients of each $R_f^{(i)}$ suffices, the last being fixed by the consistency check; these coefficients, with $s_f$, are the messages a zero-knowledge variant must hide.
 
-\subsubsection{Libra and Its Failure in Characteristic 2}
+\subsubsection{Libra Masking}
 \label{sec:libra}
 
 Libra masks the sumcheck by additively blending in a random polynomial. The prover samples a \emph{masking polynomial}
@@ -1129,44 +1125,40 @@ so the claim $g^* = g(r)$ is a linear query on $\pi_g$ with operand $\textsf{lib
 \emph{Claim:} $\sum_{x \in \BB_n} f(x) = s_f$, for $f$ of individual degree $\le d$.
 \begin{enumerate}
 \item \emph{Masking.} The prover samples $g' \gets K^{\BB_{\nu + \delta}}$, commits $\pi_g \coloneqq g'$, derives $g$ as above, and sends $s_g = \sum_{v \in \BB_n} g(v)$. The verifier samples $\alpha \gets K$ and sets $s^{(0)} \coloneqq s_f + \alpha\, s_g$.
-\item \emph{Rounds.} For $i = 0, \ldots, n - 1$: the prover sends all but one coefficient of $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$; the verifier recovers the last from $R^{(i)}(0) + R^{(i)}(1) = s^{(i)}$, samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1})$.
+\item \emph{Rounds.} For $i = 0, \ldots, n - 1$: the prover sends all but one coefficient of $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$; the verifier recovers the last from $R^{(i)}(0) + R^{(i)}(\infty) = s^{(i)}$, samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1})$.
 \item \emph{Reduction.} The prover reveals $g^* = g(r)$. The verifier forms $f^* \coloneqq s^{(n)} - \alpha\, g^*$ and outputs the evaluation claim $f^* = f(r)$ on $f$ and the linear query $g^* = \langle g', \textsf{libra-eval}_r \rangle$ on $\pi_g$.
 \end{enumerate}
 \end{protocol}
 
-\paragraph{Failure in characteristic 2.}
-The masking messages -- $s_g$ and the transmitted coefficients of the $R_g^{(i)}$ -- form a fixed $K$-linear image $L_r$ of the $1 + nd$ coefficients of $g$. Expanding over the hypercube,
-\[
-  s_g = 2^n g_c + 2^{n - 1} \sum_{j = 0}^{n - 1} g_j(1), \qquad R_g^{(i)}(X) = 2^{n - i - 1}\, g_{n - i - 1}(X)\, X + (\text{terms in } g_c \text{ and the } g_j,\ j \neq n - i - 1),
-\]
-so the message block carrying the fresh univariate $g_{n - i - 1}$ is scaled by $2^{n - i - 1}$, and $L_r$ is block lower-triangular with these powers of two on its diagonal. In odd characteristic the diagonal entries are units, $L_r$ is invertible, and a uniform mask yields uniform messages (Appendix~\ref{app:zk-sumcheck}). In characteristic $2$, however, $2^k = 0$ for $k > 0$: the diagonal collapses for every round $i < n - 1$, the rank of $L_r$ falls to $1 + d$, and the non-constant coefficients of the first $n - 1$ round polynomials are left unmasked. Libra masking thus gives no zero knowledge over $K$.
+\paragraph{Uniformity of the masking.}
+The masking messages -- $s_g$ and the transmitted coefficients of the $R_g^{(i)}$ -- form a fixed $K$-linear image of the $1 + nd$ coefficients of $g$. Over the infinity hypercube this image is a bijection: in each round the fresh univariate $g_{n - i - 1}(X)\, X$ enters $R_g^{(i)}$ with unit coefficient, so its degree-$\ge 1$ coefficients carry exactly the coefficients of $g_{n - i - 1}$, and reading them across the rounds together with $s_g$ recovers $g$ in full. A uniformly random mask therefore yields uniformly random messages, and the masked transcript carries no information about $f$. The computation is given in Appendix~\ref{app:zk-sumcheck}.
 
 \subsubsection{Zero-Knowledge Multilinear-Extension Check}
 \label{sec:zk-mle-check}
 
-IronSpartan's constraint check is not a bare sumcheck but a \emph{multilinear-extension check} (\S\ref{sec:notation}): the summand carries an explicit equality-indicator factor, the claim being $\sum_{x \in \BB_n} \mle{\eq}_n(\tau, x)\, f(x) = s_f$ for a verifier challenge $\tau \in K^n$. Masking it with the same $g, g', \alpha$ -- now summing the $\mle{\eq}_n(\tau, \cdot)$-weighted combination -- repairs the masking in every characteristic, following Gruen~\cite{Gruen:2024aa}. The equality-indicator factor is pulled out of the round polynomials, so each $R^{(i)}$ stays of degree $\le d$ and the round relation becomes the \emph{$\mle{\eq}$-weighted} consistency
+IronSpartan's constraint check is not a bare sumcheck but a \emph{multilinear-extension check} (\S\ref{sec:notation}): the summand carries an explicit equality-indicator factor, the claim being $\sum_{x \in \BB_n} \mle{\eq}_n(\tau, x)\, f(x) = s_f$ for a verifier challenge $\tau \in K^n$. Masking it with the same $g, g', \alpha$ -- now summing the $\mle{\eq}_n(\tau, \cdot)$-weighted combination -- proceeds exactly as for the bare sumcheck, following Gruen~\cite{Gruen:2024aa}. The equality-indicator factor is pulled out of the round polynomials, so each $R^{(i)}$ stays of degree $\le d$ and the round relation becomes the \emph{$\mle{\eq}$-weighted} consistency
 \[
-  s^{(i)} = (1 - \tau_{n - i - 1})\, R^{(i)}(0) + \tau_{n - i - 1}\, R^{(i)}(1), \qquad s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1}),
+  s^{(i)} = R^{(i)}(0) + \tau_{n - i - 1}\, R^{(i)}(\infty), \qquad s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1}),
 \]
-in place of the unweighted $R^{(i)}(0) + R^{(i)}(1) = s^{(i)}$ of the bare sumcheck.
+in place of the unweighted $R^{(i)}(0) + R^{(i)}(\infty) = s^{(i)}$ of the bare sumcheck.
 
 \begin{protocol}[Zero-knowledge multilinear-extension check]
 \label{prot:zk-mle-check}
 \emph{Claim:} $\sum_{x \in \BB_n} \mle{\eq}_n(\tau, x)\, f(x) = s_f$, for a challenge $\tau \in K^n$ and $f$ of individual degree $\le d$.
 
-The protocol is Protocol~\ref{prot:zk-sumcheck-libra} with every hypercube sum weighted by $\mle{\eq}_n(\tau, \cdot)$: the prover sends $s_g = \sum_{v \in \BB_n} \mle{\eq}_n(\tau, v)\, g(v)$, and $R_f^{(i)}, R_g^{(i)}$ are the equality-indicator-factored round polynomials of the weighted summand, each of degree $\le d$, computed by the MLE-check prover of \cite{Gruen:2024aa}. In round $i$ the prover sends the degree-$\ge 1$ coefficients of $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$; the verifier recovers the constant coefficient from $s^{(i)} = (1 - \tau_{n - i - 1})\, R^{(i)}(0) + \tau_{n - i - 1}\, R^{(i)}(1)$, samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1})$. The reduction is unchanged: it outputs the evaluation claim $f^* = f(r)$ on $f$ and the linear query $g^* = \langle g', \textsf{libra-eval}_r \rangle$ on $\pi_g$.
+The protocol is Protocol~\ref{prot:zk-sumcheck-libra} with every hypercube sum weighted by $\mle{\eq}_n(\tau, \cdot)$: the prover sends $s_g = \sum_{v \in \BB_n} \mle{\eq}_n(\tau, v)\, g(v)$, and $R_f^{(i)}, R_g^{(i)}$ are the equality-indicator-factored round polynomials of the weighted summand, each of degree $\le d$, computed by the MLE-check prover of \cite{Gruen:2024aa}. In round $i$ the prover sends the degree-$\ge 1$ coefficients of $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$; the verifier recovers the constant coefficient from $s^{(i)} = R^{(i)}(0) + \tau_{n - i - 1}\, R^{(i)}(\infty)$, samples $r_{n - i - 1} \gets K$, and sets $s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1})$. The reduction is unchanged: it outputs the evaluation claim $f^* = f(r)$ on $f$ and the linear query $g^* = \langle g', \textsf{libra-eval}_r \rangle$ on $\pi_g$.
 \end{protocol}
 
-\paragraph{Why it works.}
-With the equality-indicator factor pulled out, the as-yet-unbound low variables are summed against $\mle{\eq}_{n - i - 1}(\tau_{< n - i - 1}, \cdot)$, contributing the factor $\sum_{x_{< n - i - 1}} \mle{\eq}_{n - i - 1}(\tau_{< n - i - 1}, x_{< n - i - 1}) = 1$ -- in place of the $\sum_{x_{< n - i - 1}} 1 = 2^{n - i - 1}$ of the bare sumcheck. The masking contributions are therefore
+\paragraph{Why it masks.}
+With the equality-indicator factor pulled out, the masking contributions over the infinity hypercube are
 \[
-  s_g = g_c + \sum_{j = 0}^{n - 1} \tau_j\, g_j(1), \qquad R_g^{(i)}(X) = g_c + \sum_{j > n - i - 1} g_j(r_j)\, r_j + \sum_{j < n - i - 1} \tau_j\, g_j(1) + g_{n - i - 1}(X)\, X.
+  s_g = g_c + \sum_{j = 0}^{n - 1} \tau_j\, g_{j, d - 1}, \qquad R_g^{(i)}(X) = g_c + \sum_{j < n - i - 1} \tau_j\, g_{j, d - 1} + g_{n - i - 1}(X)\, X + \sum_{j > n - i - 1} g_j(r_j)\, r_j,
 \]
-The fresh univariate appears as $g_{n - i - 1}(X)\, X$ with \emph{unit} coefficient, rather than scaled by the vanishing power of two $2^{n - i - 1}$. Its degree-$\ge 1$ coefficients are exactly those of $g_{n - i - 1}$, so the round message hides the corresponding coefficients of $f$ in every characteristic; the masking is in fact perfect once the blending challenge $\alpha$ is nonzero (Appendix~\ref{app:zk-sumcheck}).
+derived in Appendix~\ref{app:zk-sumcheck}. The fresh univariate $g_{n - i - 1}(X)\, X$ appears with \emph{unit} coefficient, so its degree-$\ge 1$ coefficients are exactly those of $g_{n - i - 1}$ and the round message hides the corresponding coefficients of $f$; the masking is perfect once the blending challenge $\alpha$ is nonzero (Appendix~\ref{app:zk-sumcheck}).
 
 \begin{theorem}
 \label{thm:zk-mle-check}
-The zero-knowledge multilinear-extension check (Protocol~\ref{prot:zk-mle-check}) is honest-verifier zero-knowledge: there is an efficient simulator whose transcript, given the public claim $(\tau, s_f)$ and the reduced value $f^*$, is statistically $O(1)/|K|$-close to an honest execution. The same masking applied to the bare sumcheck (Protocol~\ref{prot:zk-sumcheck-libra}) is honest-verifier zero-knowledge only when $\operatorname{char}(K) \neq 2$.
+The zero-knowledge multilinear-extension check (Protocol~\ref{prot:zk-mle-check}) is honest-verifier zero-knowledge: there is an efficient simulator whose transcript, given the public claim $(\tau, s_f)$ and the reduced value $f^*$, is statistically $O(1)/|K|$-close to an honest execution. The same holds for the bare-sumcheck masking of Protocol~\ref{prot:zk-sumcheck-libra}.
 \end{theorem}
 
 The proof is given in Appendix~\ref{app:zk-sumcheck}. This masked multilinear-extension check is what IronSpartan uses for its constraint check (\S\ref{sec:constraint-check-reduction}).
@@ -1386,16 +1378,74 @@ Each $5$-bit auxiliary function is succinct by the same recursion as in \S\ref{s
 
 We prove Theorem~\ref{thm:zk-mle-check}. Both the success of the masked multilinear-extension check (\S\ref{sec:zk-mle-check}) and the failure of Libra masking in characteristic $2$ (\S\ref{sec:libra}) follow from the distribution of the prover's masking messages.
 
+\paragraph{The masking polynomial.}
+Recall (\S\ref{sec:libra}) that the prover's mask is
+\[
+  g(X_0, \ldots, X_{n - 1}) = g_c + \sum_{j = 0}^{n - 1} g_j(X_j)\, X_j, \qquad g_j(X) = \sum_{k = 0}^{d - 1} g_{j, k} X^k,
+\]
+with constant $g_c \in K$ and univariates $g_j$ of degree $\le d - 1$, so that $g$ has individual degree $\le d$ and $1 + nd$ free coefficients $c_g = \bigl( g_c, (g_{j, k})_{j < n,\, k < d} \bigr)$. Writing the coordinate-$j$ term as $g_j(X_j)\, X_j = \sum_{k = 1}^{d} g_{j, k - 1} X_j^{k}$, it ranges over the powers $X_j^1, \ldots, X_j^d$.
+
+\paragraph{The Boolean hypercube, for comparison.}
+We first record the masking messages when the sum runs over the Boolean hypercube $\set{0, 1}^n$, the setting of the original Libra masking (\S\ref{sec:libra}). Summing $g$ over $\set{0, 1}^n$, a constant contributes its value times the number of vertices and each $g_j(X_j)\, X_j$ depends on a single coordinate, so
+
+\begin{align*}
+  s_g &= \sum_{v \in \BB_n} g(v) \\
+  &= \left( \sum_{v \in \BB_n} g_c \right) + \sum_{j=0}^{n-1} \left( \sum_{v \in \BB_{n-1}} g_j(1) \right) \\
+  &= 2^n g_c + 2^{n - 1} \sum_{j = 0}^{n - 1} g_j(1).
+\end{align*}
+
+In round $i$ the current variable is $X_{m}$ with $m \coloneqq n - i - 1$, the high variables are fixed to challenges $r_{m + 1}, \ldots, r_{n - 1}$, and the $m$ low variables are summed over $\set{0, 1}^{m}$, giving
+
+\begin{align*}
+  R_g^{(i)}(X) &= \sum_{v \in \BB_m} g(v, X, r_{m + 1}, \ldots, r_{n - 1}) \\
+  &= 2^{m} g_c + 2^{m - 1} \sum_{j = 0}^{m-1} g_j(1) + 2^m\, g_{m}(X)\, X + 2^m \sum_{j = m + 1}^{n-1} g_j(r_j)\, r_j,
+\end{align*}
+
+where the last sum is empty when $m = 0$. The fresh univariate $g_{m}(X)\, X = g_{n - i - 1}(X)\, X$ carries the factor $2^{m} = 2^{n - i - 1}$, the number of unbound low coordinates, so the degree-$\ge 1$ coefficients of $R_g^{(i)}$ that enter the transmitted $R^{(i)}$ are $2^{n - i - 1} g_{n - i - 1, 0}, \ldots, 2^{n - i - 1} g_{n - i - 1, d - 1}$.
+
+In characteristic $2$ these powers of two vanish: $2^{n - i - 1} = 0$ for every round $i < n - 1$, so the fresh-univariate coefficients of the first $n - 1$ round polynomials are identically $0$ and carry no mask, while $s_g$ collapses to $0$ for $n \ge 2$. Only the final round $i = n - 1$ (where $m = 0$ and $2^{0} = 1$) keeps its coefficients. The map $L_r$ from $c_g$ to the $1 + nd$ messages thus falls in rank to $1 + d$, and Libra masking leaves the non-constant round coefficients exposed.
+
+\paragraph{The infinity hypercube.}
+We now recompute the masking messages with the sum running over the infinity hypercube $\set{0, \infty}^n$ (\S\ref{sec:notation}), the setting of the monomial-basis sumcheck. Evaluation on $\set{0, \infty}^n$ extracts monomial coefficients rather than point values, so we work with the per-coordinate homogenization of $g$. Write each coordinate projectively as a pair $(X_i, Z_i)$ with the affine chart at $Z_i = 1$, and the two hypercube points as $0 = (0 : 1)$ and $\infty = (1 : 0)$; homogenizing $g$ to degree $d$ in each pair sends the monomial $X_j^{k}$ to $X_j^{k} Z_j^{d - k}$, giving
+\begin{align*}
+  g\bigl( (X_0, Z_0), \ldots, (X_{n - 1}, Z_{n - 1}) \bigr) &= g_c \prod_{i = 0}^{n - 1} Z_i^{d} + \sum_{j = 0}^{n - 1} \Bigl( \prod_{i \neq j} Z_i^{d} \Bigr) X_j \sum_{k = 0}^{d-1} g_{j, k}\, X_j^k Z_j^{d - 1 - k}.
+\end{align*}
+
+Summing over $\set{0, \infty}^n$ evaluates each coordinate at $0 = (0 : 1)$ or $\infty = (1 : 0)$. A homogeneous factor $X_i^{a} Z_i^{d - a}$ contributes $1$ at $0$ only when $a = 0$, contributes $1$ at $\infty$ only when $a = d$, and vanishes otherwise; we index each vertex by its set of infinite coordinates $S \coloneqq \set{i : v_i = \infty}$. The constant term $g_c \prod_i Z_i^{d}$, carrying $Z_i^{d}$ in every coordinate, survives only at the all-zero vertex $S = \emptyset$, where it contributes $g_c$. In the summand for $j$, the prefactor $\prod_{i \neq j} Z_i^{d}$ forces $v_i = 0$ for all $i \neq j$, so $S \subseteq \set{j}$, while the leading $X_j$ of the coordinate-$j$ factor makes it vanish at $v_j = 0$; the summand is therefore nonzero only at the vertex $S = \set{j}$, where the coordinate-$j$ factor reduces to its top monomial $g_{j, d - 1} X_j^{d}$ and evaluates to $g_{j, d - 1}$. Every other vertex contributes $0$, so
+\[
+  s_g = \sum_{v \in \set{0, \infty}^n} g(v) = g_c + \sum_{j = 0}^{n - 1} g_{j, d - 1}.
+\]
+Unlike the Boolean sum $2^n g_c + 2^{n - 1} \sum_j g_j(1)$, no powers of two appear.
+
+The round polynomial is computed the same way. In round $i$, with $m \coloneqq n - i - 1$, the current variable $X_m = X$ stays affine, the high variables are fixed to $r_{m + 1}, \ldots, r_{n - 1}$, and the $m$ low variables are summed over $\set{0, \infty}^m$:
+\begin{align*}
+  R_g^{(i)}(X) &= \sum_{v \in \set{0, \infty}^m} g(v, X, r_{m + 1}, \ldots, r_{n - 1}) \\
+  &= g_c + \sum_{j = 0}^{m - 1} g_{j, d - 1} + g_{m}(X)\, X + \sum_{j = m + 1}^{n - 1} g_j(r_j)\, r_j.
+\end{align*}
+Each Boolean count $2^{\,\cdots}$ is again replaced by $1$: a quantity independent of the low coordinates passes through the sum unchanged, since $\sum_{v_i \in \set{0, \infty}} 1 = 1$ for each low coordinate, so the constant $g_c$, the fresh univariate $g_m(X)\, X$, and the high-variable terms $g_j(r_j)\, r_j$ are carried with unit coefficient; and each low term $g_j(v_j)\, v_j$ with $j < m$ contributes only its top coefficient $g_{j, d - 1}$, exactly as in $s_g$. The fresh univariate $g_{m}(X)\, X = g_{n - i - 1}(X)\, X$ thus appears with \emph{unit} coefficient in every round, so the degree-$\ge 1$ coefficients of $R_g^{(i)}$ that enter the transmitted $R^{(i)}$ are precisely $g_{n - i - 1, 0}, \ldots, g_{n - i - 1, d - 1}$ -- with no power of two to vanish in characteristic $2$.
+
+\paragraph{The multilinear-extension check.}
+IronSpartan's constraint check is the equality-weighted variant (\S\ref{sec:zk-mle-check}): the summand is $\mle{\eq}_n(\tau, x)\, g(x)$ and the low variables are summed against $\mle{\eq}_m(\tau_{< m}, \cdot)$. The new indicator $\mle{\eq}(\tau_i, x_i) = 1 + \tau_i x_i$ raises the summand's individual degree to $d + 1$, so $\infty$ now extracts the coefficient of $x_i^{d + 1}$; the weight $1 + \tau_i x_i$ contributes $1$ at $0$ and its leading coefficient $\tau_i$ at $\infty$. Repeating the vertex analysis, the constant $g_c$ again survives only at the all-zero vertex, while the coordinate-$j$ term survives only at $x_j = \infty$, where the weight's leading $\tau_j$ multiplies $g$'s top coefficient $g_{j, d - 1}$. Hence
+\[
+  s_g = \sum_{v \in \set{0, \infty}^n} \mle{\eq}_n(\tau, v)\, g(v) = g_c + \sum_{j = 0}^{n - 1} \tau_j\, g_{j, d - 1},
+\]
+and, summing the low variables against $\mle{\eq}_m(\tau_{< m}, \cdot)$ in round $i$ (with $m \coloneqq n - i - 1$),
+\begin{align*}
+  R_g^{(i)}(X) &= \sum_{v \in \set{0, \infty}^m} \mle{\eq}_m(\tau_{< m}, v)\, g(v, X, r_{m + 1}, \ldots, r_{n - 1}) \\
+  &= g_c + \sum_{j = 0}^{m - 1} \tau_j\, g_{j, d - 1} + g_{m}(X)\, X + \sum_{j = m + 1}^{n - 1} g_j(r_j)\, r_j.
+\end{align*}
+These are the Boolean closed forms of \S\ref{sec:zk-mle-check}, with each low-variable contribution $\tau_j\, g_j(1)$ replaced by $\tau_j\, g_{j, d - 1}$. As in the bare infinity-hypercube sumcheck, the fresh univariate $g_{m}(X)\, X$ carries \emph{unit} coefficient, so its degree-$\ge 1$ coefficients $g_{n - i - 1, 0}, \ldots, g_{n - i - 1, d - 1}$ are exposed in every characteristic -- with no power of two and no dependence on $\tau$ -- and the masking map is a bijection regardless of characteristic.
+
 \paragraph{The masking messages.}
 Fix the challenges $\tau, r$. The masking messages -- $s_g$ together with, for each round $i$, the degree-$\ge 1$ coefficients of $R_g^{(i)}$ that enter the sent $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$ -- number $1 + nd$ and form a fixed $K$-linear image of the coefficient vector $c_g = (g_c, (g_{j, k})_{j < n,\, k < d})$ of the mask.
 
 \begin{lemma}
 \label{lem:masking-uniform}
-For the multilinear-extension check this map is a bijection of $K^{1 + nd}$, in every characteristic; for the bare sumcheck it is a bijection if and only if $\operatorname{char}(K) \neq 2$. Whenever it is a bijection and $g'$ is uniform, the masking messages are uniform on $K^{1 + nd}$.
+Over the infinity hypercube the map is a bijection of $K^{1 + nd}$ in every characteristic, for both the bare sumcheck and the multilinear-extension check. Over the Boolean hypercube it is a bijection in every characteristic for the multilinear-extension check, but for the bare sumcheck only when $\operatorname{char}(K) \neq 2$. Whenever it is a bijection and $g'$ is uniform, the masking messages are uniform on $K^{1 + nd}$.
 \end{lemma}
 
 \begin{proof}
-By the closed form of \S\ref{sec:zk-mle-check}, $R_g^{(i)}(X) = \bigl( g_c + \sum_{j > n - i - 1} g_j(r_j) r_j + \sum_{j < n - i - 1} \tau_j g_j(1) \bigr) + g_{n - i - 1}(X)\, X$, so the degree-$\ge 1$ coefficients of $R_g^{(i)}$ are exactly the coefficients $g_{n - i - 1, 0}, \ldots, g_{n - i - 1, d - 1}$ of the fresh univariate $g_{n - i - 1}$. Reading the round messages in order $i = 0, \ldots, n - 1$ recovers $g_{n - 1}, g_{n - 2}, \ldots, g_0$ in turn, after which $s_g = g_c + \sum_j \tau_j g_j(1)$ recovers $g_c$; the map is thus a bijection, with no condition on the challenges. For the bare sumcheck (\S\ref{sec:libra}) the corresponding coefficients are $2^{n - i - 1} g_{n - i - 1, k}$, so the round-$i$ block is this same bijection scaled by $2^{n - i - 1}$ -- invertible exactly when $2^{n - i - 1} \neq 0$ for every $i$, i.e.\ when $\operatorname{char}(K) \neq 2$. In characteristic $2$ the blocks with $i < n - 1$ vanish, the rank falls to $1 + d$, and the non-constant coefficients of the first $n - 1$ round polynomials lie outside the image. A bijection carries the uniform distribution on $g$ to the uniform distribution on the messages.
+In every case the degree-$\ge 1$ coefficients of $R_g^{(i)}$ come entirely from the fresh univariate $g_{n - i - 1}(X)\, X$, so reading the round messages in order $i = 0, \ldots, n - 1$ recovers $g_{n - 1}, g_{n - 2}, \ldots, g_0$ from those coefficients, after which $s_g$ recovers $g_c$; the map is therefore a bijection exactly when the fresh univariate's coefficient is a unit in each round. Over the infinity hypercube this coefficient is $1$ for both the bare sumcheck and the multilinear-extension check (the closed forms derived above), so the map is a bijection in every characteristic. Over the Boolean hypercube the multilinear-extension check likewise has unit coefficient, while the bare sumcheck (\S\ref{sec:libra}) scales the round-$i$ block by $2^{n - i - 1}$, a unit exactly when $\operatorname{char}(K) \neq 2$; in characteristic $2$ the blocks with $i < n - 1$ vanish, the rank falls to $1 + d$, and the non-constant coefficients of the first $n - 1$ round polynomials lie outside the image. A bijection carries the uniform distribution on $g$ to the uniform distribution on the messages.
 \end{proof}
 
 \paragraph{Simulator.}
@@ -1407,7 +1457,7 @@ The simulator $\mathcal{S}$ receives the public claim $(\tau, s_f)$ and the redu
 \item For $i = 0, \ldots, n - 1$: sample the transmitted coefficients of $R^{(i)}$ uniformly; let the verifier recover the remaining coefficient and sample $r_{n - i - 1}$; set $s^{(i + 1)} \coloneqq R^{(i)}(r_{n - i - 1})$.
 \item Set $g^* \coloneqq (s^{(n)} - f^*)/\alpha$ and program the response to the single query $\langle g', \textsf{libra-eval}_r \rangle$ to equal $g^*$.
 \end{enumerate}
-In an honest run the messages are $s^{(0)} = s_f + \alpha\, s_g$ and $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$. Conditioned on the challenges, $f$ fixes $s_f$ and the $R_f^{(i)}$, while the mask supplies $s_g$ and the $R_g^{(i)}$; by Lemma~\ref{lem:masking-uniform} these are jointly uniform over the uniform choice of $g'$, so for $\alpha \neq 0$ the sent $(s^{(0)}, (R^{(i)})_i)$ are uniform, matching $\mathcal{S}$ exactly. The lone opening of $\pi_g$ lands at the point encoded by $\textsf{libra-eval}_r$, where $\mathcal{S}$ programs the response to satisfy $f^* = s^{(n)} - \alpha\, g^*$; as $g'$ is committed and opened nowhere else, this is undetectable. The two transcripts coincide except on the event $\alpha = 0$, of probability $1/|K|$, giving statistical distance $O(1)/|K|$. The same argument fails for the bare sumcheck in characteristic $2$, where by Lemma~\ref{lem:masking-uniform} the masking messages are confined to a proper subspace and so cannot match the uniform simulation.
+In an honest run the messages are $s^{(0)} = s_f + \alpha\, s_g$ and $R^{(i)} = R_f^{(i)} + \alpha\, R_g^{(i)}$. Conditioned on the challenges, $f$ fixes $s_f$ and the $R_f^{(i)}$, while the mask supplies $s_g$ and the $R_g^{(i)}$; by Lemma~\ref{lem:masking-uniform} these are jointly uniform over the uniform choice of $g'$, so for $\alpha \neq 0$ the sent $(s^{(0)}, (R^{(i)})_i)$ are uniform, matching $\mathcal{S}$ exactly. The lone opening of $\pi_g$ lands at the point encoded by $\textsf{libra-eval}_r$, where $\mathcal{S}$ programs the response to satisfy $f^* = s^{(n)} - \alpha\, g^*$; as $g'$ is committed and opened nowhere else, this is undetectable. The two transcripts coincide except on the event $\alpha = 0$, of probability $1/|K|$, giving statistical distance $O(1)/|K|$. The same argument fails for the bare sumcheck over the Boolean hypercube in characteristic $2$, where by Lemma~\ref{lem:masking-uniform} the masking messages are confined to a proper subspace and so cannot match the uniform simulation; over the infinity hypercube no such failure occurs.
 \end{proof}
 
 \printbibliography
