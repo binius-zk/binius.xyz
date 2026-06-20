@@ -199,18 +199,14 @@ Soundness of the reduction follows from Schwartz--Zippel applied to the batching
 
 \paragraph{Variable padding.}
 \label{sec:variable-padding}
-The batched sumcheck above assumes the $F_i$ share a common number of variables; when they do not, we pad each up to the common count. To raise an $n$-variate claim $\sum_{x \in \BB_n} F(x) = s$ to $n + \nu$ variables, the parties instead sumcheck the padded summand $F(X_0, \ldots, X_{n - 1}) \cdot \mle{\eq}_\nu\bigl( 0^\nu, (X_n, \ldots, X_{n + \nu - 1}) \bigr)$ over $\BB_{n + \nu}$, with the same target $s$. The extra factor $\mle{\eq}_\nu(0^\nu, \cdot) = \prod_{j = 0}^{\nu - 1} (1 + 0 \cdot X_{n + j})$ is identically $1$, so the padded summand is just $F$; since $F$ does not depend on the padding variables, summing it over $\set{0, \infty}^\nu$ leaves the value unchanged---each padding coordinate contributes its value at $0$ plus a leading coefficient that vanishes---and the padded claim holds iff the original one does.
+The batched sumcheck above assumes the $F_i$ share a common number of variables; when they do not, we pad each up to the common count. To raise an $n$-variate claim $\sum_{x \in \BB_n} F(x) = s$ to $n + \nu$ variables, the parties simply sumcheck $F(X_0, \ldots, X_{n - 1})$---regarded as a polynomial in $X_0, \ldots, X_{n + \nu - 1}$ that ignores the $\nu$ added variables---over $\BB_{n + \nu}$, with the same target $s$. No padding factor is needed: over the infinity hypercube, summing a polynomial over a variable on which it does not depend leaves its value unchanged, since the value at $0$ is the polynomial itself and the leading coefficient at $\infty$ vanishes. Hence $\sum_{x \in \BB_{n + \nu}} F(x) = \sum_{x \in \BB_n} F(x) = s$, and the padded claim holds iff the original one does.
 
-Since we bind variables from the highest index down, the $\nu$ padding variables $X_n, \ldots, X_{n + \nu - 1}$ are bound first---in rounds $i = 0, \ldots, \nu - 1$---and the original variables only afterwards. The padding rounds are essentially free, and the remaining rounds reproduce the unpadded sumcheck up to a constant:
+Since we bind variables from the highest index down, the $\nu$ padding variables $X_n, \ldots, X_{n + \nu - 1}$ are bound first---in rounds $i = 0, \ldots, \nu - 1$---and the original variables only afterwards. The padding rounds are essentially free, and the remaining rounds reproduce the unpadded sumcheck exactly:
 \begin{itemize}
-\item In a padding round $i < \nu$ (binding $X_{n + \nu - 1 - i}$), every original variable is still unbound, so summing over them returns the original target $s$, and the round polynomial is
+\item In a padding round $i < \nu$ (binding $X_{n + \nu - 1 - i}$), every original variable is still unbound, so summing over them returns the original target $s$; since $F$ is constant in the current padding variable, the round polynomial is the constant $R^{(i)}(X) = s$. The prover touches $F$ not at all.
+\item In a round $i \ge \nu$, all padding variables are bound, and as $F$ is independent of them they contribute no factor, so the round polynomial coincides with the unpadded one,
 \[
-  R^{(i)}(X) = s \cdot \mle{\eq}(0, X) \cdot \mle{\eq}_i\bigl( 0^i, (r_{n + \nu - i}, \ldots, r_{n + \nu - 1}) \bigr) = s,
-\]
-since the bivariate $\mle{\eq}(0, X) = 1$ for the current variable and the accumulated constant $\mle{\eq}_i(0^i, \cdot) = 1$ are both identically $1$. The prover touches $F$ not at all.
-\item In a round $i \ge \nu$, all padding variables are bound and contribute the constant $c \coloneqq \mle{\eq}_\nu\bigl( 0^\nu, (r_n, \ldots, r_{n + \nu - 1}) \bigr) = 1$, so the round polynomial coincides with the unpadded one,
-\[
-  R^{(i)}(X) = c \cdot R_F^{(i - \nu)}(X) = R_F^{(i - \nu)}(X),
+  R^{(i)}(X) = R_F^{(i - \nu)}(X),
 \]
 where $R_F^{(i - \nu)}$ is the round polynomial of the original $n$-variate sumcheck on $F$ in its round $i - \nu$.
 \end{itemize}
