@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "vocs dev",
     "build:spec": "make -C whitepaper && cp whitepaper/main.pdf docs/public/spec.pdf",
-    "build": "npm run build:spec && vocs build",
+    "build:site": "vocs build",
+    "build": "npm run build:spec && npm run build:site",
     "preview": "vocs preview",
     "test": "echo \"No tests yet\" && exit 0"
   },

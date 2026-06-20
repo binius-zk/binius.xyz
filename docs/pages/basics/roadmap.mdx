@@ -6,5 +6,6 @@ We are planning to add several important features:
 
 - **Recursion.** Proof composition and recursion are important techniques for proving large statements, while bounding memory usage.
 - **Succinctness.** While Binius64's proof _sizes_ are succinct, its verification complexity is not yet. We are working on achieving succinct verifier complexity and reducing verification times.
+- **Boost FRI security.** Binius64 currently achieves ~100 bits of security, and 120 bits of security in all reductions except for FRI. The goal is to use a 256-bit extension field for proximity testing to get overall security bits up to 120.
 - **Formal verification of circuits.** We would like to develop a framework for writing circuits in Lean4 and formally proving their security properties.
 

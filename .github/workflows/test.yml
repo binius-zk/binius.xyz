@@ -6,7 +6,38 @@ on:
     branches: ["main", "stack/main/**"]
 
 jobs:
+  whitepaper:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Cache whitepaper PDF
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: whitepaper/main.pdf
+        # Only the contents of whitepaper/ affect the PDF, so reuse a cached
+        # build whenever nothing there has changed.
+        key: whitepaper-pdf-${{ hashFiles('whitepaper/**') }}
+    - name: Install TeX Live
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+          texlive-fonts-recommended texlive-fonts-extra \
+          texlive-bibtex-extra biber
+    - name: Build whitepaper PDF
+      if: steps.cache.outputs.cache-hit != 'true'
+      working-directory: whitepaper
+      run: make
+    - name: Upload whitepaper PDF for site build
+      uses: actions/upload-artifact@v4
+      with:
+        name: whitepaper-pdf
+        path: whitepaper/main.pdf
+
   build:
+    needs: whitepaper
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -15,12 +46,12 @@ jobs:
       with:
         node-version: 24
         cache: 'npm'
-    - name: Install TeX Live
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          texlive-latex-base texlive-latex-recommended texlive-latex-extra \
-          texlive-fonts-recommended texlive-fonts-extra \
-          texlive-bibtex-extra biber
+    - name: Download whitepaper PDF
+      uses: actions/download-artifact@v4
+      with:
+        name: whitepaper-pdf
+        path: whitepaper
     - run: npm install
-    - run: npm run build
+    - name: Copy whitepaper into site assets
+      run: cp whitepaper/main.pdf docs/public/spec.pdf
+    - run: npm run build:site
