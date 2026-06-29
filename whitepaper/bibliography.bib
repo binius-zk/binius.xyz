@@ -214,6 +214,17 @@
 	volume = {4},
 	year = {2022}}
 
+@inproceedings{Thaler:2013aa,
+	address = {Berlin, Heidelberg},
+	author = {Thaler, Justin},
+	booktitle = {Advances in Cryptology -- CRYPTO 2013},
+	editor = {Canetti, Ran and Garay, Juan A.},
+	isbn = {978-3-642-40084-1},
+	pages = {71--89},
+	publisher = {Springer Berlin Heidelberg},
+	title = {Time-Optimal Interactive Proofs for Circuit Evaluation},
+	year = {2013}}
+
 @inproceedings{Ben-Sasson:2016aa,
 	abstract = {We initiate the study of a proof system model that naturally combines interactive proofs IPs and probabilistically-checkable proofs PCPs, and generalizes interactive PCPs which consist of a PCP followed by an IP. We define an interactive oracle proof IOP to be an interactive proof in which the verifier is not required to read the prover's messages in their entirety; rather, the verifier has oracle access to the prover's messages, and may probabilistically query them. IOPs retain the expressiveness of PCPs, capturing NEXP rather than only PSPACE, and also the flexibility of IPs, allowing multiple rounds of communication with the prover. IOPs have already found several applications, including unconditional zero knowledge [BCGV16], constant-rate constant-query probabilistic checking [BCG+16], and doubly-efficient constant-round IPs for polynomial-time bounded-space computations [RRR16].We offer two main technical contributions. First, we give a compiler that maps any public-coin IOP into a non-interactive proof in the random oracle model. We prove that the soundness of the resulting proof is tightly characterized by the soundness of the IOP against state restoration attacks, a class of rewinding attacks on the IOP verifier that is reminiscent of, but incomparable to, resetting attacks.Second, we study the notion of state-restoration soundness of an IOP: we prove tight upper and lower bounds in terms of the IOP's standard soundness and round complexity; and describe a simple adversarial strategy that is optimal, in expectation, across all state restoration attacks.Our compiler can be viewed as a generalization of the Fiat---Shamir paradigm for public-coin IPs CRYPTO\"{\i} \'{z}'86, and of the "CS proof" constructions of Micali FOCS\"{\i} \'{z}'94 and Valiant TCC\"{\i} \'{z}'08 for PCPs. Our analysis of the compiler gives, in particular, a unified understanding of these constructions, and also motivates the study of state restoration attacks, not only for IOPs, but also for IPs and PCPs.When applied to known IOP constructions, our compiler implies, e.g., blackbox unconditional ZK proofs in the random oracle model with quasilinear prover and polylogarithmic verifier, improving on a result of [IMSX15].},
 	address = {Berlin, Heidelberg},
