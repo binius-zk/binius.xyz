@@ -610,6 +610,8 @@ and the verifier reconstructs each leaf evaluation locally as $\sel(\alpha_{z, i
 \]
 The $2^k$ per-bit claims $\alpha_{z, i}$, all at the common point $r'_x$, are the subprotocol output; a prover that sends inconsistent values is caught downstream, where they are reduced against the committed witness with fresh randomness. The subprotocol is therefore the depth-$k$ GKR tree and one interpolation check, with total soundness error $O\bigl(k(k + \ell_\text{mul})\bigr) / |K|$.
 
+The subprotocol never uses that the base is the generator: for any public base $h \in K^*$ it applies verbatim to the vector with entries $h^{\intval{z}[x]}$, reducing an evaluation claim on it to the per-bit claims on $\mle{z}$, with the leaf constants $g^{2^i}$ replaced by $h^{2^i}$. The combined protocol invokes this with $h = g^{2^{64}}$ for the high-half factor (\S\ref{sec:intmul-combined}).
+
 \subsubsection{Variable-Base Exponentiation}
 \label{sec:var-base-exp}
 
@@ -630,24 +632,24 @@ A single $\gamma$ suffices because the weights $\mle{\eq}_k(\gamma, i)$ are the 
 
 The IntMul reduction verifies the multiplicative-group identity \eqref{eq:exp-identity} and the wraparound parity \eqref{eq:lsb-parity} for all $x \in \BB_{\ell_\text{mul}}$ simultaneously, producing, for each of $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$, its $64$ per-bit evaluations at a shared constraint point. Write
 \[
-  \mle{A} \coloneqq \mle{\textsf{gen-exp}}(a), \qquad \mle{C}_\text{lo} \coloneqq \mle{\textsf{gen-exp}}(c_\text{lo}), \qquad \mle{C}_\text{hi} \coloneqq \mle{\textsf{gen-exp}}(c_\text{hi}),
+  \mle{A} \coloneqq \mle{\textsf{gen-exp}}(a), \qquad \mle{C}_\text{lo} \coloneqq \mle{\textsf{gen-exp}}(c_\text{lo}),
 \]
-the multilinear extensions of the fixed-base exponentiation vectors $A, C_\text{lo}, C_\text{hi}$, whose entries $A[x] = g^{\intval{a}[x]}$, $C_\text{lo}[x] = g^{\intval{c_\text{lo}}[x]}$, and $C_\text{hi}[x] = g^{\intval{c_\text{hi}}[x]}$ all lie in $K^*$. Only the $2^{64}$-th power of $C_\text{hi}$ ever enters the relation, so write $D_\text{hi} \coloneqq C_\text{hi}^{2^{64}}$ for the high-half factor, with entries
+the multilinear extensions of the base-$g$ fixed-base exponentiation vectors $A, C_\text{lo}$, whose entries $A[x] = g^{\intval{a}[x]}$ and $C_\text{lo}[x] = g^{\intval{c_\text{lo}}[x]}$ lie in $K^*$. The high half enters the integer relation weighted by $2^{64}$, so its factor is a fixed-base exponentiation with base $g^{2^{64}}$: write $C_\text{hi}$ for the vector with entries
 \[
-  D_\text{hi}[x] = C_\text{hi}[x]^{2^{64}} = \varphi^{64}\bigl( C_\text{hi}[x] \bigr) = \bigl( g^{2^{64}} \bigr)^{\intval{c_\text{hi}}[x]} \in K^*,
+  C_\text{hi}[x] \coloneqq \bigl( g^{2^{64}} \bigr)^{\intval{c_\text{hi}}[x]} = g^{2^{64} \cdot \intval{c_\text{hi}}[x]} \in K^*,
 \]
-the third equality recording that raising to the $2^{64}$-th power is the Frobenius $\varphi^{64}$. We write $\mle{D}_\text{hi}$ for its multilinear extension. While $D_\text{hi}$ is itself a fixed-base exponentiation with base $g^{2^{64}}$, the entrywise relation $D_\text{hi} = \varphi^{64}(C_\text{hi})$ will let phase~2 trade it for a base-$g$ claim on $C_\text{hi}$ at a twisted point. In this notation identity \eqref{eq:exp-identity} becomes the pointwise relation
+and $\mle{C}_\text{hi}$ for its multilinear extension. The fixed-base subprotocol (\S\ref{sec:fixed-base-exp}) applies to $C_\text{hi}$ verbatim, with the public leaf constants $g^{2^i}$ replaced by $\bigl( g^{2^{64}} \bigr)^{2^i} = g^{2^{64 + i}}$; folding the high half straight into a base-$g^{2^{64}}$ exponentiation avoids ever forming the base-$g$ vector $g^{\intval{c_\text{hi}}[x]}$ and its $2^{64}$-th power. In this notation identity \eqref{eq:exp-identity} becomes the pointwise relation
 \[
-  \textsf{var-exp}(A, b)[x] = C_\text{lo}[x] \cdot D_\text{hi}[x], \qquad x \in \BB_{\ell_\text{mul}},
+  \textsf{var-exp}(A, b)[x] = C_\text{lo}[x] \cdot C_\text{hi}[x], \qquad x \in \BB_{\ell_\text{mul}},
 \]
-since $\textsf{var-exp}(A, b)[x] = A[x]^{\intval{b}[x]} = g^{\intval{a}[x] \cdot \intval{b}[x]}$ while $C_\text{lo}[x] \cdot D_\text{hi}[x] = g^{\intval{c_\text{lo}}[x] + 2^{64} \cdot \intval{c_\text{hi}}[x]}$. The base $A$ of the variable-base exponentiation is itself the output of a fixed-base exponentiation, so verifying the relation chains the two subprotocols of \S\ref{sec:exp-subprotocols}.
+since $\textsf{var-exp}(A, b)[x] = A[x]^{\intval{b}[x]} = g^{\intval{a}[x] \cdot \intval{b}[x]}$ while $C_\text{lo}[x] \cdot C_\text{hi}[x] = g^{\intval{c_\text{lo}}[x] + 2^{64} \cdot \intval{c_\text{hi}}[x]}$. The base $A$ of the variable-base exponentiation is itself the output of a fixed-base exponentiation, so verifying the relation chains the two subprotocols of \S\ref{sec:exp-subprotocols}.
 
 We organize the reduction into six phases (0 through 5), writing $r_k$ for the principal verifier challenge of phase $k$ where unambiguous.
 
 \paragraph{Phase 0 (setup).}
 The verifier samples $r_0 \gets K^{\ell_\text{mul}}$ and sends it to the prover, who returns a single value $y_0 \in K$. This $y_0$ is claimed to equal both readings of the relation at $r_0$:
 \[
-  y_0 \stackrel{?}{=} \mle{\textsf{var-exp}}(A, b)(r_0), \qquad\qquad y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot C_\text{lo}[x] \cdot D_\text{hi}[x],
+  y_0 \stackrel{?}{=} \mle{\textsf{var-exp}}(A, b)(r_0), \qquad\qquad y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot C_\text{lo}[x] \cdot C_\text{hi}[x],
 \]
 the right-hand sum being the multilinear extension of the relation's right-hand side evaluated at $r_0$. The first reading is discharged by phases~1--4, the second by the \emph{deferred right-hand-side sumcheck} opened in phase~2. A single $y_0$ satisfies both readings iff the two multilinear sides agree at $r_0$, which by Schwartz--Zippel certifies the pointwise relation except with probability $\ell_\text{mul} / |K|$.
 
@@ -662,21 +664,15 @@ all at the common leaf $x$-point $r_1 \in K^{\ell_\text{mul}}$, identifying the 
 \]
 a degree-$2$ sumcheck in $\mle{A}$ and $\mle{b}$.
 
-\paragraph{Phase 2 (batched sumcheck and high-half twist).}
+\paragraph{Phase 2 (batched sumcheck).}
 The parties run the variable-base sumcheck claim that phase~1 set up, batching into the same $\ell_\text{mul}$-round sumcheck the \emph{deferred right-hand-side reading} of phase~0,
 \[
-  y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot \mle{C}_\text{lo}(x) \cdot \mle{D}_\text{hi}(x),
+  y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot \mle{C}_\text{lo}(x) \cdot \mle{C}_\text{hi}(x),
 \]
-a degree-$2$ sumcheck in $\mle{C}_\text{lo}$ and $\mle{D}_\text{hi}$. Sharing the common challenge $r_2 \in K^{\ell_\text{mul}}$, the sumchecks output the root claims $\mle{A}(r_2)$ and $\mle{C}_\text{lo}(r_2)$ and the high-half claim $\mle{D}_\text{hi}(r_2)$. The variable-base subprotocol outputs the $64$ per-bit exponent claims $\mle{b}(i, r_2)$ at the constraint point $r_2$; the verifier recombines them into the single claim $\mle{b}(r_I^b, r_2) = \sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_2)$ by sampling $r_I^b \gets K^6$, carrying one exponent claim rather than $64$ into the later phases.
-
-Finally, the verifier rewrites the base-$g^{2^{64}}$ claim $\mle{D}_\text{hi}(r_2)$ as a base-$g$ claim on $\mle{C}_\text{hi}$. Because $D_\text{hi} = \varphi^{64}(C_\text{hi})$ entrywise and the Frobenius $\varphi$ is an $\FF{2}$-automorphism of $K$---so it fixes the $\set{0, 1}$ coefficients of the equality weights and distributes over the multilinear extension, up to a twist of the evaluation point---
-\[
-  \mle{D}_\text{hi}(X) = \varphi^{64}\bigl( \mle{C}_\text{hi}(\varphi^{-64}(X)) \bigr),
-\]
-and the verifier replaces $\mle{D}_\text{hi}(r_2)$ by the equivalent claim $\mle{C}_\text{hi}(\varphi^{-64}(r_2)) = \varphi^{-64}\bigl( \mle{D}_\text{hi}(r_2) \bigr)$, computed locally. The phase hands the three base-$g$ root claims $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(\varphi^{-64}(r_2))$ to phase~3, and the single recombined exponent claim $\mle{b}(r_I^b, r_2)$ to phase~4.
+a degree-$2$ sumcheck in $\mle{C}_\text{lo}$ and $\mle{C}_\text{hi}$. Sharing the common challenge $r_2 \in K^{\ell_\text{mul}}$, the sumchecks output the three root claims $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, and $\mle{C}_\text{hi}(r_2)$, the last a base-$g^{2^{64}}$ exponentiation claim. The variable-base subprotocol also outputs the $64$ per-bit exponent claims $\mle{b}(i, r_2)$ at the constraint point $r_2$; the verifier recombines them into the single claim $\mle{b}(r_I^b, r_2) = \sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_2)$ by sampling $r_I^b \gets K^6$, carrying one exponent claim rather than $64$ into the later phases. The phase hands the three root claims to phase~3 and the single recombined exponent claim $\mle{b}(r_I^b, r_2)$ to phase~4.
 
 \paragraph{Phase 3 (fixed-base trees).}
-The parties run the three base-$g$ fixed-base product trees on $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(\varphi^{-64}(r_2))$ (the $\mle{C}_\text{hi}$ tree rooted at the twisted point; the differing root points enter only as distinct equality weights). The binary-tree grand-product loop (\S\ref{sec:exp-subprotocols}) is run down through \emph{all but the last layer}, folding both the bit-index and the constraint variable and batching the three trees to a common point $r_3$. Phase~3 ends holding, for each of $a, c_\text{lo}, c_\text{hi}$, an MLE-check at $r_3$ on the product of the two layer-$0$ child \emph{selectors}: writing $\mle{L}_{c_\text{lo}}$ for the gen-exp leaf with boolean values $\mle{L}_{c_\text{lo}}[i, x] = \sel(c_\text{lo}[i, x], g^{2^i})$, the claim is on $\mle{L}_{c_\text{lo}}(0, \rho, r_3) \cdot \mle{L}_{c_\text{lo}}(1, \rho, r_3)$ with $\rho \in K^5$ the folded upper bit-index, and analogously for $a$ and $c_\text{hi}$. No local inversion is performed: with the bit-index folded, the selectors are kept symbolic and the conversion to $\mle{c}_\text{lo}$ is deferred to phase~5.
+The parties run the three fixed-base product trees on $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(r_2)$, all rooted at the common point $r_2$ (the $\mle{A}$ and $\mle{C}_\text{lo}$ trees with base $g$, the $\mle{C}_\text{hi}$ tree with base $g^{2^{64}}$). The binary-tree grand-product loop (\S\ref{sec:exp-subprotocols}) is run down through \emph{all but the last layer}, folding both the bit-index and the constraint variable and batching the three trees to a common point $r_3$. Phase~3 ends holding, for each of $a, c_\text{lo}, c_\text{hi}$, an MLE-check at $r_3$ on the product of the two layer-$0$ child \emph{selectors}: writing $\mle{L}_{c_\text{lo}}$ for the gen-exp leaf with boolean values $\mle{L}_{c_\text{lo}}[i, x] = \sel(c_\text{lo}[i, x], g^{2^i})$, the claim is on $\mle{L}_{c_\text{lo}}(0, \rho, r_3) \cdot \mle{L}_{c_\text{lo}}(1, \rho, r_3)$ with $\rho \in K^5$ the folded upper bit-index, and analogously for $a$ and for $c_\text{hi}$ (whose leaf uses the high-half constants, $\mle{L}_{c_\text{hi}}[i, x] = \sel(c_\text{hi}[i, x], g^{2^{64 + i}})$). No local inversion is performed: with the bit-index folded, the selectors are kept symbolic and the conversion to $\mle{c}_\text{lo}$ is deferred to phase~5.
 
 \paragraph{Phase 4 (last layer, re-randomization, and wraparound).}
 A single batched sumcheck over the constraint variable runs three checks at once:
@@ -692,7 +688,7 @@ The prover sends the $4 \times 64$ per-bit values $\mle{a}(i, r_x), \mle{b}(i, r
 \[
   \sum_{i \in \BB_6} \mle{\eq}_6(r_I, i) \, \sel\bigl( \mle{a}(i, r_x), g^{2^i} \bigr) \stackrel{?}{=} \mle{L}_a(r_I, r_x),
 \]
-for $b$ it tests $\sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_x)$ against $\mle{b}(r_I^b, r_x)$, and it tests the $i = 0$ values against the wraparound claims. The sent values are thereby bound to the GKR-verified products, and to the committed witness by the shift reduction downstream.
+using the leaf constant $g^{2^i}$ for $a$ and $c_\text{lo}$ and the high-half constant $g^{2^{64 + i}}$ for $c_\text{hi}$; for $b$ it tests $\sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_x)$ against $\mle{b}(r_I^b, r_x)$, and it tests the $i = 0$ values against the wraparound claims. The sent values are thereby bound to the GKR-verified products, and to the committed witness by the shift reduction downstream.
 
 The $4 \times 64$ output claims, all at the shared constraint point $r_x \in K^{\ell_\text{mul}}$, are passed to the shift reduction (\S\ref{sec:shift-reduction}). Total soundness error is $O(\ell_\text{mul}) / |K|$, dominated by the depth-$6$ GKR trees and the batched sumchecks of phases~1--4, the last also carrying the wraparound parity zerocheck and the leaf-reconstruction binding.
 
@@ -702,13 +698,13 @@ The $4 \times 64$ output claims, all at the shared constraint point $r_x \in K^{
 The dominant cost is preparing and maintaining tables of values for the various exponentiated multilinears at the relevant cube points; this involves substantial work in $K$. We highlight a few implementation considerations.
 
 \paragraph{Computing the leaf tables.}
-For each of the four exponentiations, the prover initializes the leaf tables $\bigl( L[i, x] \bigr)_{x \in \BB_{\ell_\text{mul}}}$ for $i = 0, \ldots, 63$ from the base values $f[x]$ and the bits $z[i, x]$. Since each $z[i, x] \in \FF{2}$, the entry $L[i, x]$ is either $1$ or $f[x]^{2^i} = \varphi^i(f[x])$. The three fixed-base exponentiations all use base $f[x] \equiv g$, so the powers $g^{2^i}$ can be precomputed once into a single table indexed by $i$, and the leaves are obtained by a bit-controlled select. The high-half values $D_\text{hi}[x] = \varphi^{64}(C_\text{hi}[x])$ needed for the deferred right-hand-side sumcheck are obtained from the $C_\text{hi}$ table by a single Frobenius application, not by a separate exponentiation. For the variable-base exponentiation (base $\mle{A}$, exponent $b$), the prover applies $\varphi^i$ to each entry of the $\mle{A}$-table, which costs $i$ squarings per entry.
+For each of the four exponentiations, the prover initializes the leaf tables $\bigl( L[i, x] \bigr)_{x \in \BB_{\ell_\text{mul}}}$ for $i = 0, \ldots, 63$ from the base values $f[x]$ and the bits $z[i, x]$. Since each $z[i, x] \in \FF{2}$, the entry $L[i, x]$ is either $1$ or $f[x]^{2^i} = \varphi^i(f[x])$. The $A$ and $C_\text{lo}$ exponentiations use base $g$, so the powers $g^{2^i}$ are precomputed once into a table indexed by $i$; the $C_\text{hi}$ exponentiation uses base $g^{2^{64}}$, whose powers $g^{2^{64 + i}}$ form a second such table. In each case the leaves are obtained by a bit-controlled select, so no per-entry exponentiation or Frobenius application is needed. For the variable-base exponentiation (base $\mle{A}$, exponent $b$), the prover applies $\varphi^i$ to each entry of the $\mle{A}$-table, which costs $i$ squarings per entry.
 
 \paragraph{Sumcheck round computation.}
 Each layer of the GKR loop runs a batched sumcheck with composing polynomials of individual degree $2$ (plus the equality indicator), over $\ell_\text{mul}$ rounds. Standard sumcheck-prover algorithms (e.g.\ Thaler~\cite[\S 4.1]{Thaler:2022aa}) apply directly. The Frobenius step's sumcheck has composing polynomials of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(i, \cdot)$ (plus the equality indicator), so the per-round prover work is also linear in the table size.
 
 \paragraph{Frobenius application.}
-Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in the variable-base Frobenius step, costs at most $\lambda \cdot 64$ field squarings in total. The high-half twist of phase~2 needs the one additional point $\varphi^{-64}(r_2)$ (a further $\lambda - 64$ squarings, or simply $\varphi^{64}(r_2)$ when $\lambda = 128$). The prover precomputes these quantities once and reuses them across the batched sumcheck.
+Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in the variable-base Frobenius step, costs at most $\lambda \cdot 64$ field squarings in total. The prover precomputes these quantities once and reuses them across the batched sumcheck.
 
 \subsection{The Shift Reduction}
 \label{sec:shift-reduction}
