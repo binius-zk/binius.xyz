@@ -216,7 +216,7 @@ the bivariate $\mle{\eq}(0, X) = 1 - X$ for the current variable times the const
 \]
 where $R_F^{(i - \nu)}$ is the round polynomial of the original $n$-variate sumcheck on $F$ in its round $i - \nu$.
 \end{itemize}
-A polynomial entering the batch below the common variable count therefore costs only a string of trivial padding rounds before its ordinary sumcheck begins.
+A polynomial entering the batch below the common variable count therefore costs only a string of trivial padding rounds before its ordinary sumcheck begins. The multiplicative analog of this padding---batching binary-tree grand-product arguments over trees of unequal depths---is developed in Appendix~\ref{app:padded-prodcheck}.
 
 \subsubsection{Univariate Skip}
 \label{sec:oblong}
@@ -511,7 +511,7 @@ For the sumcheck in step 4 of \S\ref{sec:univariate-skip}, the prover needs the 
 \subsection{The IntMul Reduction}
 \label{sec:intmul}
 
-The IntMul reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints (\S\ref{sec:intmul-constraints}) into per-bit evaluation claims on the multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays---the $64$ values $\mle{a}(i, r_x), \ldots$ at every bit-position $i \in \BB_6$ of a shared constraint point $r_x \in K^{\ell_\text{mul}}$. Unlike the BitAnd reduction, which exploits that bitwise AND is just per-bit field multiplication, IntMul concerns an integer-arithmetic relation that has no direct expression in $K$; we instead encode it as a multiplicative-group identity in $K^*$ and reduce that identity via a tree of small-degree sumchecks.
+The IntMul reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints (\S\ref{sec:intmul-constraints}) into per-bit evaluation claims on the multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays---the $64$ values $\mle{a}(r_x, i), \ldots$ at every bit-position $i \in \BB_6$ of a shared constraint point $r_x \in K^{\ell_\text{mul}}$. Unlike the BitAnd reduction, which exploits that bitwise AND is just per-bit field multiplication, IntMul concerns an integer-arithmetic relation that has no direct expression in $K$; we instead encode it as a multiplicative-group identity in $K^*$ and reduce that identity via a tree of small-degree sumchecks.
 
 \subsubsection{Multiplying in the Exponent}
 \label{sec:multiplying-in-exponent}
@@ -542,7 +542,7 @@ a condition on a single bit per constraint. Together, \eqref{eq:exp-identity} an
 \subsubsection{Exponentiation Subprotocols}
 \label{sec:exp-subprotocols}
 
-Identity \eqref{eq:exp-identity} is verified by composing two generic exponentiation subprotocols. Throughout, fix the generator $g \in K^*$ and let $z \in \FF{2}^{\BB_k \times \BB_{\ell_\text{mul}}}$ be a bit vector, with $k = 6$ and entries $z[i, x] \in \FF{2}$. We index the $2^k = 64$ bit positions by $i \in \set{0, \ldots, 2^k - 1}$, identified with the hypercube $\BB_k$ via binary representation. Its multilinear extension $\mle{z}(I, X) \in K[I_0, \ldots, I_{k - 1}, X_0, \ldots, X_{\ell_\text{mul} - 1}]^\mlin$ has $\mle{z}(i, X)$ for the multilinear section at the $i$-th hypercube point, with $\mle{\eq}_k(\cdot, i)$ the corresponding Lagrange basis function. The integer encoded by each column is $\intval{z}[x] = \sum_{i = 0}^{2^k - 1} 2^i \cdot z[i, x]$, with $\intval{\cdot}$ as in \S\ref{sec:intmul-constraints}.
+Identity \eqref{eq:exp-identity} is verified by composing two generic exponentiation subprotocols. Throughout, fix the generator $g \in K^*$ and let $z \in \FF{2}^{\BB_{\ell_\text{mul}} \times \BB_k}$ be a bit vector, with $k = 6$ and entries $z[x, i] \in \FF{2}$, written with the constraint index first and the bit position last---the transpose of the bit indexing of \S\ref{sec:intmul-constraints}, to which the shift reduction (\S\ref{sec:shift-reduction}) reverts---so that the bit index occupies the high variables, matching the layer structure of the product trees below and the implementation's data layout. We index the $2^k = 64$ bit positions by $i \in \set{0, \ldots, 2^k - 1}$, identified with the hypercube $\BB_k$ via binary representation. Its multilinear extension $\mle{z}(X, I) \in K[X_0, \ldots, X_{\ell_\text{mul} - 1}, I_0, \ldots, I_{k - 1}]^\mlin$ has $\mle{z}(X, i)$ for the multilinear section at the $i$-th hypercube point, with $\mle{\eq}_k(\cdot, i)$ the corresponding Lagrange basis function. The integer encoded at each constraint index is $\intval{z}[x] = \sum_{i = 0}^{2^k - 1} 2^i \cdot z[x, i]$, with $\intval{\cdot}$ as in \S\ref{sec:intmul-constraints}.
 
 \paragraph{The two operators.}
 The \emph{fixed-base} operator raises the public generator to the encoded exponents,
@@ -553,41 +553,41 @@ while the \emph{variable-base} operator raises a multilinear base $\mle{f}(X) \i
 \[
   \textsf{var-exp}(f, z)[x] \coloneqq f[x]^{\intval{z}[x]} \in K^*, \qquad x \in \BB_{\ell_\text{mul}}.
 \]
-We denote by $\mle{\textsf{gen-exp}}(z)$ and $\mle{\textsf{var-exp}}(f, z)$ their multilinear extensions. The fixed-base subprotocol (\S\ref{sec:fixed-base-exp}) reduces an evaluation claim on $\mle{\textsf{gen-exp}}(z)$ to the $2^k$ per-bit evaluation claims $\mle{z}(i, r'_x)$; the variable-base subprotocol (\S\ref{sec:var-base-exp}) reduces an evaluation claim on $\mle{\textsf{var-exp}}(f, z)$ to one evaluation claim on $\mle{f}$ together with the $2^k$ per-bit claims $\mle{z}(i, r'_x)$. Both run the same GKR product tree that splits the exponent into its $2^k$ bits, differing only in how the product-tree leaves are discharged into the per-bit claims.
+We denote by $\mle{\textsf{gen-exp}}(z)$ and $\mle{\textsf{var-exp}}(f, z)$ their multilinear extensions. The fixed-base subprotocol (\S\ref{sec:fixed-base-exp}) reduces an evaluation claim on $\mle{\textsf{gen-exp}}(z)$ to the $2^k$ per-bit evaluation claims $\mle{z}(r'_x, i)$; the variable-base subprotocol (\S\ref{sec:var-base-exp}) reduces an evaluation claim on $\mle{\textsf{var-exp}}(f, z)$ to one evaluation claim on $\mle{f}$ together with the $2^k$ per-bit claims $\mle{z}(r'_x, i)$. Both run the same GKR product tree that splits the exponent into its $2^k$ bits, differing only in how the product-tree leaves are discharged into the per-bit claims.
 
 \paragraph{The product tree.}
-Define the \emph{selector} $\sel(s, v) \coloneqq 1 + (v - 1) s$, which returns $v$ when the bit $s = 1$ and $1$ when $s = 0$. Collect the $2^k$ leaves into a vector $L \in K^{\BB_k \times \BB_{\ell_\text{mul}}}$ with entries
+Define the \emph{selector} $\sel(s, v) \coloneqq 1 + (v - 1) s$, which returns $v$ when the bit $s = 1$ and $1$ when $s = 0$. Collect the $2^k$ leaves into a vector $L \in K^{\BB_{\ell_\text{mul}} \times \BB_k}$ with entries
 \[
-  L[i, x] \coloneqq \bigl( f[x]^{2^i} \bigr)^{z[i, x]} = \sel\bigl( z[i, x],\, f[x]^{2^i} \bigr), \qquad i \in \BB_k, \quad x \in \BB_{\ell_\text{mul}},
+  L[x, i] \coloneqq \bigl( f[x]^{2^i} \bigr)^{z[x, i]} = \sel\bigl( z[x, i],\, f[x]^{2^i} \bigr), \qquad x \in \BB_{\ell_\text{mul}}, \quad i \in \BB_k,
 \]
-where the second equality uses that $z[i, x] \in \set{0, 1}$. The operator output is the product of the leaves over the bit index,
+where the second equality uses that $z[x, i] \in \set{0, 1}$. The operator output is the product of the leaves over the bit index,
 \[
-  \textsf{var-exp}(f, z)[x] = \prod_{i \in \BB_k} L[i, x]
+  \textsf{var-exp}(f, z)[x] = \prod_{i \in \BB_k} L[x, i]
 \]
-(for the fixed-base operator, $f[x] \equiv g$ and the product is $\textsf{gen-exp}(z)[x]$). We evaluate this product by a balanced binary tree of depth $k$, whose layers are vectors $L^{(j)} \in K^{\BB_{k - j} \times \BB_{\ell_\text{mul}}}$, for $j = 0, \ldots, k$, with leaf layer $L^{(0)} \coloneqq L$ and each node the product of its two children,
+(for the fixed-base operator, $f[x] \equiv g$ and the product is $\textsf{gen-exp}(z)[x]$). We evaluate this product by a balanced binary tree of depth $k$, whose layers are vectors $L^{(j)} \in K^{\BB_{\ell_\text{mul}} \times \BB_{k - j}}$, for $j = 0, \ldots, k$, with leaf layer $L^{(0)} \coloneqq L$ and each node the product of its two children,
 \[
-  L^{(j)}[i, x] = L^{(j - 1)}[0, i, x] \cdot L^{(j - 1)}[1, i, x], \qquad i \in \BB_{k - j}, \quad x \in \BB_{\ell_\text{mul}},
+  L^{(j)}[x, i] = L^{(j - 1)}[x, (i, 0)] \cdot L^{(j - 1)}[x, (i, 1)], \qquad x \in \BB_{\ell_\text{mul}}, \quad i \in \BB_{k - j},
 \]
-the leading bit selecting the child; the root is $L^{(k)} = \textsf{var-exp}(f, z)$. Write $\mle{L}^{(j)}$ for the multilinear extension of the layer vector $L^{(j)}$.
+the trailing bit selecting the child; the root is $L^{(k)} = \textsf{var-exp}(f, z)$. Write $\mle{L}^{(j)}$ for the multilinear extension of the layer vector $L^{(j)}$.
 
-Starting from the root claim $s^{(k)} \stackrel{?}{=} \mle{L}^{(k)}(r^{(k)})$ (the root layer has no node index, so we write $r_x^{(k)} \coloneqq r^{(k)}$), the parties run the binary-tree GKR grand-product argument~\cite{Thaler:2013aa} for $j = k, k - 1, \ldots, 1$. At layer $j$ the parties hold a claim $\mle{L}^{(j)}(\rho^{(j)}, r_x^{(j)})$ at a folded node-index point $\rho^{(j)} \in K^{k - j}$ and $x$-point $r_x^{(j)} \in K^{\ell_\text{mul}}$. Expanding the product relation,
+Starting from the root claim $s^{(k)} \stackrel{?}{=} \mle{L}^{(k)}(r^{(k)})$ (the root layer has no node index, so we write $r_x^{(k)} \coloneqq r^{(k)}$), the parties run the binary-tree GKR grand-product argument~\cite{Thaler:2013aa} for $j = k, k - 1, \ldots, 1$. At layer $j$ the parties hold a claim $\mle{L}^{(j)}(r_x^{(j)}, \rho^{(j)})$ at an $x$-point $r_x^{(j)} \in K^{\ell_\text{mul}}$ and a folded node-index point $\rho^{(j)} \in K^{k - j}$. Expanding the product relation,
 \[
-  \mle{L}^{(j)}(\rho^{(j)}, r_x^{(j)}) = \sum_{i \in \BB_{k - j}} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{k - j}(\rho^{(j)}, i) \cdot \mle{\eq}_{\ell_\text{mul}}(r_x^{(j)}, x) \cdot \mle{L}^{(j - 1)}(0, i, x) \cdot \mle{L}^{(j - 1)}(1, i, x),
+  \mle{L}^{(j)}(r_x^{(j)}, \rho^{(j)}) = \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i \in \BB_{k - j}} \mle{\eq}_{\ell_\text{mul}}(r_x^{(j)}, x) \cdot \mle{\eq}_{k - j}(\rho^{(j)}, i) \cdot \mle{L}^{(j - 1)}(x, i, 0) \cdot \mle{L}^{(j - 1)}(x, i, 1),
 \]
-the parties run a $\bigl( (k - j) + \ell_\text{mul} \bigr)$-round MLE-check, whose composition polynomials have individual degree $\leq 2$. It produces the two child evaluations $\mle{L}^{(j - 1)}(0, \rho', r_x^{(j - 1)})$ and $\mle{L}^{(j - 1)}(1, \rho', r_x^{(j - 1)})$, which a line reduction~\cite{Goldwasser:2015aa} collapses into the single layer-$(j - 1)$ claim $\mle{L}^{(j - 1)}(\rho^{(j - 1)}, r_x^{(j - 1)})$ with $\rho^{(j - 1)} \in K^{k - j + 1}$. After $k$ layers the parties hold a single leaf claim
+the parties run a $\bigl( \ell_\text{mul} + (k - j) \bigr)$-round MLE-check, whose composition polynomials have individual degree $\leq 2$. It produces the two child evaluations $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 0)$ and $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 1)$, which a line reduction~\cite{Goldwasser:2015aa} collapses into the single layer-$(j - 1)$ claim $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho^{(j - 1)})$ with $\rho^{(j - 1)} \in K^{k - j + 1}$, the line challenge appended as the new trailing node coordinate. After $k$ layers the parties hold a single leaf claim
 \[
-  s^{(0)} \stackrel{?}{=} \mle{L}(\rho, r_x), \qquad (\rho, r_x) \in K^k \times K^{\ell_\text{mul}},
+  s^{(0)} \stackrel{?}{=} \mle{L}(r_x, \rho), \qquad (r_x, \rho) \in K^{\ell_\text{mul}} \times K^k,
 \]
-at the fully folded node-index $\rho \coloneqq \rho^{(0)}$ and final $x$-point $r_x \coloneqq r_x^{(0)}$. Soundness error is the standard GKR sum over layers, $O\bigl( k(k + \ell_\text{mul}) \bigr) / |K|$.
+at the final $x$-point $r_x \coloneqq r_x^{(0)}$ and fully folded node-index $\rho \coloneqq \rho^{(0)}$. Soundness error is the standard GKR sum over layers, $O\bigl( k(k + \ell_\text{mul}) \bigr) / |K|$.
 
 \paragraph{Leaf extrapolation.}
 Each subprotocol discharges the leaves one bit at a time, re-exposing them from the single folded claim $s^{(0)}$. In the general case---when the base is a witness value, as in the variable-base subprotocol---the prover sends the $2^k = 64$ leaf evaluations
 \[
-  s^{(0)}_i \stackrel{?}{=} \mle{L}(i, r_x), \qquad i \in \BB_k,
+  s^{(0)}_i \stackrel{?}{=} \mle{L}(r_x, i), \qquad i \in \BB_k,
 \]
 and the verifier checks that they interpolate to the folded claim,
 \[
-  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot s^{(0)}_i \stackrel{?}{=} s^{(0)} = \mle{L}(\rho, r_x).
+  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot s^{(0)}_i \stackrel{?}{=} s^{(0)} = \mle{L}(r_x, \rho).
 \]
 The $2^k$ per-bit claims, all at the common $x$-point $r_x$, are the input to the leaf discharge. The interpolation check binds them to the GKR-verified product value $s^{(0)}$; a prover that sends inconsistent values is caught downstream, where each subprotocol reduces the $s^{(0)}_i$ against the committed witness with fresh randomness. When the base is public (the fixed-base subprotocol, \S\ref{sec:fixed-base-exp}), the prover instead re-exposes the exponent bits and the verifier reconstructs the leaves itself, folding this step into the same interpolation check.
 
@@ -596,17 +596,17 @@ The $2^k$ per-bit claims, all at the common $x$-point $r_x$, are the input to th
 
 The fixed-base subprotocol reduces a claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{gen-exp}}(z)(r^{(k)})$ to the $2^k$ per-bit claims on $\mle{z}$. With the constant base $f[x] \equiv g$, the leaf vector is affine in the exponent bit, so its multilinear extension is already linear,
 \[
-  \mle{L}(i, X) = \sel\bigl( \mle{z}(i, X),\, g^{2^i} \bigr) = 1 + (g^{2^i} - 1) \cdot \mle{z}(i, X),
+  \mle{L}(X, i) = \sel\bigl( \mle{z}(X, i),\, g^{2^i} \bigr) = 1 + (g^{2^i} - 1) \cdot \mle{z}(X, i),
 \]
-since $g^{2^i}$ is constant and $\mle{z}(i, X)$ is multilinear in $X$.
+since $g^{2^i}$ is constant and $\mle{z}(X, i)$ is multilinear in $X$.
 
-The parties run the product-tree GKR loop (\S\ref{sec:exp-subprotocols}) on the root claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{gen-exp}}(z)(r^{(k)})$, folding to the single leaf claim $s^{(0)} \stackrel{?}{=} \mle{L}(\rho, r_x)$ at the common point $r'_x \coloneqq r_x$. Because the powers $g^{2^i}$ are public, the verifier can evaluate the leaf selector itself, so the prover re-exposes the exponent rather than the leaves: it sends the $2^k$ values
+The parties run the product-tree GKR loop (\S\ref{sec:exp-subprotocols}) on the root claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{gen-exp}}(z)(r^{(k)})$, folding to the single leaf claim $s^{(0)} \stackrel{?}{=} \mle{L}(r_x, \rho)$ at the common point $r'_x \coloneqq r_x$. Because the powers $g^{2^i}$ are public, the verifier can evaluate the leaf selector itself, so the prover re-exposes the exponent rather than the leaves: it sends the $2^k$ values
 \[
-  \alpha_{z, i} \stackrel{?}{=} \mle{z}(i, r'_x), \qquad i \in \BB_k,
+  \alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i), \qquad i \in \BB_k,
 \]
 and the verifier reconstructs each leaf evaluation locally as $\sel(\alpha_{z, i}, g^{2^i})$ and checks that the reconstructed leaves interpolate to the folded claim,
 \[
-  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot \sel\bigl( \alpha_{z, i},\, g^{2^i} \bigr) \stackrel{?}{=} s^{(0)} = \mle{L}(\rho, r_x).
+  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot \sel\bigl( \alpha_{z, i},\, g^{2^i} \bigr) \stackrel{?}{=} s^{(0)} = \mle{L}(r_x, \rho).
 \]
 The $2^k$ per-bit claims $\alpha_{z, i}$, all at the common point $r'_x$, are the subprotocol output; a prover that sends inconsistent values is caught downstream, where they are reduced against the committed witness with fresh randomness. The subprotocol is therefore the depth-$k$ GKR tree and one interpolation check, with total soundness error $O\bigl(k(k + \ell_\text{mul})\bigr) / |K|$.
 
@@ -615,17 +615,17 @@ The subprotocol never uses that the base is the generator: for any public base $
 \subsubsection{Variable-Base Exponentiation}
 \label{sec:var-base-exp}
 
-The variable-base subprotocol reduces a claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{var-exp}}(f, z)(r^{(k)})$ to one claim on $\mle{f}$ and the $2^k$ per-bit claims on $\mle{z}$. The parties first run the product-tree GKR loop and leaf extrapolation (\S\ref{sec:exp-subprotocols}), obtaining $2^k$ leaf claims $s^{(0)}_i \stackrel{?}{=} \mle{L}(i, r_x)$ at the common point $r_x$. Unlike the fixed-base case, the leaves couple the base and the exponent: the entry $L[i, x] = \sel(z[i, x], f[x]^{2^i}) = 1 + z[i, x] \cdot (f[x]^{2^i} - 1)$. Naively reducing the leaf claim to a claim on $\mle{f}$ would involve the polynomial $\mle{f}(X)^{2^i}$, whose degree blows up; we sidestep this using the Frobenius endomorphism $\varphi(\alpha) = \alpha^2$ (\S\ref{sec:binary-fields}). Applying $\varphi^{-i}$ (well-defined because $\varphi$ is invertible on $K$, with inverse $\varphi^{\lambda - 1}$) to the leaf claim:
+The variable-base subprotocol reduces a claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{var-exp}}(f, z)(r^{(k)})$ to one claim on $\mle{f}$ and the $2^k$ per-bit claims on $\mle{z}$. The parties first run the product-tree GKR loop and leaf extrapolation (\S\ref{sec:exp-subprotocols}), obtaining $2^k$ leaf claims $s^{(0)}_i \stackrel{?}{=} \mle{L}(r_x, i)$ at the common point $r_x$. Unlike the fixed-base case, the leaves couple the base and the exponent: the entry $L[x, i] = \sel(z[x, i], f[x]^{2^i}) = 1 + z[x, i] \cdot (f[x]^{2^i} - 1)$. Naively reducing the leaf claim to a claim on $\mle{f}$ would involve the polynomial $\mle{f}(X)^{2^i}$, whose degree blows up; we sidestep this using the Frobenius endomorphism $\varphi(\alpha) = \alpha^2$ (\S\ref{sec:binary-fields}). Applying $\varphi^{-i}$ (well-defined because $\varphi$ is invertible on $K$, with inverse $\varphi^{\lambda - 1}$) to the leaf claim:
 \[
-  \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(i, x) \cdot (\mle{f}(x) - 1) \bigr),
+  \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(x, i) \cdot (\mle{f}(x) - 1) \bigr),
 \]
-using that $\varphi^{-i}$ is a ring automorphism that fixes the $\FF{2}$-coefficients of $\mle{\eq}$ and of $\mle{z}(i, \cdot)$, and that $\varphi^{-i}(\mle{f}(x)^{2^i}) = \mle{f}(x)$.
+using that $\varphi^{-i}$ is a ring automorphism that fixes the $\FF{2}$-coefficients of $\mle{\eq}$ and of $\mle{z}(\cdot, i)$, and that $\varphi^{-i}(\mle{f}(x)^{2^i}) = \mle{f}(x)$.
 
-The right-hand side is now of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(i, \cdot)$. The verifier samples a single vector $\gamma \gets K^k$ and the parties run a batched $\ell_\text{mul}$-round sumcheck, using the multilinear Lagrange weights $\mle{\eq}_k(\gamma, i)$ as batching coefficients in place of $2^k$ independent ones:
+The right-hand side is now of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(\cdot, i)$. The verifier samples a single vector $\gamma \gets K^k$ and the parties run a batched $\ell_\text{mul}$-round sumcheck, using the multilinear Lagrange weights $\mle{\eq}_k(\gamma, i)$ as batching coefficients in place of $2^k$ independent ones:
 \[
-  \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(i, x) \cdot (\mle{f}(x) - 1) \bigr).
+  \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(x, i) \cdot (\mle{f}(x) - 1) \bigr).
 \]
-A single $\gamma$ suffices because the weights $\mle{\eq}_k(\gamma, i)$ are the values at $\gamma$ of the $k$-variate multilinear Lagrange basis, so a false claim survives with probability at most $k / |K|$ by Schwartz--Zippel. At the end, the parties hold a final sumcheck challenge $r'_x \in K^{\ell_\text{mul}}$ and claimed evaluations $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ and $\alpha_{z, i} \stackrel{?}{=} \mle{z}(i, r'_x)$ for $i \in \set{0, \ldots, 2^k - 1}$. The verifier evaluates each $\mle{\eq}_{\ell_\text{mul}}(\varphi^{-i}(r_x), r'_x)$ on its own, costing at most $\lambda$ squarings per $i$ to compute $\varphi^{-i}(r_x)$, and closes out the batched sumcheck. The claim $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ is the output base claim, and the $2^k$ per-bit claims $\alpha_{z, i} \stackrel{?}{=} \mle{z}(i, r'_x)$ are the output exponent claims.
+A single $\gamma$ suffices because the weights $\mle{\eq}_k(\gamma, i)$ are the values at $\gamma$ of the $k$-variate multilinear Lagrange basis, so a false claim survives with probability at most $k / |K|$ by Schwartz--Zippel. At the end, the parties hold a final sumcheck challenge $r'_x \in K^{\ell_\text{mul}}$ and claimed evaluations $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ and $\alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i)$ for $i \in \set{0, \ldots, 2^k - 1}$. The verifier evaluates each $\mle{\eq}_{\ell_\text{mul}}(\varphi^{-i}(r_x), r'_x)$ on its own, costing at most $\lambda$ squarings per $i$ to compute $\varphi^{-i}(r_x)$, and closes out the batched sumcheck. The claim $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ is the output base claim, and the $2^k$ per-bit claims $\alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i)$ are the output exponent claims.
 
 \subsubsection{Combined Protocol}
 \label{sec:intmul-combined}
@@ -656,11 +656,11 @@ the right-hand sum being the multilinear extension of the relation's right-hand 
 \paragraph{Phase 1 (variable-base tree and Frobenius twist).}
 The parties run the product-tree GKR loop and leaf extrapolation (\S\ref{sec:exp-subprotocols}) of the variable-base subprotocol on the root claim $y_0 \stackrel{?}{=} \mle{\textsf{var-exp}}(A, b)(r_0)$, with base $\mle{A}$ and exponent $b$. This reduces it to $64$ leaf claims
 \[
-  s^{(0)}_i \stackrel{?}{=} \mle{L}(i, r_1), \qquad L[i, x] = 1 + \bigl( A[x]^{2^i} - 1 \bigr) \cdot b[i, x], \qquad i \in \BB_6,
+  s^{(0)}_i \stackrel{?}{=} \mle{L}(r_1, i), \qquad L[x, i] = 1 + \bigl( A[x]^{2^i} - 1 \bigr) \cdot b[x, i], \qquad i \in \BB_6,
 \]
 all at the common leaf $x$-point $r_1 \in K^{\ell_\text{mul}}$, identifying the product tree's leaf $x$-point $r_x$ with the phase-$1$ challenge $r_1$. Because the leaves couple the base and the exponent, the parties then apply the Frobenius twist $\varphi^{-i}$ to each leaf claim and batch across $i$ with weights $\mle{\eq}_6(\gamma, i)$ for a verifier challenge $\gamma \gets K^6$ (\S\ref{sec:var-base-exp}). Phase~1 closes with the resulting variable-base sumcheck claim
 \[
-  \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \varphi^{-i}\bigl( s^{(0)}_i \bigr) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_1), x \bigr) \cdot \bigl( 1 + (\mle{A}(x) - 1) \cdot \mle{b}(i, x) \bigr),
+  \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \varphi^{-i}\bigl( s^{(0)}_i \bigr) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_1), x \bigr) \cdot \bigl( 1 + (\mle{A}(x) - 1) \cdot \mle{b}(x, i) \bigr),
 \]
 a degree-$2$ sumcheck in $\mle{A}$ and $\mle{b}$.
 
@@ -669,26 +669,26 @@ The parties run the variable-base sumcheck claim that phase~1 set up, batching i
 \[
   y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot \mle{C}_\text{lo}(x) \cdot \mle{C}_\text{hi}(x),
 \]
-a degree-$2$ sumcheck in $\mle{C}_\text{lo}$ and $\mle{C}_\text{hi}$. Sharing the common challenge $r_2 \in K^{\ell_\text{mul}}$, the sumchecks output the three root claims $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, and $\mle{C}_\text{hi}(r_2)$, the last a base-$g^{2^{64}}$ exponentiation claim. The variable-base subprotocol also outputs the $64$ per-bit exponent claims $\mle{b}(i, r_2)$ at the constraint point $r_2$; the verifier recombines them into the single claim $\mle{b}(r_I^b, r_2) = \sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_2)$ by sampling $r_I^b \gets K^6$, carrying one exponent claim rather than $64$ into the later phases. The phase hands the three root claims to phase~3 and the single recombined exponent claim $\mle{b}(r_I^b, r_2)$ to phase~4.
+a degree-$2$ sumcheck in $\mle{C}_\text{lo}$ and $\mle{C}_\text{hi}$. Sharing the common challenge $r_2 \in K^{\ell_\text{mul}}$, the sumchecks output the three root claims $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, and $\mle{C}_\text{hi}(r_2)$, the last a base-$g^{2^{64}}$ exponentiation claim. The variable-base subprotocol also outputs the $64$ per-bit exponent claims $\mle{b}(r_2, i)$ at the constraint point $r_2$; the verifier recombines them into the single claim $\mle{b}(r_2, r_I^b) = \sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(r_2, i)$ by sampling $r_I^b \gets K^6$, carrying one exponent claim rather than $64$ into the later phases. The phase hands the three root claims to phase~3 and the single recombined exponent claim $\mle{b}(r_2, r_I^b)$ to phase~4.
 
 \paragraph{Phase 3 (fixed-base trees).}
-The parties run the three fixed-base product trees on $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(r_2)$, all rooted at the common point $r_2$ (the $\mle{A}$ and $\mle{C}_\text{lo}$ trees with base $g$, the $\mle{C}_\text{hi}$ tree with base $g^{2^{64}}$). The binary-tree grand-product loop (\S\ref{sec:exp-subprotocols}) is run down through \emph{all but the last layer}, folding both the bit-index and the constraint variable and batching the three trees to a common point $r_3$. Phase~3 ends holding, for each of $a, c_\text{lo}, c_\text{hi}$, an MLE-check at $r_3$ on the product of the two layer-$0$ child \emph{selectors}: writing $\mle{L}_{c_\text{lo}}$ for the gen-exp leaf with boolean values $\mle{L}_{c_\text{lo}}[i, x] = \sel(c_\text{lo}[i, x], g^{2^i})$, the claim is on $\mle{L}_{c_\text{lo}}(0, \rho, r_3) \cdot \mle{L}_{c_\text{lo}}(1, \rho, r_3)$ with $\rho \in K^5$ the folded upper bit-index, and analogously for $a$ and for $c_\text{hi}$ (whose leaf uses the high-half constants, $\mle{L}_{c_\text{hi}}[i, x] = \sel(c_\text{hi}[i, x], g^{2^{64 + i}})$). No local inversion is performed: with the bit-index folded, the selectors are kept symbolic and the conversion to $\mle{c}_\text{lo}$ is deferred to phase~5.
+The parties run the three fixed-base product trees on $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(r_2)$, all rooted at the common point $r_2$ (the $\mle{A}$ and $\mle{C}_\text{lo}$ trees with base $g$, the $\mle{C}_\text{hi}$ tree with base $g^{2^{64}}$). The binary-tree grand-product loop (\S\ref{sec:exp-subprotocols}) is run down through \emph{all but the last layer}, folding both the bit-index and the constraint variable and batching the three trees to a common point $r_3$. Phase~3 ends holding, for each of $a, c_\text{lo}, c_\text{hi}$, an MLE-check at $r_3$ on the product of the two layer-$0$ child \emph{selectors}: writing $\mle{L}_{c_\text{lo}}$ for the gen-exp leaf with boolean values $\mle{L}_{c_\text{lo}}[x, i] = \sel(c_\text{lo}[x, i], g^{2^i})$, the claim is on $\mle{L}_{c_\text{lo}}(r_3, \rho, 0) \cdot \mle{L}_{c_\text{lo}}(r_3, \rho, 1)$ with $\rho \in K^5$ the folded lower bit-index, and analogously for $a$ and for $c_\text{hi}$ (whose leaf uses the high-half constants, $\mle{L}_{c_\text{hi}}[x, i] = \sel(c_\text{hi}[x, i], g^{2^{64 + i}})$). No local inversion is performed: with the bit-index folded, the selectors are kept symbolic and the conversion to $\mle{c}_\text{lo}$ is deferred to phase~5.
 
 \paragraph{Phase 4 (last layer, re-randomization, and wraparound).}
 A single batched sumcheck over the constraint variable runs three checks at once:
 \begin{itemize}
 \item the last product-tree layer of each of $a, c_\text{lo}, c_\text{hi}$---the MLE-check of the layer-$0$ selector products at $r_3$;
-\item the re-randomization of the exponent: an MLE-check point-switching the single claim $\mle{b}(r_I^b, r_2)$ from the phase-$2$ constraint point $r_2$ to the shared point $r_x$;
-\item the \emph{wraparound parity} zerocheck \eqref{eq:lsb-parity}, $\sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_2, x) \bigl[ \mle{a}(0, x) \, \mle{b}(0, x) - \mle{c}_\text{lo}(0, x) \bigr] \stackrel{?}{=} 0$, reusing the phase-$2$ challenge $r_2$---available for free because the $\mle{b}$ re-randomization already evaluates at constraint $r_2$.
+\item the re-randomization of the exponent: an MLE-check point-switching the single claim $\mle{b}(r_2, r_I^b)$ from the phase-$2$ constraint point $r_2$ to the shared point $r_x$;
+\item the \emph{wraparound parity} zerocheck \eqref{eq:lsb-parity}, $\sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_2, x) \bigl[ \mle{a}(x, 0) \, \mle{b}(x, 0) - \mle{c}_\text{lo}(x, 0) \bigr] \stackrel{?}{=} 0$, reusing the phase-$2$ challenge $r_2$---available for free because the $\mle{b}$ re-randomization already evaluates at constraint $r_2$.
 \end{itemize}
-The batch folds the constraint variable to the shared point $r_x \in K^{\ell_\text{mul}}$ and the tree bit-index to $r_I \in K^6$. Its outputs are the three leaf-selector claims $\mle{L}_a(r_I, r_x)$, $\mle{L}_{c_\text{lo}}(r_I, r_x)$, $\mle{L}_{c_\text{hi}}(r_I, r_x)$, the exponent claim $\mle{b}(r_I^b, r_x)$, and the bit-$0$ wraparound claims $\mle{a}(0, r_x)$, $\mle{b}(0, r_x)$, $\mle{c}_\text{lo}(0, r_x)$.
+The batch folds the constraint variable to the shared point $r_x \in K^{\ell_\text{mul}}$ and the tree bit-index to $r_I \in K^6$. Its outputs are the three leaf-selector claims $\mle{L}_a(r_x, r_I)$, $\mle{L}_{c_\text{lo}}(r_x, r_I)$, $\mle{L}_{c_\text{hi}}(r_x, r_I)$, the exponent claim $\mle{b}(r_x, r_I^b)$, and the bit-$0$ wraparound claims $\mle{a}(r_x, 0)$, $\mle{b}(r_x, 0)$, $\mle{c}_\text{lo}(r_x, 0)$.
 
 \paragraph{Phase 5 (leaf reconstruction).}
-The prover sends the $4 \times 64$ per-bit values $\mle{a}(i, r_x), \mle{b}(i, r_x), \mle{c}_\text{lo}(i, r_x), \mle{c}_\text{hi}(i, r_x)$ for $i \in \BB_6$; these are the IntMul output. The verifier binds them to the phase-$4$ claims rather than collapsing them: for each of $a, c_\text{lo}, c_\text{hi}$ it forms the selector recombination
+The prover sends the $4 \times 64$ per-bit values $\mle{a}(r_x, i), \mle{b}(r_x, i), \mle{c}_\text{lo}(r_x, i), \mle{c}_\text{hi}(r_x, i)$ for $i \in \BB_6$; these are the IntMul output. The verifier binds them to the phase-$4$ claims rather than collapsing them: for each of $a, c_\text{lo}, c_\text{hi}$ it forms the selector recombination
 \[
-  \sum_{i \in \BB_6} \mle{\eq}_6(r_I, i) \, \sel\bigl( \mle{a}(i, r_x), g^{2^i} \bigr) \stackrel{?}{=} \mle{L}_a(r_I, r_x),
+  \sum_{i \in \BB_6} \mle{\eq}_6(r_I, i) \, \sel\bigl( \mle{a}(r_x, i), g^{2^i} \bigr) \stackrel{?}{=} \mle{L}_a(r_x, r_I),
 \]
-using the leaf constant $g^{2^i}$ for $a$ and $c_\text{lo}$ and the high-half constant $g^{2^{64 + i}}$ for $c_\text{hi}$; for $b$ it tests $\sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(i, r_x)$ against $\mle{b}(r_I^b, r_x)$, and it tests the $i = 0$ values against the wraparound claims. The sent values are thereby bound to the GKR-verified products, and to the committed witness by the shift reduction downstream.
+using the leaf constant $g^{2^i}$ for $a$ and $c_\text{lo}$ and the high-half constant $g^{2^{64 + i}}$ for $c_\text{hi}$; for $b$ it tests $\sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(r_x, i)$ against $\mle{b}(r_x, r_I^b)$, and it tests the $i = 0$ values against the wraparound claims. The sent values are thereby bound to the GKR-verified products, and to the committed witness by the shift reduction downstream.
 
 The $4 \times 64$ output claims, all at the shared constraint point $r_x \in K^{\ell_\text{mul}}$, are passed to the shift reduction (\S\ref{sec:shift-reduction}). Total soundness error is $O(\ell_\text{mul}) / |K|$, dominated by the depth-$6$ GKR trees and the batched sumchecks of phases~1--4, the last also carrying the wraparound parity zerocheck and the leaf-reconstruction binding.
 
@@ -698,10 +698,10 @@ The $4 \times 64$ output claims, all at the shared constraint point $r_x \in K^{
 The dominant cost is preparing and maintaining tables of values for the various exponentiated multilinears at the relevant cube points; this involves substantial work in $K$. We highlight a few implementation considerations.
 
 \paragraph{Computing the leaf tables.}
-For each of the four exponentiations, the prover initializes the leaf tables $\bigl( L[i, x] \bigr)_{x \in \BB_{\ell_\text{mul}}}$ for $i = 0, \ldots, 63$ from the base values $f[x]$ and the bits $z[i, x]$. Since each $z[i, x] \in \FF{2}$, the entry $L[i, x]$ is either $1$ or $f[x]^{2^i} = \varphi^i(f[x])$. The $A$ and $C_\text{lo}$ exponentiations use base $g$, so the powers $g^{2^i}$ are precomputed once into a table indexed by $i$; the $C_\text{hi}$ exponentiation uses base $g^{2^{64}}$, whose powers $g^{2^{64 + i}}$ form a second such table. In each case the leaves are obtained by a bit-controlled select, so no per-entry exponentiation or Frobenius application is needed. For the variable-base exponentiation (base $\mle{A}$, exponent $b$), the prover applies $\varphi^i$ to each entry of the $\mle{A}$-table, which costs $i$ squarings per entry.
+For each of the four exponentiations, the prover initializes the leaf tables $\bigl( L[x, i] \bigr)_{x \in \BB_{\ell_\text{mul}}}$ for $i = 0, \ldots, 63$ from the base values $f[x]$ and the bits $z[x, i]$. Since each $z[x, i] \in \FF{2}$, the entry $L[x, i]$ is either $1$ or $f[x]^{2^i} = \varphi^i(f[x])$. The $A$ and $C_\text{lo}$ exponentiations use base $g$, so the powers $g^{2^i}$ are precomputed once into a table indexed by $i$; the $C_\text{hi}$ exponentiation uses base $g^{2^{64}}$, whose powers $g^{2^{64 + i}}$ form a second such table. In each case the leaves are obtained by a bit-controlled select, so no per-entry exponentiation or Frobenius application is needed. For the variable-base exponentiation (base $\mle{A}$, exponent $b$), the prover applies $\varphi^i$ to each entry of the $\mle{A}$-table, which costs $i$ squarings per entry.
 
 \paragraph{Sumcheck round computation.}
-Each layer of the GKR loop runs a batched sumcheck with composing polynomials of individual degree $2$ (plus the equality indicator), over $\ell_\text{mul}$ rounds. Standard sumcheck-prover algorithms (e.g.\ Thaler~\cite[\S 4.1]{Thaler:2022aa}) apply directly. The Frobenius step's sumcheck has composing polynomials of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(i, \cdot)$ (plus the equality indicator), so the per-round prover work is also linear in the table size.
+Each layer of the GKR loop runs a batched sumcheck with composing polynomials of individual degree $2$ (plus the equality indicator), over $\ell_\text{mul}$ rounds. Standard sumcheck-prover algorithms (e.g.\ Thaler~\cite[\S 4.1]{Thaler:2022aa}) apply directly. The Frobenius step's sumcheck has composing polynomials of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(\cdot, i)$ (plus the equality indicator), so the per-round prover work is also linear in the table size.
 
 \paragraph{Frobenius application.}
 Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in the variable-base Frobenius step, costs at most $\lambda \cdot 64$ field squarings in total. The prover precomputes these quantities once and reuses them across the batched sumcheck.
@@ -711,7 +711,7 @@ Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in
 
 The shift reduction consumes the evaluation claims produced by the BitAnd reduction (\S\ref{sec:binand}) and the IntMul reduction (\S\ref{sec:intmul}) and transforms all of them into a single multilinear-evaluation claim on the witness $\mle{w}$. It is the largest single component of the LIOP, with a sumcheck whose underlying domain contains the witness; the prover algorithm therefore has to exploit the sparsity of the constraint system to run in time close to the witness size.
 
-For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays at the same point by random batching, with the verifier sampling fresh batching coefficients before phase 1. In the full Binius64 LIOP, the claims from the BitAnd and IntMul reductions are coordinated to share a common $(r_{\widehat{i}}, r'_x)$ via a preliminary batching step (with constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{and}, \ell_\text{mul})$). The IntMul reduction contributes, for each of its four arrays, the $64$ per-bit claims $\mle{z}(i, r_x)$ over the bit-index $i \in \BB_6$; this step folds them along the bit-index---sampling $r_{\widehat{i}} \in K^6$ and recombining---at the same time as it batches across arrays, yielding the common oblong point $r_{\widehat{i}}$. A single shift reduction then processes the batched claim.
+For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays at the same point by random batching, with the verifier sampling fresh batching coefficients before phase 1. In the full Binius64 LIOP, the claims from the BitAnd and IntMul reductions are coordinated to share a common $(r_{\widehat{i}}, r'_x)$ via a preliminary batching step (with constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{and}, \ell_\text{mul})$). The IntMul reduction contributes, for each of its four arrays, the $64$ per-bit claims $\mle{z}(r_x, i)$ over the bit-index $i \in \BB_6$ (written in the constraint-first indexing of \S\ref{sec:exp-subprotocols}); this step folds them along the bit-index---sampling $r_{\widehat{i}} \in K^6$ and recombining---at the same time as it batches across arrays, yielding the common oblong point $r_{\widehat{i}}$. A single shift reduction then processes the batched claim.
 
 \subsubsection{Mathematizing Constraint Arrays}
 \label{sec:mathematizing}
@@ -1440,6 +1440,166 @@ Each $32$-bit indicator is a product of a $5$-bit version of the corresponding $
 The sign-bit selector $\prod_{k = 0}^4 J_k$ in the $\textsf{sra32}$ formula identifies $j_{<5} = (1, 1, 1, 1, 1)$, which is bit $31$ when $J_5 = 0$ and bit $63$ when $J_5 = 1$, i.e., the sign bit of whichever half $j$ lies in; the factor $\mle{\eq}(I_5, J_5)$ then forces $i$ to lie in the same half.
 
 Each $5$-bit auxiliary function is succinct by the same recursion as in \S\ref{sec:logical-shifts} and \S\ref{sec:arithmetic-shifts}, truncated to $k = 5$: $\mle{\mathsf{s}}_5$ and $\mle{\mathsf{s}}'_5$ cost at most $60$ multiplications, and $\mle{\mathsf{a}}_5$ costs at most $10$ multiplications. Hence each of the four $32$-bit shift indicators is succinct.
+
+\section{Batched Product Checks of Unequal Depths}
+\label{app:padded-prodcheck}
+
+The binary-tree grand-product argument~\cite{Thaler:2013aa} recalled in \S\ref{sec:exp-subprotocols} reduces an evaluation claim on the root of a depth-$k$ product tree to an evaluation claim on its leaf vector. Several such trees of a \emph{common} depth batch readily: interpolating the trees along a selector index merges them into a single tree over an enlarged content domain, and one run of the layer loop discharges them all, at the cost of a claim-combination step at the start and a claim-separation step at the end. This appendix specifies the batched product check for trees of \emph{unequal} depths. The device is the multiplicative analog of the variable padding of \S\ref{sec:variable-padding}: each shallower tree is padded up to the maximal depth with constant-$1$ leaves, which leaves its products unchanged, and---the substance of this appendix---the padding commutes with the product-tree layer structure, so that the padded prover messages are cheap corrections of the unpadded ones. The verifier's control flow depends only on the maximal depth, the transcript having exactly the shape of an equal-depth batch, and the prover's extra work is a low-order term.
+
+\subsection{Setting}
+\label{app:padded-prodcheck-setting}
+
+Fix a content dimension $\ell \geq 0$ and a selector dimension $\kappa \geq 0$. There are $N \leq 2^\kappa$ \emph{instances}, indexed by $u \in \set{0, \ldots, N - 1} \subseteq \BB_\kappa$. Instance $u$ consists of a depth $k_u \geq 0$ and a leaf vector $L_u \in K^{\BB_\ell \times \BB_{k_u}}$; as in \S\ref{sec:exp-subprotocols}, its product-tree layers $L^{(j)}_u \in K^{\BB_\ell \times \BB_{k_u - j}}$, for $j = 0, \ldots, k_u$, are defined by $L^{(0)}_u \coloneqq L_u$ and
+\[
+  L^{(j)}_u[x, i] \coloneqq L^{(j - 1)}_u[x, (i, 0)] \cdot L^{(j - 1)}_u[x, (i, 1)], \qquad x \in \BB_\ell, \quad i \in \BB_{k_u - j},
+\]
+the trailing bit of the node index selecting the child. We write $p_u \coloneqq L^{(k_u)}_u \in K^{\BB_\ell}$ for the root layer, whose entries are the products $p_u[x] = \prod_{z \in \BB_{k_u}} L_u[x, z]$.
+
+Set $n \coloneqq \max_u k_u$, assumed $\geq 1$, and $\eta_u \coloneqq n - k_u$. The protocol input is one evaluation claim per instance, all at a \emph{common} content point $\tau \in K^\ell$:
+\[
+  s_u \stackrel{?}{=} \mle{p}_u(\tau), \qquad u \in \set{0, \ldots, N - 1};
+\]
+its output is one evaluation claim per instance on the leaf multilinear $\mle{L}_u$, at a family of nested points described below. (When $\ell = 0$ the content index is empty and the input claims are the products themselves.)
+
+\subsection{One-Padding}
+\label{app:one-padding}
+
+Recall the selector $\sel(s, v) = 1 + (v - 1) s$ of \S\ref{sec:exp-subprotocols}. For $\nu \geq 0$ and a function $f \in K^{\BB_\ell \times \BB_m}$, the \emph{$\nu$-fold one-padding} $\textsf{OnePad}_\nu(f) \in K^{\BB_\ell \times \BB_{\nu + m}}$ is defined by
+\[
+  \textsf{OnePad}_\nu(f)[x, (i', i)] \coloneqq \sel\bigl( \mle{\eq}_\nu(0^\nu, i'),\, f[x, i] \bigr) = \begin{cases} f[x, i] & \text{if } i' = 0^\nu, \\ 1 & \text{otherwise}, \end{cases}
+\]
+where the node index is split into its low $\nu$ bits $i'$ and high $m$ bits $i$. Under the integer identification of node indices, one-padding places the entry at node index $i$ of $f$ at node index $2^\nu \cdot i$ and fills the remaining positions with ones; in particular it preserves the products over the node index. On the level of multilinear extensions,
+\begin{equation}
+  \mle{\textsf{OnePad}_\nu(f)}(X, Z', Z) = \sel\bigl( \mle{\eq}_\nu(0^\nu, Z'),\, \mle{f}(X, Z) \bigr) = 1 + \bigl( \mle{f}(X, Z) - 1 \bigr) \cdot \mle{\eq}_\nu(0^\nu, Z'),
+  \label{eq:onepad-mle}
+\end{equation}
+since the right-hand side is multilinear in all variables and agrees with $\textsf{OnePad}_\nu(f)$ on the cube.
+
+Define the padded leaf vectors $L'_u \coloneqq \textsf{OnePad}_{\eta_u}(L_u) \in K^{\BB_\ell \times \BB_n}$, with product-tree layers $L'^{(j)}_u$ for $j = 0, \ldots, n$ as above. All padded trees have depth $n$, and the padding threads through their layers as follows.
+
+\begin{lemma}[Padded layers]
+\label{lem:padded-layers}
+For every instance $u$:
+\begin{enumerate}
+\item for $0 \leq j \leq k_u$: \quad $L'^{(j)}_u = \textsf{OnePad}_{\eta_u}\bigl( L^{(j)}_u \bigr)$;
+\item for $k_u \leq j \leq n$: \quad $L'^{(j)}_u = \textsf{OnePad}_{n - j}\bigl( p_u \bigr)$.
+\end{enumerate}
+In particular the padded root agrees with the original one, $L'^{(n)}_u = p_u$.
+\end{lemma}
+
+\begin{proof}
+Upward induction on $j$, the base case $j = 0$ being the definition of $L'_u$. For $1 \leq j \leq k_u$, split the layer-$(j - 1)$ node index as $(i', i, b)$ with $i' \in \BB_{\eta_u}$ the low bits, $i \in \BB_{k_u - j}$ the remaining middle bits, and $b$ the trailing bit; by the induction hypothesis,
+\[
+  L'^{(j)}_u[x, (i', i)] = \prod_{b \in \BB_1} \sel\bigl( \mle{\eq}_{\eta_u}(0^{\eta_u}, i'),\, L^{(j - 1)}_u[x, (i, b)] \bigr),
+\]
+which equals $1$ when $i' \neq 0^{\eta_u}$, and equals $L^{(j - 1)}_u[x, (i, 0)] \cdot L^{(j - 1)}_u[x, (i, 1)] = L^{(j)}_u[x, i]$ when $i' = 0^{\eta_u}$; this is $\textsf{OnePad}_{\eta_u}(L^{(j)}_u)[x, (i', i)]$. For $k_u < j \leq n$, the layer-$(j - 1)$ node index $(i', b)$ consists of padding bits only, and
+\[
+  L'^{(j)}_u[x, i'] = \prod_{b \in \BB_1} \sel\bigl( \mle{\eq}_{n - j + 1}(0^{n - j + 1}, (i', b)),\, p_u[x] \bigr);
+\]
+the $b = 1$ factor is identically $1$, and the $b = 0$ factor is $\sel(\mle{\eq}_{n - j}(0^{n - j}, i'), p_u[x])$, as claimed.
+\end{proof}
+
+Lemma~\ref{lem:padded-layers} is why the padding bits occupy the \emph{low} end of the node index: the layer loop below runs from the root down and appends one node variable per layer at the end of the evaluation point, so the variables introduced by its first $\eta_u$ reductions---which act on the pure-padding layers $\textsf{OnePad}_{n - j}(p_u)$---occupy the low positions, and only afterwards does the real tree of instance $u$ begin, wrapped throughout in the fixed one-padding $\textsf{OnePad}_{\eta_u}(\cdot)$.
+
+\subsection{The Protocol}
+\label{app:padded-prodcheck-protocol}
+
+Combine the padded trees along the selector index into the single function $\mathbf{L} \in K^{\BB_\kappa \times \BB_\ell \times \BB_n}$,
+\[
+  \mathbf{L}[u, x, z] \coloneqq \begin{cases} L'_u[x, z] & \text{if } u < N, \\ 0 & \text{otherwise}, \end{cases}
+\]
+and let $\mathbf{L}^{(j)} \in K^{\BB_\kappa \times \BB_\ell \times \BB_{n - j}}$ be its product-tree layers \emph{over the node index only}---$\mathbf{L}^{(j)}[u, x, i] = \mathbf{L}^{(j - 1)}[u, x, (i, 0)] \cdot \mathbf{L}^{(j - 1)}[u, x, (i, 1)]$---the selector and content indices being carried along passively. By construction,
+\begin{equation}
+  \mle{\mathbf{L}}^{(j)}(U, X, Z) = \sum_{u = 0}^{N - 1} \mle{\eq}_\kappa(u, U) \cdot \mle{L'}^{(j)}_u(X, Z).
+  \label{eq:combined-layers}
+\end{equation}
+
+\paragraph{Claim combination.}
+The verifier samples $\sigma \gets K^\kappa$, and both parties form the combined root claim
+\[
+  y^{(n)} \coloneqq \sum_{u = 0}^{N - 1} \mle{\eq}_\kappa(\sigma, u) \cdot s_u \stackrel{?}{=} \mle{\mathbf{L}}^{(n)}(\sigma, \tau),
+\]
+the identification of the right-hand side being \eqref{eq:combined-layers} at $j = n$ together with $L'^{(n)}_u = p_u$ (Lemma~\ref{lem:padded-layers}). Since the weights $\mle{\eq}_\kappa(\sigma, u)$ are the values at $\sigma$ of the $\kappa$-variate multilinear Lagrange basis, a family containing a false input claim yields a true combined claim with probability at most $\kappa / |K|$ over $\sigma$ (Schwartz--Zippel, as for the batching of \S\ref{sec:var-base-exp}).
+
+\paragraph{Layer loop.}
+For $j = n, n - 1, \ldots, 1$, the parties hold a claim $y^{(j)} \stackrel{?}{=} \mle{\mathbf{L}}^{(j)}(\sigma^{(j)}, \tau^{(j)}, \rho^{(j)})$, initialized with $\sigma^{(n)} \coloneqq \sigma$, $\tau^{(n)} \coloneqq \tau$, and $\rho^{(n)}$ empty. Expanding the layer relation,
+\[
+  \mle{\mathbf{L}}^{(j)}(\sigma^{(j)}, \tau^{(j)}, \rho^{(j)}) = \sum_{u \in \BB_\kappa} \sum_{x \in \BB_\ell} \sum_{i \in \BB_{n - j}} \mle{\eq}_\kappa(\sigma^{(j)}, u) \, \mle{\eq}_\ell(\tau^{(j)}, x) \, \mle{\eq}_{n - j}(\rho^{(j)}, i) \cdot \mle{\mathbf{L}}^{(j - 1)}(u, x, i, 0) \, \mle{\mathbf{L}}^{(j - 1)}(u, x, i, 1),
+\]
+the parties run a $\bigl( \kappa + \ell + (n - j) \bigr)$-round MLE-check (Protocol~\ref{prot:mle-check}) whose composition has individual degree $\leq 2$, exactly as in \S\ref{sec:exp-subprotocols}, producing challenges $(\sigma^{(j - 1)}, \tau^{(j - 1)}, \rho') \in K^\kappa \times K^\ell \times K^{n - j}$. The prover sends the two child evaluations
+\[
+  \beta_b \stackrel{?}{=} \mle{\mathbf{L}}^{(j - 1)}(\sigma^{(j - 1)}, \tau^{(j - 1)}, \rho', b), \qquad b \in \set{0, 1};
+\]
+the verifier checks that $\beta_0 \cdot \beta_1$ equals the MLE-check's reduced evaluation, and a line reduction~\cite{Goldwasser:2015aa} collapses the pair: the verifier samples $r_b \gets K$ and sets $y^{(j - 1)} \coloneqq (1 - r_b)\, \beta_0 + r_b\, \beta_1$ and $\rho^{(j - 1)} \coloneqq (\rho', r_b)$, appending the new node coordinate at the end. Neither the round count, nor the message degrees, nor any verifier check depends on the individual depths $k_u$: the transcript has the shape of an equal-depth batch of depth $n$.
+
+\paragraph{Claim separation and unpadding.}
+After $n$ layers the parties hold $y^{(0)} \stackrel{?}{=} \mle{\mathbf{L}}^{(0)}(\sigma^{(0)}, \tau^{(0)}, \rho^{(0)})$ with $\rho^{(0)} \in K^n$. The prover sends the padded per-instance leaf evaluations
+\[
+  \alpha'_u \stackrel{?}{=} \mle{L'}_u(\tau^{(0)}, \rho^{(0)}), \qquad u \in \set{0, \ldots, N - 1},
+\]
+and the verifier checks that they interpolate the folded claim,
+\[
+  \sum_{u = 0}^{N - 1} \mle{\eq}_\kappa(\sigma^{(0)}, u) \cdot \alpha'_u \stackrel{?}{=} y^{(0)},
+\]
+as in the leaf extrapolation of \S\ref{sec:exp-subprotocols}. Finally the verifier removes the padding using \eqref{eq:onepad-mle}: splitting $\rho^{(0)} = (\rho_{< \eta_u}, \rho_{\geq \eta_u}) \in K^{\eta_u} \times K^{k_u}$ and writing $e_u \coloneqq \mle{\eq}_{\eta_u}(0^{\eta_u}, \rho_{< \eta_u})$, it computes
+\[
+  \alpha_u \coloneqq 1 + (\alpha'_u - 1) \cdot e_u^{-1},
+\]
+rejecting in the event $e_u = 0$, which requires some coordinate of $\rho^{(0)}$ to equal $1$ and so occurs with probability at most $n / |K|$. The protocol output is the family of leaf claims
+\[
+  \alpha_u \stackrel{?}{=} \mle{L}_u\bigl( \tau^{(0)}, \rho_{\geq \eta_u} \bigr), \qquad u \in \set{0, \ldots, N - 1}.
+\]
+The evaluation points are \emph{nested}: every instance's node point is a suffix of the common point $\rho^{(0)}$ shared by the deepest instances, and all instances share the content point $\tau^{(0)}$.
+
+\paragraph{Completeness and soundness.}
+For an honest prover every check passes and every output claim is true, except that the verifier rejects with probability at most $n / |K|$ (the event $e_u = 0$ above). Conversely, if some input claim $s_u \neq \mle{p}_u(\tau)$, then except with probability $O\bigl( n (\kappa + n + \ell) \bigr) / |K|$ over the verifier's challenges---the claim combination, the $n$ MLE-checks and line reductions, and the final interpolation check---either the verifier rejects or some output claim $\alpha_u \neq \mle{L}_u(\tau^{(0)}, \rho_{\geq \eta_u})$ is false, to be caught downstream when the output claims are discharged against committed data.
+
+\subsection{Prover Algorithm}
+\label{app:padded-prodcheck-prover}
+
+The protocol above is verbatim the equal-depth batched product check applied to the padded trees; the content of this subsection is that the prover need never materialize the padded trees. Throughout, fix a layer $j$ and abbreviate $\eta \coloneqq \eta_u$ and $m \coloneqq k_u - j$.
+
+\paragraph{Per-instance decomposition.}
+The layer-$j$ MLE-check binds variables from the highest index down: its first $n - j$ rounds bind the node variables from the top---for instance $u$ in a layer $j \leq k_u$, first the $m \coloneqq k_u - j$ real bits and then the $\eta$ padding bits---followed by $\ell$ content rounds and finally $\kappa$ selector rounds. While the selector variables are unbound, the round polynomial of Protocol~\ref{prot:mle-check} decomposes by \eqref{eq:combined-layers} as
+\[
+  R^{(i)}(X) = \sum_{u = 0}^{N - 1} \mle{\eq}_\kappa\bigl( \sigma^{(j)}, u \bigr) \cdot R^{(i)}_u(X),
+\]
+where $R^{(i)}_u$ is the corresponding round polynomial of the (unbatched) layer MLE-check of the padded instance $u$; the final $\kappa$ selector rounds operate on length-$2^\kappa$ tables holding the per-instance child-evaluation pairs, costing $O(2^\kappa)$ operations per layer. It remains to describe $R^{(i)}_u$, in the three phases of a \emph{real} layer ($1 \leq j \leq k_u$) and then in the \emph{padding} layers ($k_u < j \leq n$). Write $\rho^{(j)} = (\rho_\text{pa}, \rho_\text{re}) \in K^\eta \times K^m$ for the split of the node claim point into padding and real coordinates, and $q_u \coloneqq \mle{\eq}_\eta(0^\eta, \rho_\text{pa})$.
+
+\paragraph{Real rounds.}
+In the first $m$ rounds, every padding variable of the summation is still unbound. Splitting the node sum on whether the padding bits $i'$ vanish: on the slab $i' = 0^\eta$ the two $\sel$-factors of \eqref{eq:onepad-mle} reduce to the unpadded children and the padding equality-weights contribute the constant $q_u$; off the slab both factors equal $1$ and the weights sum to $1 - q_u$. Hence
+\[
+  R^{(i)}_u(X) = 1 + q_u \cdot \bigl( \bar{R}^{(i)}_u(X) - 1 \bigr),
+\]
+where $\bar{R}^{(i)}_u$ is the round polynomial of the \emph{unpadded} layer-$j$ MLE-check of instance $u$, run on the claim point $(\tau^{(j)}, \rho_\text{re})$ with the shared transcript challenges. The correction is an affine map of the message coefficients, costing $O(1)$ per round, and it commutes with the verifier's per-round consistency check.
+
+\paragraph{Padding rounds.}
+Let $r_\text{re} \in K^m$ denote the real-node challenges just bound, and let $g_{u, b} \in K^{\BB_\ell}$, for $b \in \set{0, 1}$, be the partially specialized children
+\[
+  g_{u, b}[x] \coloneqq \mle{L}^{(j - 1)}_u\bigl( x, (r_\text{re}, b) \bigr), \qquad x \in \BB_\ell,
+\]
+which are exactly the tables the unpadded prover holds after its node rounds. At the phase boundary the prover computes three scalars: the running unpadded claim $z_u \coloneqq \sum_{x \in \BB_\ell} \mle{\eq}_\ell(\tau^{(j)}, x) \, g_{u, 0}[x] \, g_{u, 1}[x]$ (available from the message chain), the evaluation sum $S_u \coloneqq \mle{g}_{u, 0}(\tau^{(j)}) + \mle{g}_{u, 1}(\tau^{(j)})$ (two $O(2^\ell)$ evaluations), and $Q_u \coloneqq z_u - S_u + 1$. In padding round $a \in \set{0, \ldots, \eta - 1}$, define
+\[
+  e_{u, a} \coloneqq \prod_{c = 0}^{\eta - a - 2} \mle{\eq}(0, \rho_{\text{pa}, c}), \qquad E_{u, a}(X) \coloneqq \mle{\eq}(0, X) \cdot \prod_{a' = 0}^{a - 1} \mle{\eq}\bigl( 0, r^\text{pa}_{a'} \bigr),
+\]
+the equality-weights of the still-unbound and already-bound padding coordinates respectively, with $r^\text{pa}_{a'}$ the challenge of padding round $a'$. Splitting the residual node sum on whether the unbound padding bits vanish, expanding the product $\prod_b \bigl( 1 + (g_{u, b}[x] - 1) E_{u, a}(X) \bigr)$ on the slab, and summing the content index against its equality-weights yields the closed form
+\[
+  R^{(m + a)}_u(X) = 1 - e_{u, a} + e_{u, a} \cdot \Bigl[ 1 + (S_u - 2) \, E_{u, a}(X) + Q_u \, E_{u, a}(X)^2 \Bigr]:
+\]
+the coefficients of $E^0, E^1, E^2$ are the equality-weighted moments $1$, $S_u - 2$, and $Q_u$ of the children. Each padding round costs $O(1)$ operations, only $e_{u, a}$ and $E_{u, a}$ updating between rounds.
+
+\paragraph{Content rounds.}
+Once all node variables are bound, the factor $E$ collapses to the constant $e^*_u \coloneqq \prod_{a = 0}^{\eta - 1} \mle{\eq}(0, r^\text{pa}_a)$, and the residual summand is the bivariate product of the transformed tables
+\[
+  \tilde{g}_{u, b} \coloneqq \sel\bigl( e^*_u, g_{u, b} \bigr) = 1 + (g_{u, b} - 1) \cdot e^*_u.
+\]
+The remaining $\ell$ content rounds therefore coincide with those of the unpadded MLE-check run on tables obtained by one affine pass ($O(2^\ell)$ operations), with no further per-round correction, and the layer's child evaluations are the $\sel(e^*_u, \cdot)$-images of the unpadded ones. One checks directly that the messages of the three phases chain through the verifier's per-round consistency checks; for instance, at the real-to-padding boundary both the last real-round message and the first padding-round message reduce the claim to $1 + q_u (z_u - 1)$, using $(S_u - 2) + Q_u = z_u - 1$.
+
+\paragraph{Padding layers.}
+For $k_u < j \leq n$ the layer is $\textsf{OnePad}_{n - j}(p_u)$ and its $b = 1$ child is identically $1$ (Lemma~\ref{lem:padded-layers} and its proof), so the composition is \emph{affine} in $p_u$ and all messages have degree $\leq 1$. The three phases specialize with $m = 0$ and padding count $n - j$ in place of $\eta$: there are no real rounds; the padding rounds open the layer with the children $g_{u, 0} = p_u$ and $g_{u, 1}$ the all-ones table, whence $z_u = \mle{p}_u(\tau^{(j)})$ (the instance's running claim), $S_u = \mle{p}_u(\tau^{(j)}) + 1$, and $Q_u = 0$; and the content rounds run the linear MLE-check on the transformed table $\sel(e^*_u, p_u)$, a fresh length-$2^\ell$ copy per padding layer ($O(2^\ell)$ operations). The child evaluations are $\beta_0 = 1 + (\mle{p}_u(\tau^{(j - 1)}) - 1) \cdot \mle{\eq}_{n - j}(0^{n - j}, \rho')$ and $\beta_1 = 1$.
+
+\paragraph{Cost.}
+Summing over the layers, instance $u$ costs its unpadded prover---$O(2^{k_u + \ell})$ operations for the whole tree---plus $O(2^\ell)$ per layer (the boundary evaluations and table transformation in a real layer; the fresh table of $p_u$ in a padding layer) and $O(1)$ per round, for a padding overhead of $O(n \cdot 2^\ell)$. The batch as a whole additionally pays $O(2^\kappa)$ per layer for the selector rounds.
 
 \section{Zero-Knowledge of the Sumcheck Machinery}
 \label{app:zk-sumcheck}
