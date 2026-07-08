@@ -33,6 +33,7 @@
 \newcommand{\BB}{\mathcal{B}}
 \newcommand{\FF}[1]{\mathbb{F}_{#1}}
 \newcommand{\intval}[1]{[\![#1]\!]}
+\newcommand{\gval}[1]{\langle\!\langle #1 \rangle\!\rangle}
 \newcommand{\sel}{\textsf{sel}}
 \pagecolor{white}
 
@@ -273,7 +274,7 @@ The compilation of an LIOP into a SNARK using a polynomial commitment scheme is 
 \section{The Constraint System}
 \label{sec:constraint-system}
 
-The Binius64 constraint system operates on $64$-bit words and supports two native constraint forms: \emph{BitAnd constraints}, which express bitwise-AND relations between XOR-accumulations of shifted prover words, and \emph{IntMul constraints}, which express unsigned-integer multiplication on $64$-bit operands. This section defines the constraint language as a combinatorial object, independent of any protocol that verifies it. Appendix~\ref{sec:common-ops} sketches how this language expresses common derived operations (bitwise XOR, NOT, OR; integer addition and subtraction).
+The Binius64 constraint system operates on $64$-bit words and supports three native constraint forms: \emph{BitAnd constraints}, which express bitwise-AND relations between XOR-accumulations of shifted prover words; \emph{IntMul constraints}, which express unsigned-integer multiplication on $64$-bit operands; and \emph{BinMul constraints}, which express multiplication in the GHASH field $\FF{2^{128}}$ on operands each carried by a pair of $64$-bit words. This section defines the constraint language as a combinatorial object, independent of any protocol that verifies it. Appendix~\ref{sec:common-ops} sketches how this language expresses common derived operations (bitwise XOR, NOT, OR; integer addition and subtraction).
 
 \subsection{Prover Data Layout}
 \label{sec:prover-data}
@@ -291,7 +292,8 @@ The prover data $w$ \emph{satisfies} the constraint system with respect to the s
 \item the constant stretch matches $C$: $w[y] = C(y)$ for each $y \in \set{0, \ldots, n_\text{const} - 1}$;
 \item the input--output stretch matches $u$: $w[n_\text{const} + y] = u(y)$ for each $y \in \set{0, \ldots, n_\text{inout} - 1}$;
 \item every BitAnd constraint is satisfied (\S\ref{sec:bitand-constraints});
-\item every IntMul constraint is satisfied (\S\ref{sec:intmul-constraints}).
+\item every IntMul constraint is satisfied (\S\ref{sec:intmul-constraints});
+\item every BinMul constraint is satisfied (\S\ref{sec:binmul-constraints}).
 \end{itemize}
 
 \subsection{Shifted Value Indices}
@@ -361,12 +363,31 @@ for the nonnegative integer encoded by the word at $x$ (and likewise for $b, c_\
 \]
 the multiplication taken over the integers. Equivalently, $\intval{c_\text{hi}}[x]$ and $\intval{c_\text{lo}}[x]$ are the high and low $64$-bit halves of the $128$-bit unsigned product $\intval{a}[x] \cdot \intval{b}[x]$.
 
+\subsection{BinMul Constraints}
+\label{sec:binmul-constraints}
+
+The constraint system specifies a total number $n_\text{binmul}$ of BinMul constraints. A BinMul constraint multiplies two elements of the GHASH field $\FF{2^{128}} \cong \FF{2}[X] / (X^{128} + X^7 + X^2 + X + 1)$ (\S\ref{sec:binary-fields}). Since $\FF{2^{128}}$ is a $128$-dimensional $\FF{2}$-space while a prover word holds only $64$ bits, each field element is carried by a pair of words---a \emph{low} word supplying the coefficients of $1, X, \ldots, X^{63}$ and a \emph{high} word supplying the coefficients of $X^{64}, \ldots, X^{127}$. Concretely, for a pair of words $(z_\text{lo}, z_\text{hi}) \in \BB_{64} \times \BB_{64}$ with bits $z_\text{lo}[i], z_\text{hi}[i] \in \FF{2}$, we write
+\[
+  \gval{z_\text{lo}, z_\text{hi}} \coloneqq \sum_{i = 0}^{63} z_\text{lo}[i] \cdot X^i + \sum_{i = 0}^{63} z_\text{hi}[i] \cdot X^{64 + i} \in \FF{2^{128}}
+\]
+for the field element it encodes, the monomials $1, X, \ldots, X^{127}$ being the $\FF{2}$-basis of $\FF{2^{128}}$ fixed in \S\ref{sec:binary-fields}.
+
+The $x$-th BinMul constraint is a tuple of six lists of shifted value indices
+\[
+  (L^{a_\text{lo}}_x, L^{a_\text{hi}}_x, L^{b_\text{lo}}_x, L^{b_\text{hi}}_x, L^{c_\text{lo}}_x, L^{c_\text{hi}}_x), \quad x \in \set{0, \ldots, n_\text{binmul} - 1},
+\]
+inducing six length-$n_\text{binmul}$ constraint arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi} \in \BB_{64}^{n_\text{binmul}}$ as in \S\ref{sec:constraint-arrays}. Each operand pair is read as a GHASH field element via $\gval{\cdot}$: the pair $(a_\text{lo}[x], a_\text{hi}[x])$ encodes $\gval{a_\text{lo}[x], a_\text{hi}[x]} \in \FF{2^{128}}$, and likewise for $b$ and $c$. The prover data $w$ \emph{satisfies} the BinMul constraints if for each $x \in \set{0, \ldots, n_\text{binmul} - 1}$,
+\[
+  \gval{a_\text{lo}[x], a_\text{hi}[x]} \cdot \gval{b_\text{lo}[x], b_\text{hi}[x]} = \gval{c_\text{lo}[x], c_\text{hi}[x]},
+\]
+the multiplication taken in the GHASH field $\FF{2^{128}}$.
+
 \section{The Binius64 LIOP}
 \label{sec:binius-liop}
 
 This section specifies the Binius64 LIOP: an interactive oracle protocol that, given a constraint system (\S\ref{sec:constraint-system}) and a public statement $u$, verifies that the prover holds a witness $w$ satisfying the constraint system with respect to $u$. The compilation of this LIOP into a SNARK is discussed in \S\ref{sec:basic-snark-compiler}.
 
-Throughout, we assume the constraint-system parameters are padded so that $n_\text{words} = 2^{\ell_\text{words}}$, $n_\text{and} = 2^{\ell_\text{and}}$, $n_\text{mul} = 2^{\ell_\text{mul}}$, and $n_\text{public} \coloneqq n_\text{const} + n_\text{inout} = 2^{\ell_\text{public}}$ are all powers of two. We additionally pad both the witness and the public segment so that $\lambda \mid 64 \cdot n_\text{words}$ and $\lambda \mid 64 \cdot n_\text{public}$; equivalently, $\ell_\text{words} \geq \log_2(\lambda) - 6$ and $\ell_\text{public} \geq \log_2(\lambda) - 6$. With $\lambda = 128$, this means $\ell_\text{words}, \ell_\text{public} \geq 1$. The first condition is needed for the packed-witness construction of \S\ref{sec:ring-switching} and the second for the public input check of \S\ref{sec:public-input-check}. When the LIOP is compiled to a zero-knowledge SNARK (\S\ref{sec:zk-compiler}), the packed-witness oracle additionally carries a randomizable support (\S\ref{sec:liop}); the compiler of \S\ref{sec:batched-zk-basefold} imposes a lower bound on its size, and the padding above must be enlarged to host it. Padding entries are taken to be zero (or, for constraint-array lists, the empty list). Where convenient we identify $\BB_{\ell_\text{words}} \cong \set{0, \ldots, n_\text{words} - 1}$ and similarly for the other domains.
+Throughout, we assume the constraint-system parameters are padded so that $n_\text{words} = 2^{\ell_\text{words}}$, $n_\text{and} = 2^{\ell_\text{and}}$, $n_\text{mul} = 2^{\ell_\text{mul}}$, $n_\text{binmul} = 2^{\ell_\text{binmul}}$, and $n_\text{public} \coloneqq n_\text{const} + n_\text{inout} = 2^{\ell_\text{public}}$ are all powers of two. We additionally pad both the witness and the public segment so that $\lambda \mid 64 \cdot n_\text{words}$ and $\lambda \mid 64 \cdot n_\text{public}$; equivalently, $\ell_\text{words} \geq \log_2(\lambda) - 6$ and $\ell_\text{public} \geq \log_2(\lambda) - 6$. With $\lambda = 128$, this means $\ell_\text{words}, \ell_\text{public} \geq 1$. The first condition is needed for the packed-witness construction of \S\ref{sec:ring-switching} and the second for the public input check of \S\ref{sec:public-input-check}. When the LIOP is compiled to a zero-knowledge SNARK (\S\ref{sec:zk-compiler}), the packed-witness oracle additionally carries a randomizable support (\S\ref{sec:liop}); the compiler of \S\ref{sec:batched-zk-basefold} imposes a lower bound on its size, and the padding above must be enlarged to host it. Padding entries are taken to be zero (or, for constraint-array lists, the empty list). Where convenient we identify $\BB_{\ell_\text{words}} \cong \set{0, \ldots, n_\text{words} - 1}$ and similarly for the other domains.
 
 \subsection{Protocol Overview}
 \label{sec:protocol-overview}
@@ -377,18 +398,19 @@ The protocol commits to a single $K$-valued oracle obtained by packing the witne
 \]
 The prover does not commit to $w$ directly: it instead commits to the packed function $\textsf{pack}_\lambda(w) \colon \BB_{\ell_\text{pack}} \to K$, defined in \S\ref{sec:ring-switching}, which encodes $\lambda$ consecutive bits of $w$ as a single $K$-element. The packed witness is the actual LIOP oracle, in keeping with the $K$-valued-oracle convention of \S\ref{sec:liop}.
 
-The LIOP proceeds in seven phases:
+The LIOP proceeds in eight phases:
 \begin{enumerate}
 \item \textbf{Packed witness commitment.} The prover sends the packed witness oracle $\pi \coloneqq \textsf{pack}_\lambda(w) \colon \BB_{\ell_\text{pack}} \to K$, where $\ell_\text{pack} \coloneqq \ell_\text{words} - (\log_2 \lambda - 6)$ and $\textsf{pack}_\lambda$ is the packing map defined in \S\ref{sec:ring-switching}. (Implementations commit to $\pi$ via the polynomial commitment scheme of \S\ref{sec:basic-snark-compiler}, but the LIOP itself treats $\pi$ as an oracle of length $2^{\ell_\text{pack}}$.)
 \item \textbf{BitAnd reduction (\S\ref{sec:binand}).} A sumcheck-based reduction transforms the satisfaction of the $n_\text{and}$ BitAnd constraints into evaluation claims on the three oblong-multilinearizations $\widehat{a}, \widehat{b}, \widehat{c}$ of the BitAnd constraint arrays.
 \item \textbf{IntMul reduction (\S\ref{sec:intmul}).} A separate GKR-based reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints into evaluation claims on the four multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays.
-\item \textbf{Shift reduction (\S\ref{sec:shift-reduction}).} The seven evaluation claims produced by the two reductions are batched, and a two-phase sumcheck reduces them to a single evaluation claim on $\mle{w}$ at a point $(r_j, r_y) \in K^6 \times K^{\ell_\text{words}}$.
+\item \textbf{BinMul reduction (\S\ref{sec:binmul}).} A separate zerocheck-based reduction transforms the satisfaction of the $n_\text{binmul}$ BinMul constraints into per-bit evaluation claims on the multilinear extensions of the six BinMul constraint arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi}$.
+\item \textbf{Shift reduction (\S\ref{sec:shift-reduction}).} The evaluation claims produced by the BitAnd, IntMul, and BinMul reductions are batched, and a two-phase sumcheck reduces them to a single evaluation claim on $\mle{w}$ at a point $(r_j, r_y) \in K^6 \times K^{\ell_\text{words}}$.
 \item \textbf{Ring-switching (\S\ref{sec:ring-switching}).} The evaluation claim $\mle{w}(r_j, r_y) = t$ on the $\FF{2}$-valued multilinear $\mle{w}$ is converted into a linear query on the packed $K$-valued oracle $\pi$, via the protocol of Diamond and Posen~\cite{Diamond:2024ab}.
 \item \textbf{Public input check (\S\ref{sec:public-input-check}).} A separate linear query on $\pi$ certifies that the packing of the public segment $C \mathbin{\Vert} u$ agrees with the prefix of $\pi$ that contains it. This query is then random-combined with the ring-switching query into a single linear query.
 \item \textbf{Witness query.} The verifier issues the combined linear query on $\pi$.
 \end{enumerate}
 
-Phases 2 and 3 may be executed in either order; their outputs are independent until they are batched in Phase 4.
+Phases 2--4 may be executed in any order; their outputs are independent until they are batched in Phase 5.
 
 \subsection{Shift Indicator Polynomials}
 \label{sec:shift-indicators}
@@ -705,6 +727,58 @@ Each layer of the GKR loop runs a batched sumcheck with composing polynomials of
 
 \paragraph{Frobenius application.}
 Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in the variable-base Frobenius step, costs at most $\lambda \cdot 64$ field squarings in total. The prover precomputes these quantities once and reuses them across the batched sumcheck.
+
+\subsection{The BinMul Reduction}
+\label{sec:binmul}
+
+The BinMul reduction transforms the satisfaction of the $n_\text{binmul}$ BinMul constraints (\S\ref{sec:binmul-constraints}) into evaluation claims on the multilinear extensions of the six BinMul constraint arrays. The BitAnd and IntMul constraints act on $\FF{2}$-valued arrays that carry one relation per bit; a BinMul constraint instead asserts a single multiplicative relation in the GHASH field $\FF{2^{128}}$ per constraint. Packing each operand's two words into one field element (\S\ref{sec:binmul-constraints}) turns the constraint into a product relation between $\FF{2^{128}}$-valued multilinears, which an ordinary zerocheck discharges.
+
+\subsubsection{Packing the Operands}
+\label{sec:binmul-packing}
+
+Recall that $\FF{2^{128}} \cong \FF{2}[X] / (X^{128} + X^7 + X^2 + X + 1)$ is the GHASH field (\S\ref{sec:binary-fields}) and write $\gamma \in \FF{2^{128}}$ for the class of $X$, so that $(1, \gamma, \ldots, \gamma^{127})$ is the monomial $\FF{2}$-basis in which $\gval{\cdot}$ encodes operands. In the system default $\lambda = 128$ we have $\FF{2^{128}} = K$; when $128 \mid \lambda$ strictly, the reduction runs over $K$ with the operand values confined to the subfield $\FF{2^{128}} \subseteq K$ and $\gamma$ taken as the image of $X$ under the fixed embedding.
+
+For each of the six constraint arrays write $\mle{a}_\text{lo}(I, X), \mle{a}_\text{hi}(I, X), \ldots, \mle{c}_\text{hi}(I, X)$ for the multilinear extensions, with bit-index $I \in \BB_6$ and constraint-index $X \in \BB_{\ell_\text{binmul}}$. Define the packed operand multilinears $\mle{A}, \mle{B}, \mle{C} \in K[X_0, \ldots, X_{\ell_\text{binmul} - 1}]^\mlin$ by
+\[
+  \mle{A}(X) \coloneqq \sum_{i \in \BB_6} \gamma^i \cdot \mle{a}_\text{lo}(i, X) + \sum_{i \in \BB_6} \gamma^{64 + i} \cdot \mle{a}_\text{hi}(i, X),
+\]
+and analogously $\mle{B}$ from $(b_\text{lo}, b_\text{hi})$ and $\mle{C}$ from $(c_\text{lo}, c_\text{hi})$, where in each case $i \in \BB_6$ is identified with $\set{0, \ldots, 63}$ via binary representation. Each is multilinear in $X$ and $\FF{2^{128}}$-valued, and at a hypercube point $x \in \BB_{\ell_\text{binmul}}$ it evaluates to the encoded field element
+\[
+  \mle{A}(x) = \gval{a_\text{lo}[x], a_\text{hi}[x]} = A[x] \in \FF{2^{128}},
+\]
+since $\mle{a}_\text{lo}(i, x) = a_\text{lo}[i, x]$ is the $i$-th bit of the word $a_\text{lo}[x]$, and likewise for $B$ and $C$.
+
+\subsubsection{The Zerocheck}
+\label{sec:binmul-zerocheck}
+
+Satisfaction of the BinMul constraints is the claim that $A[x] \cdot B[x] = C[x]$ for every $x \in \BB_{\ell_\text{binmul}}$, i.e., that
+\[
+  f(X) \coloneqq \mle{A}(X) \cdot \mle{B}(X) - \mle{C}(X)
+\]
+vanishes on $\BB_{\ell_\text{binmul}}$. The operands are already $K$-valued, so, unlike the BitAnd reduction (\S\ref{sec:binand}), no univariate skip or Rijndael-field specialization applies; the reduction is an ordinary product-check zerocheck.
+\begin{enumerate}
+\item The verifier samples $r_z \gets K^{\ell_\text{binmul}}$ and sends it to the prover.
+\item The parties run an $\ell_\text{binmul}$-round sumcheck on
+  \[
+    0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{binmul}}} \mle{\eq}_{\ell_\text{binmul}}(r_z, x) \cdot \bigl( \mle{A}(x) \, \mle{B}(x) - \mle{C}(x) \bigr).
+  \]
+  The composing polynomial $\mle{\eq}_{\ell_\text{binmul}}(r_z, X) \cdot \bigl( \mle{A}(X) \mle{B}(X) - \mle{C}(X) \bigr)$ has individual degree $\leq 3$, so the prover sends a degree-$3$ round polynomial each round. The sumcheck produces a challenge $r_x \in K^{\ell_\text{binmul}}$ and a target $s$, with the assertion that $s \stackrel{?}{=} \mle{\eq}_{\ell_\text{binmul}}(r_z, r_x) \cdot \bigl( \mle{A}(r_x) \mle{B}(r_x) - \mle{C}(r_x) \bigr)$.
+\item The prover sends the $6 \times 64$ per-bit values $\mle{a}_\text{lo}(r_x, i), \mle{a}_\text{hi}(r_x, i), \mle{b}_\text{lo}(r_x, i), \mle{b}_\text{hi}(r_x, i), \mle{c}_\text{lo}(r_x, i), \mle{c}_\text{hi}(r_x, i)$ for $i \in \BB_6$. The verifier recombines them into the packed evaluations
+  \[
+    \alpha_A \coloneqq \sum_{i \in \BB_6} \gamma^i \cdot \mle{a}_\text{lo}(r_x, i) + \gamma^{64 + i} \cdot \mle{a}_\text{hi}(r_x, i),
+  \]
+  and $\alpha_B, \alpha_C$ likewise, evaluates $\mle{\eq}_{\ell_\text{binmul}}(r_z, r_x)$ on its own, and checks
+  \[
+    s \stackrel{?}{=} \bigl( \alpha_A \cdot \alpha_B - \alpha_C \bigr) \cdot \mle{\eq}_{\ell_\text{binmul}}(r_z, r_x).
+  \]
+\end{enumerate}
+
+The reduction's output is the $6 \times 64$ evaluation claims $\mle{a}_\text{lo}(r_x, i), \ldots, \mle{c}_\text{hi}(r_x, i)$ at the shared constraint point $r_x \in K^{\ell_\text{binmul}}$. These are in the same per-bit form as the IntMul output (\S\ref{sec:intmul}) and are passed to the shift reduction (\S\ref{sec:shift-reduction}). Soundness is that of the standard zerocheck, with error $O(\ell_\text{binmul}) / |K|$.
+
+\subsubsection{Prover Algorithm}
+\label{sec:binmul-prover}
+
+The prover forms the value tables of $\mle{A}, \mle{B}, \mle{C}$ on $\BB_{\ell_\text{binmul}}$ by packing the bit-columns of the constraint arrays: each entry $\mle{A}(x) = A[x]$ is assembled from the $128$ bits of $(a_\text{lo}[x], a_\text{hi}[x])$ by a bit-controlled XOR of the precomputed basis constants $\gamma^0, \ldots, \gamma^{127}$, exactly as the IntMul leaf tables are formed by bit-controlled selects (\S\ref{sec:intmul-prover}). With the three tables in hand, the zerocheck sumcheck runs by standard algorithms (Thaler~\cite[\S 4.1]{Thaler:2022aa}), with per-round work linear in $2^{\ell_\text{binmul}}$ and a composing polynomial of individual degree $\leq 3$. The constraint arrays are themselves computed from the witness via the shift structure shared with the other reductions.
 
 \subsection{The Shift Reduction}
 \label{sec:shift-reduction}
