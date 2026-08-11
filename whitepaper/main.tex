@@ -932,26 +932,6 @@ The verifier evaluates the bracketed factor on its own (see below) and outputs t
 \paragraph{Verifier evaluation of the constraint matrix.}
 At the very end, the verifier needs the single evaluation $\mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o)$. The straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
 
-\subsubsection{Zero-Shift Optimization}
-\label{sec:zero-shift-opt}
-
-A large fraction of shifted value indices in typical circuits use shift amount $s = 0$, which acts as the identity for every $\text{op} \in \textsf{ShiftOps}$: $\textsf{sll}(v, 0) = \textsf{srl}(v, 0) = \cdots = v$. In this case, $\textsf{shift-ind}_\text{op}(i, j, 0) = \mathbb{1}[i = j]$ for every op, and the shift-indicator factor in \eqref{eq:shift-reduction-claim} collapses to $\mle{\eq}_6(I, J)$.
-
-We split the phase-1 sum into $s = 0$ and $s \neq 0$ parts. For the $s = 0$ part, summing $i$ against $\mle{\eq}_6(I, J)$ collapses the inner sum:
-\[
-  \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\eq}_6(i, j) = \delta_D(r_{\widehat{i}}, \widehat{j}),
-\]
-so the entire $s = 0$ contribution simplifies to
-\[
-  \sum_{y \in \BB_{\ell_\text{words}}} \widehat{w}(r_{\widehat{i}}, y) \cdot \Bigl( \sum_\text{op} \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, 0) \Bigr),
-\]
-where $\widehat{w}(\widehat{I}, Y)$ is the oblong-multilinearization of $\mle{w}$ (in the $J$-variable). The double summation over $i, j \in \BB_6$ has collapsed to a single dimension, a $64$-fold reduction. The modified protocol splits phase 1 into:
-\begin{itemize}
-\item an $s = 0$ branch: directly produce a claim on $\widehat{w}(r_{\widehat{i}}, r_y)$ via an $\ell_\text{words}$-round sumcheck (no $J, S$ binding needed),
-\item an $s \neq 0$ branch: run the original phase-1 sumcheck but only over the non-zero shift amounts.
-\end{itemize}
-The verifier then closes out with both a claim on $\widehat{w}(r_{\widehat{i}}, r_y)$ from the $s = 0$ branch and a claim on $\mle{w}(r_j, r_y)$ from the $s \neq 0$ branch. The two claims can be batched into a single query by sharing the same $r_y$ across both sumchecks; the verifier evaluates the connection via the Lagrange-extrapolation identity $\widehat{w}(r_{\widehat{i}}, r_y) = \sum_{j \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{j}) \cdot \mle{w}(j, r_y)$.
-
 \subsubsection{Prover Algorithm}
 \label{sec:shift-reduction-prover}
 
