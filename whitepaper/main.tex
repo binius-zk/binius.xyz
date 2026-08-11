@@ -912,11 +912,11 @@ The parties run a $15$-round sumcheck on
 \[
   \alpha_z \stackrel{?}{=} \sum_{(j, s, o) \in \BB_{15}} h(j, s, o) \cdot g(j, s, o).
 \]
-The composing polynomial is the degree-$2$ product of two multilinears; the prover sends a degree-$2$ round polynomial in each round. After $15$ rounds, the sumcheck reduces $\alpha_z$ to a claim
+The composing polynomial is the degree-$2$ product of two multilinears; the prover sends a degree-$2$ round polynomial in each round. The variables are bound in the order $S_0, \ldots, S_5, O_0, \ldots, O_2, J_0, \ldots, J_5$, so that the nine variables carrying the shift amount and the shift operation are bound before the six carrying the bit index; the prover algorithm of \S\ref{sec:shift-reduction-prover} exploits this order. After $15$ rounds, the sumcheck reduces $\alpha_z$ to a claim
 \[
   \beta \stackrel{?}{=} h(r_j, r_s, r_o) \cdot g(r_j, r_s, r_o),
 \]
-where $r_j, r_s \in K^6$ and $r_o \in K^3$ are the sumcheck challenges. The verifier can evaluate $h(r_j, r_s, r_o)$ on its own: it expands the interpolated indicator by \eqref{eq:shift-indicator-interpolation} into the eight succinct shift-indicator arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$, after a single $O(2^6)$ precomputation of $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$.
+where $r_s \in K^6$, $r_o \in K^3$, and $r_j \in K^6$ are the sumcheck challenges, in the order drawn. The verifier can evaluate $h(r_j, r_s, r_o)$ on its own: it expands the interpolated indicator by \eqref{eq:shift-indicator-interpolation} into the eight succinct shift-indicator arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$, after a single $O(2^6)$ precomputation of $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$.
 
 \paragraph{Phase 2: $\ell_\text{words}$ rounds.}
 Unrolling the definition of $g(r_j, r_s, r_o)$ and exchanging sums,
@@ -951,8 +951,22 @@ exactly for those $(y, s, o)$ triples for which the value is nonzero (otherwise 
 \end{quote}
 Total work and space are $O(\text{circuit size}) + O(n_\text{words})$ field elements.
 
+\paragraph{Active shift pairs.}
+A constraint system draws on only a few of the $2^9$ pairs $(s, o) \in \BB_6 \times \BB_3$. Hash and cipher circuits fix a handful of shift and rotation amounts and reuse them throughout, so the count
+\[
+  n_\text{shift} \coloneqq \bigl| \set{(s, o) : (y, \text{op}(o), s) \in L^z_x \text{ for some } x \text{ and some array } z \text{ of the batch}} \bigr|
+\]
+of \emph{active} pairs---taken across the Zero, BitAnd, IntMul, and BinMul arrays that the batched reduction consumes---is typically in the tens. For an inactive pair the entire slice $Z_\text{cons}[\cdot, \cdot, s, o]$ vanishes, hence so does $g(J, s, o)$. The prover accordingly carries $g$ on the active pairs alone.
+
 \paragraph{Computing $g$.}
-Using $\textsf{index}$, the $2^{15}$-entry table $g[j][s][o] = \sum_y \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{w}(j, y)$ is computed by iterating over $y$ and, for each populated key $(s, o)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(s, o)]$ into $g[j][s][o]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size.
+Using $\textsf{index}$, the prover forms the $2^6 \cdot n_\text{shift}$-entry table $g[j][(s, o)] = \sum_y \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{w}(j, y)$, indexed by the bit position and by an active pair, by iterating over $y$ and, for each populated key $(s, o)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(s, o)]$ into $g[j][(s, o)]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size. This loop is the reduction's one pass over the whole circuit, and the accumulator it scatters into stays cache-resident throughout.
+
+\paragraph{Sparse rounds of phase 1.}
+The nine rounds binding $(S, O)$ fold $h$ and $g$ against the verifier's challenges. Let $L_t$ denote the image of the active pairs under the map forgetting the $t$ coordinates bound so far; since binding a variable merges two indices into one, $|L_t| \leq \min(n_\text{shift}, 2^{9 - t})$. The folded $g$ is supported on $L_t$, so the prover folds and forms round polynomials over those entries alone, at $O(2^6 \cdot |L_t|)$ field operations in round $t$ and
+\[
+  O\bigl( 2^6 \cdot n_\text{shift} \cdot \log_2 (2^9 / n_\text{shift}) \bigr)
+\]
+across the nine rounds. The table $h$ is folded in full: its folded value at an active pair is a weighted sum over that index's whole subtree, inactive pairs included, so the dense table is what supplies it. This costs at most $2^{15}$ multiplications over the nine rounds, a fixed charge independent of the circuit. After the ninth round both tables have length $2^6$ in $J$ alone, and the remaining six rounds are an ordinary dense sumcheck.
 
 \paragraph{Phase-2 multilinear tables.}
 For phase 2 the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_s, r_o)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$ and $\textsf{TensorExpand}_3(r_o)$, then accumulate, for each $y$ and each populated $(s, o) \in \textsf{index}[y]$, the product $\textsf{index}[y][(s, o)] \cdot \mle{\eq}_6(r_s, s) \cdot \mle{\eq}_3(r_o, o)$ into a length-$n_\text{words}$ vector.
