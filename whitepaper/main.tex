@@ -313,6 +313,8 @@ The first four are full-width $64$-bit operations. For $v \in \BB_{64}$ and $s \
 \end{itemize}
 The remaining four operations are the \emph{$32$-bit parallel} variants $\textsf{sll32}, \textsf{srl32}, \textsf{sra32}, \textsf{ror32}$. Each treats $v$ as a pair of independent $32$-bit halves (the low and high halves of $v$) and applies the corresponding shift to both halves in parallel. The $32$-bit operations use only the five least-significant bits of the $6$-bit shift amount $s$; the most-significant bit of $s$ is ignored.
 
+Since $|\textsf{ShiftOps}| = 8$, we index the shift operations by the hypercube $\BB_3$: we write $\text{op}(o)$ for the $o$-th operation in the order listed above, under the little-endian identification of $\BB_3$ with $\set{0, \ldots, 7}$ (\S\ref{sec:notation}). The enumeration is chosen so that the top bit $o_2$ selects the width---$o_2 = 0$ for the four full-width operations, $o_2 = 1$ for the four $32$-bit parallel variants---while the low pair $(o_0, o_1)$ selects the base operation $\textsf{sll}, \textsf{srl}, \textsf{sra}, \textsf{ror}$ in either width.
+
 A \emph{shifted value index} is a triple
 \[
   (y, \text{op}, s) \in \set{0, \ldots, n_\text{words} - 1} \times \textsf{ShiftOps} \times \set{0, \ldots, 63}
@@ -454,8 +456,20 @@ To verify \eqref{eq:shift-indicator-identity}, it suffices to check it on the cu
 
 Identity \eqref{eq:shift-indicator-identity} enables the standard reduction: given an evaluation claim on $\mle{\textsf{shift}}_\text{op}(\mle{w})$ at some point $(r_i, r_y, r_s) \in K^{6 + \ell_\text{words} + 6}$, a $6$-round sumcheck binds the index $j$, leaving evaluation claims on $\mle{\textsf{shift-ind}}_\text{op}(r_i, r_j, r_s)$ (which the verifier evaluates directly) and on $\mle{w}(r_j, r_y)$ (a single query to the witness oracle).
 
+\paragraph{Interpolation over the operations.}
+The shift reduction treats the shift operation as one more hypercube coordinate, so we assemble the eight indicators into a single polynomial. Using the indexing $o \mapsto \text{op}(o)$ of $\textsf{ShiftOps}$ by $\BB_3$ (\S\ref{sec:shifted-indices}), define the \emph{interpolated shift indicator} $\textsf{shift-ind} \colon \BB_6 \times \BB_6 \times \BB_6 \times \BB_3 \to \FF{2}$ by
+\[
+  \textsf{shift-ind}(i, j, s, o) \coloneqq \textsf{shift-ind}_{\text{op}(o)}(i, j, s),
+\]
+and write $\mle{\textsf{shift-ind}}(I, J, S, O)$ for its multilinear extension, a $21$-variate multilinear with $\FF{2}$-coefficients. Expanding the multilinear extension along its last three variables (\S\ref{sec:notation}) gives
+\begin{equation}
+  \mle{\textsf{shift-ind}}(I, J, S, O) = \sum_{o \in \BB_3} \mle{\eq}_3(O, o) \cdot \mle{\textsf{shift-ind}}_{\text{op}(o)}(I, J, S),
+  \label{eq:shift-indicator-interpolation}
+\end{equation}
+since both sides are multilinear and agree on $\BB_{21}$.
+
 \paragraph{Succinctness.}
-The shift indicator $\mle{\textsf{shift-ind}}_\text{op}$ is \emph{succinct} for each of the eight $\text{op} \in \textsf{ShiftOps}$: any point of $K^{18}$ can be evaluated in $O(1)$ field operations (concretely, at most $84$ multiplications in $K$ plus a $6$-way product). The explicit arithmetizations, with auxiliary functions $\mathsf{s}_k, \mathsf{s}'_k, \mathsf{a}_k$ for the recursive constructions of the $64$-bit and $32$-bit-parallel variants, are deferred to Appendix~\ref{app:shift-arithmetizations}.
+The shift indicator $\mle{\textsf{shift-ind}}_\text{op}$ is \emph{succinct} for each of the eight $\text{op} \in \textsf{ShiftOps}$: any point of $K^{18}$ can be evaluated in $O(1)$ field operations (concretely, at most $84$ multiplications in $K$ plus a $6$-way product). The explicit arithmetizations, with auxiliary functions $\mathsf{s}_k, \mathsf{s}'_k, \mathsf{a}_k$ for the recursive constructions of the $64$-bit and $32$-bit-parallel variants, are deferred to Appendix~\ref{app:shift-arithmetizations}. The interpolated indicator $\mle{\textsf{shift-ind}}$ is succinct in turn: by \eqref{eq:shift-indicator-interpolation}, a point of $K^{21}$ costs the eight per-op evaluations plus the $O(1)$ weights $\textsf{TensorExpand}_3(O)$.
 
 \subsection{The BitAnd Reduction}
 \label{sec:binand}
@@ -837,7 +851,7 @@ The shift reduction consumes the evaluation claims produced by the Zero, BitAnd,
 
 For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays by random batching, with the verifier sampling fresh batching coefficients before phase 1. In the full Binius64 LIOP, the outputs of all four constraint reductions are first brought to a common oblong point $r_{\widehat{i}}$ over the bit-index and batched, as described in \S\ref{sec:rz-unification}; a single shift reduction then processes the batched claim, over constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{zero}, \ell_\text{and}, \ell_\text{mul}, \ell_\text{binmul})$.
 
-Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrices $\mle{Z}_{\text{cons}, \text{op}}$ of \S\ref{sec:mathematizing}, which are per-array objects to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_{\text{cons}, \text{op}}(r'_x, y, S)$ by $\sum_z \eta_z \cdot \mle{Z}^z_{\text{cons}, \text{op}}(\rho_z, y, S)$ throughout: the factorization of \S\ref{sec:two-phase-sumcheck} is untouched, the prover accumulates the sparse index of \S\ref{sec:shift-reduction-prover} from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the factor $h_\text{op}$, which the phase-1 sumcheck binds jointly for all arrays.
+Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrix $\mle{Z}_\text{cons}$ of \S\ref{sec:mathematizing}, which is a per-array object to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_\text{cons}(r'_x, y, S, O)$ by $\sum_z \eta_z \cdot \mle{Z}^z_\text{cons}(\rho_z, y, S, O)$ throughout: the factorization of \S\ref{sec:two-phase-sumcheck} is untouched, the prover accumulates the sparse index of \S\ref{sec:shift-reduction-prover} from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the factor $h$, which the phase-1 sumcheck binds jointly for all arrays.
 
 \subsubsection{Unifying the Output Claims}
 \label{sec:rz-unification}
@@ -858,65 +872,65 @@ The fold reuses the BitAnd univariate-skip challenge $r_{\widehat{i}}$ as the co
 
 We first re-express the oblong-multilinearization $\widehat{z}(\widehat{I}, X)$ in terms of $\mle{w}$ and the shift indicators.
 
-\paragraph{Constraint matrices.}
-For each $\text{op} \in \textsf{ShiftOps}$, define the three-dimensional $\FF{2}$-valued matrix $Z_{\text{cons}, \text{op}}$ of shape $n_\text{cons} \times n_\text{words} \times 64$ by
+\paragraph{Constraint matrix.}
+Define the four-dimensional $\FF{2}$-valued matrix $Z_\text{cons}$ of shape $n_\text{cons} \times n_\text{words} \times 64 \times 8$ by
 \[
-  Z_{\text{cons}, \text{op}}[x, y, s] \coloneqq \mathbb{1}\bigl[ (y, \text{op}, s) \in L^z_x \bigr],
+  Z_\text{cons}[x, y, s, o] \coloneqq \mathbb{1}\bigl[ (y, \text{op}(o), s) \in L^z_x \bigr],
 \]
-where $L^z_x$ is the list of shifted value indices generating $z[x]$. The constraint array can be re-expressed as
+where $L^z_x$ is the list of shifted value indices generating $z[x]$ and $o \in \BB_3$ indexes $\textsf{ShiftOps}$ as in \S\ref{sec:shifted-indices}. The constraint array can be re-expressed as
 \[
-  z[x] = \sum_{\text{op}} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} Z_{\text{cons}, \text{op}}[x, y, s] \cdot \textsf{shift}_\text{op}(w)(y, s),
+  z[x] = \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} Z_\text{cons}[x, y, s, o] \cdot \textsf{shift}_{\text{op}(o)}(w)(y, s).
 \]
-where the outer sum is over the eight elements of $\textsf{ShiftOps}$. Writing $\mle{Z}_{\text{cons}, \text{op}}$ for the multilinear extension of $Z_{\text{cons}, \text{op}}$, taking multilinear extensions and unrolling the shift-indicator identity \eqref{eq:shift-indicator-identity} gives
+Writing $\mle{Z}_\text{cons}$ for the multilinear extension of $Z_\text{cons}$, taking multilinear extensions and unrolling the shift-indicator identity \eqref{eq:shift-indicator-identity} gives
 \[
-  \mle{z}(I, X) = \sum_\text{op} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{j \in \BB_6} \mle{Z}_{\text{cons}, \text{op}}(X, y, s) \cdot \mle{\textsf{shift-ind}}_\text{op}(I, j, s) \cdot \mle{w}(j, y).
+  \mle{z}(I, X) = \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{j \in \BB_6} \mle{Z}_\text{cons}(X, y, s, o) \cdot \mle{\textsf{shift-ind}}(I, j, s, o) \cdot \mle{w}(j, y),
 \]
-Applying the oblong-multilinearization construction of \S\ref{sec:oblong} (introducing $\delta_D(\widehat{I}, \widehat{i})$ and summing $i \in \BB_6$) yields the analogous expression for $\widehat{z}(\widehat{I}, X)$. Specializing at $(r_{\widehat{i}}, r'_x)$ produces the explicit form
+where the shift indicators have been assembled into the interpolated indicator of \eqref{eq:shift-indicator-interpolation}, legitimately so because $o$ is summed over the cube. Applying the oblong-multilinearization construction of \S\ref{sec:oblong} (introducing $\delta_D(\widehat{I}, \widehat{i})$ and summing $i \in \BB_6$) yields the analogous expression for $\widehat{z}(\widehat{I}, X)$. Specializing at $(r_{\widehat{i}}, r'_x)$ produces the explicit form
 \begin{equation}
-  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_\text{op} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \mle{\textsf{shift-ind}}_\text{op}(i, j, s) \cdot \mle{w}(j, y).
+  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_{o \in \BB_3} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{\textsf{shift-ind}}(i, j, s, o) \cdot \mle{w}(j, y).
   \label{eq:shift-reduction-claim}
 \end{equation}
-This nested sum is over $\ell_\text{words} + 18$ variables; running sumcheck on it naively is prohibitive. The next subsubsection shows how to factor it into two manageable phases.
+This nested sum is over $\ell_\text{words} + 21$ variables; running sumcheck on it naively is prohibitive. The next subsubsection shows how to factor it into two manageable phases.
 
 \subsubsection{The Two-Phase Sumcheck}
 \label{sec:two-phase-sumcheck}
 
 \paragraph{Factorization.}
-In \eqref{eq:shift-reduction-claim}, no single inner factor depends on both $i$ and $y$: $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\mle{\textsf{shift-ind}}_\text{op}(i, j, s)$ contain $i$ but not $y$, whereas $\mle{Z}_{\text{cons}, \text{op}}(r'_x, y, s)$ and $\mle{w}(j, y)$ contain $y$ but not $i$. We can therefore factor the two innermost sums and obtain
+In \eqref{eq:shift-reduction-claim}, no single inner factor depends on both $i$ and $y$: $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\mle{\textsf{shift-ind}}(i, j, s, o)$ contain $i$ but not $y$, whereas $\mle{Z}_\text{cons}(r'_x, y, s, o)$ and $\mle{w}(j, y)$ contain $y$ but not $i$. We can therefore factor the two innermost sums and obtain
 \[
-  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_\text{op} h_\text{op}(j, s) \cdot g_\text{op}(j, s),
+  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_{o \in \BB_3} h(j, s, o) \cdot g(j, s, o),
 \]
 where
 \begin{align*}
-  h_\text{op}(J, S) &\coloneqq \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}_\text{op}(i, J, S), \\
-  g_\text{op}(J, S) &\coloneqq \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, S) \cdot \mle{w}(J, y).
+  h(J, S, O) &\coloneqq \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, J, S, O), \\
+  g(J, S, O) &\coloneqq \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, S, O) \cdot \mle{w}(J, y).
 \end{align*}
-Both $h_\text{op}$ and $g_\text{op}$ are multilinear in the $12$ variables $(J, S)$: for $h_\text{op}$, the variable factors $\mle{\textsf{shift-ind}}_\text{op}(i, J, S)$ depend on $J, S$ multilinearly and $\delta_D(r_{\widehat{i}}, \widehat{i})$ is constant in $(J, S)$; for $g_\text{op}$, $\mle{Z}_{\text{cons}, \text{op}}(r'_x, y, S)$ depends on $S$ but not $J$ while $\mle{w}(J, y)$ depends on $J$ but not $S$, so each summand is multilinear in $(J, S)$.
+Both $h$ and $g$ are multilinear in the $15$ variables $(J, S, O)$: for $h$, the variable factors $\mle{\textsf{shift-ind}}(i, J, S, O)$ depend on $J, S, O$ multilinearly and $\delta_D(r_{\widehat{i}}, \widehat{i})$ is constant in them; for $g$, $\mle{Z}_\text{cons}(r'_x, y, S, O)$ depends on $S, O$ but not $J$ while $\mle{w}(J, y)$ depends on $J$ but not $S, O$, so each summand is multilinear in $(J, S, O)$.
 
-\paragraph{Phase 1: $12$ rounds.}
-The parties run a $12$-round sumcheck on
+\paragraph{Phase 1: $15$ rounds.}
+The parties run a $15$-round sumcheck on
 \[
-  \alpha_z \stackrel{?}{=} \sum_{(j, s) \in \BB_{12}} \sum_\text{op} h_\text{op}(j, s) \cdot g_\text{op}(j, s).
+  \alpha_z \stackrel{?}{=} \sum_{(j, s, o) \in \BB_{15}} h(j, s, o) \cdot g(j, s, o).
 \]
-The composing polynomials are degree-$2$ products of multilinears (one $h_\text{op} \cdot g_\text{op}$ product per $\text{op}$, summed over $|\textsf{ShiftOps}| = 8$); the prover sends a degree-$2$ round polynomial in each round. After $12$ rounds, the sumcheck reduces $\alpha_z$ to a claim
+The composing polynomial is the degree-$2$ product of two multilinears; the prover sends a degree-$2$ round polynomial in each round. After $15$ rounds, the sumcheck reduces $\alpha_z$ to a claim
 \[
-  \beta \stackrel{?}{=} \sum_\text{op} h_\text{op}(r_j, r_s) \cdot g_\text{op}(r_j, r_s),
+  \beta \stackrel{?}{=} h(r_j, r_s, r_o) \cdot g(r_j, r_s, r_o),
 \]
-where $r_j, r_s \in K^6$ are the sumcheck challenges. The verifier can evaluate each $h_\text{op}(r_j, r_s)$ on its own using the succinct shift-indicator arithmetizations of \S\ref{sec:shift-indicators}, after a single $O(2^6)$ precomputation of $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$.
+where $r_j, r_s \in K^6$ and $r_o \in K^3$ are the sumcheck challenges. The verifier can evaluate $h(r_j, r_s, r_o)$ on its own: it expands the interpolated indicator by \eqref{eq:shift-indicator-interpolation} into the eight succinct shift-indicator arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$, after a single $O(2^6)$ precomputation of $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$.
 
 \paragraph{Phase 2: $\ell_\text{words}$ rounds.}
-Unrolling the definition of $g_\text{op}(r_j, r_s)$ and exchanging sums,
+Unrolling the definition of $g(r_j, r_s, r_o)$ and exchanging sums,
 \[
-  \beta \stackrel{?}{=} \sum_{y \in \BB_{\ell_\text{words}}} \Bigl[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, r_s) \Bigr] \cdot \mle{w}(r_j, y).
+  \beta \stackrel{?}{=} \sum_{y \in \BB_{\ell_\text{words}}} \Bigl[ h(r_j, r_s, r_o) \cdot \mle{Z}_\text{cons}(r'_x, y, r_s, r_o) \Bigr] \cdot \mle{w}(r_j, y).
 \]
 The bracketed quantity is multilinear in $y$, as is $\mle{w}(r_j, y)$, so the parties run an $\ell_\text{words}$-round sumcheck on this claim. The composing polynomials are degree-$2$ products of multilinears in $y$. After $\ell_\text{words}$ rounds, the sumcheck produces a challenge $r_y \in K^{\ell_\text{words}}$ and a final claim
 \[
-  \gamma \stackrel{?}{=} \Bigl[ \sum_\text{op} h_\text{op}(r_j, r_s) \cdot \mle{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s) \Bigr] \cdot \mle{w}(r_j, r_y).
+  \gamma \stackrel{?}{=} \Bigl[ h(r_j, r_s, r_o) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o) \Bigr] \cdot \mle{w}(r_j, r_y).
 \]
 The verifier evaluates the bracketed factor on its own (see below) and outputs the single witness-evaluation claim $\mle{w}(r_j, r_y)$. This bit-level claim on the $\FF{2}$-valued witness is reduced to a linear query on the packed $K$-valued oracle $\pi$ in the ring-switching step of \S\ref{sec:ring-switching}.
 
-\paragraph{Verifier evaluation of constraint matrices.}
-At the very end, the verifier needs $\mle{Z}_{\text{cons}, \text{op}}(r'_x, r_y, r_s)$ for each $\text{op} \in \textsf{ShiftOps}$. The straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
+\paragraph{Verifier evaluation of the constraint matrix.}
+At the very end, the verifier needs the single evaluation $\mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o)$. The straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
 
 \subsubsection{Zero-Shift Optimization}
 \label{sec:zero-shift-opt}
@@ -941,27 +955,27 @@ The verifier then closes out with both a claim on $\widehat{w}(r_{\widehat{i}}, 
 \subsubsection{Prover Algorithm}
 \label{sec:shift-reduction-prover}
 
-We sketch the prover-side data structures and the main loops; the goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 18$-dimensional sum.
+We sketch the prover-side data structures and the main loops; the goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 21$-dimensional sum.
 
-\paragraph{Computing $h_\text{op}$.}
-The prover precomputes $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ once (\S\ref{sec:oblong}) and then, for each $\text{op}$, populates the $64 \times 64$ table $h_\text{op}[j][s]$ exploiting the structure of $\mle{\textsf{shift-ind}}_\text{op}$. For $\textsf{srl}$, the indicator $\textsf{shift-ind}_\textsf{srl}(i, j, s)$ is $\mathbb{1}[j = i + s]$ on the cube, so $h_\textsf{srl}[j][s] = \delta_D(r_{\widehat{i}}, \widehat{i})$ for $i = j - s$ when valid (and $0$ otherwise); similar shape patterns apply to $\textsf{sll}$, $\textsf{sra}$, $\textsf{ror}$, and their $32$-bit variants. For $\textsf{sra}$, the case $j = 63$ admits multiple contributing $i$ values; these are accumulated in a running prefix sum over $s$. Total table size across all eight ops is $8 \cdot 2^{12}$ field elements.
+\paragraph{Computing $h$.}
+The prover precomputes $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ once (\S\ref{sec:oblong}) and then fills the $2^{15}$-entry value table $h[j][s][o]$ one $\text{op}$-slice at a time, exploiting the structure of each $\mle{\textsf{shift-ind}}_{\text{op}(o)}$. For $\textsf{srl}$, the indicator $\textsf{shift-ind}_\textsf{srl}(i, j, s)$ is $\mathbb{1}[j = i + s]$ on the cube, so the corresponding slice holds $\delta_D(r_{\widehat{i}}, \widehat{i})$ for $i = j - s$ when valid (and $0$ otherwise); similar shape patterns apply to $\textsf{sll}$, $\textsf{sra}$, $\textsf{ror}$, and their $32$-bit variants. For $\textsf{sra}$, the case $j = 63$ admits multiple contributing $i$ values; these are accumulated in a running prefix sum over $s$.
 
 \paragraph{Constraint-column index.}
-Most shifted value indices in practice are sparse: each constraint list $L^z_x$ has $O(1)$ entries on average. The prover builds, in a single linear pass over the constraint system, a sparse index data structure $\textsf{index} \colon \BB_{\ell_\text{words}} \to (\textsf{ShiftOps} \times \BB_6 \to K)$ such that
+Most shifted value indices in practice are sparse: each constraint list $L^z_x$ has $O(1)$ entries on average. The prover builds, in a single linear pass over the constraint system, a sparse index data structure $\textsf{index} \colon \BB_{\ell_\text{words}} \to (\BB_6 \times \BB_3 \to K)$ such that
 \[
-  \textsf{index}[y][(\text{op}, s)] = \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, s)
+  \textsf{index}[y][(s, o)] = \mle{Z}_\text{cons}(r'_x, y, s, o)
 \]
-exactly for those $(y, \text{op}, s)$ triples for which the value is nonzero (otherwise the key is absent). The build is
+exactly for those $(y, s, o)$ triples for which the value is nonzero (otherwise the key is absent). The build is
 \begin{quote}
-  precompute $\textsf{TensorExpand}_{\ell_\text{cons}}(r'_x)$; then for each $x \in \BB_{\ell_\text{cons}}$ and each $(y, \text{op}, s) \in L^z_x$, add $\textsf{TensorExpand}(r'_x)[x]$ to $\textsf{index}[y][(\text{op}, s)]$.
+  precompute $\textsf{TensorExpand}_{\ell_\text{cons}}(r'_x)$; then for each $x \in \BB_{\ell_\text{cons}}$ and each $(y, \text{op}(o), s) \in L^z_x$, add $\textsf{TensorExpand}(r'_x)[x]$ to $\textsf{index}[y][(s, o)]$.
 \end{quote}
 Total work and space are $O(\text{circuit size}) + O(n_\text{words})$ field elements.
 
-\paragraph{Computing $g_\text{op}$.}
-Using $\textsf{index}$, the table $g_\text{op}[j][s] = \sum_y \mle{Z}_{\text{cons}, \text{op}}(r'_x, y, s) \cdot \mle{w}(j, y)$ is computed by iterating over $y$ and, for each populated key $(\text{op}, s)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(\text{op}, s)]$ into $g_\text{op}[j][s]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size.
+\paragraph{Computing $g$.}
+Using $\textsf{index}$, the $2^{15}$-entry table $g[j][s][o] = \sum_y \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{w}(j, y)$ is computed by iterating over $y$ and, for each populated key $(s, o)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(s, o)]$ into $g[j][s][o]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size.
 
 \paragraph{Phase-2 multilinear tables.}
-For phase 2 the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\sum_\text{op} h_\text{op}(r_j, r_s) \cdot \mle{Z}_{\text{cons}, \text{op}}(r'_x, Y, r_s)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$, then accumulate, for each $y$ and each populated $(\text{op}, s) \in \textsf{index}[y]$, $h_\text{op}(r_j, r_s) \cdot \textsf{index}[y][(\text{op}, s)] \cdot \mle{\eq}_6(r_s, s)$ into a length-$n_\text{words}$ vector.
+For phase 2 the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_s, r_o)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$ and $\textsf{TensorExpand}_3(r_o)$, then accumulate, for each $y$ and each populated $(s, o) \in \textsf{index}[y]$, the product $\textsf{index}[y][(s, o)] \cdot \mle{\eq}_6(r_s, s) \cdot \mle{\eq}_3(r_o, o)$ into a length-$n_\text{words}$ vector.
 
 \subsection{Ring-Switching to the Packed Witness}
 \label{sec:ring-switching}
