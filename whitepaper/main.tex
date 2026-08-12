@@ -61,7 +61,7 @@ This document specifies Binius64, a hash-based zero-knowledge succinct non-inter
 
 A \emph{succinct non-interactive argument of knowledge}, or SNARK, lets a verifier check the result of a computation far more cheaply than re-executing it, while remaining convinced---up to a negligible soundness error---that the prover holds a witness for which the computation was carried out correctly. SNARKs are the central primitive of \emph{verifiable computing}~\cite{Setty:2020aa}: a small, trusted device can audit the output of an untrusted, possibly faulty, and far more powerful one. When the argument additionally reveals nothing about the witness beyond the truth of the statement, it is \emph{zero-knowledge}, the property that underpins privacy-preserving applications such as verifiable credentials and confidential transactions.
 
-Many of the computations one most wants to prove---hash functions such as SHA-256, SHA-3, and Blake3, block ciphers, and the bit manipulation at the core of cryptographic primitives---are naturally expressed as operations on machine words: $64$-bit XOR, AND, shifts, rotations, and integer multiplication. General-purpose SNARKs built over large prime fields can prove such operations only after an expensive bit-by-bit decomposition, and even most binary-field systems pay a cost per individual bit. Binius64 instead takes the $64$-bit word as its unit of arithmetization. The constraint system (\S\ref{sec:constraint-system}) offers exactly four native constraint forms---\emph{Zero}, the vanishing of an XOR-accumulation of shifted words; \emph{BitAnd}, a bitwise AND between two such accumulations; \emph{IntMul}, an unsigned $64$-bit integer multiplication; and \emph{BinMul}, a multiplication in the GHASH field $\FF{2^{128}}$---and derives the remaining common operations (NOT, OR, integer addition and subtraction; \S\ref{sec:common-ops}) from them. The key device is the \emph{shifted value index}, which fuses a reference to a prover word with a shift operation, so that shifts and rotations are absorbed into the operands of the AND and multiplication constraints rather than charged as separate constraints. Operating on words rather than bits reduces the number of constraints by up to a factor of $64$ relative to a bit-level encoding, while retaining the efficiency of binary-field arithmetic.
+Many of the computations one most wants to prove---hash functions such as SHA-256, SHA-3, and Blake3, block ciphers, and the bit manipulation at the core of cryptographic primitives---are naturally expressed as operations on machine words: $64$-bit XOR, AND, shifts, rotations, and integer multiplication. General-purpose SNARKs built over large prime fields can prove such operations only after an expensive bit-by-bit decomposition, and even most binary-field systems pay a cost per individual bit. Binius64 instead takes the $64$-bit word as its unit of arithmetization. The constraint system (\S\ref{sec:constraint-system}) offers exactly four native constraint forms---\emph{Zero}, the vanishing of an XOR-accumulation of shifted words; \emph{BitAnd}, a bitwise AND between two such accumulations; \emph{IntMul}, an unsigned $64$-bit integer multiplication; and \emph{BinMul}, a multiplication in the GHASH field $\FF{2^{128}}$---and derives the remaining common operations (NOT, OR, integer addition and subtraction; \S\ref{sec:common-ops}) from them. The key device is the \emph{shifted value index}, which fuses a reference to a prover word with a pair of shift operations applied in sequence, so that shifts and rotations are absorbed into the operands of the AND and multiplication constraints rather than charged as separate constraints. Operating on words rather than bits reduces the number of constraints by up to a factor of $64$ relative to a bit-level encoding, while retaining the efficiency of binary-field arithmetic.
 
 That efficiency is rooted in the choice of field. Binius64 works entirely in characteristic $2$. Binary-field addition is bitwise XOR; the prime field $\FF{2}$ is the natural home of a single bit; and---decisively for performance---multiplication in the GHASH field $\FF{2^{128}}$ is accelerated in hardware on precisely the processors we target. The carryless-multiplication instructions \texttt{CLMUL} on x86-64 and \texttt{PMULL} on ARM64, shipped to support the AES-GCM authenticated-encryption mode and the GMAC message-authentication code, supply exactly the field multiplication the prover needs. We accordingly take $K \coloneqq \FF{2^{128}}$, with security parameter $\lambda = 128$, as the field from which the verifier draws its random challenges (\S\ref{sec:binary-fields}). The protocol is designed throughout for high throughput on commodity x86-64 and ARM64 CPUs, including the SIMD units of modern mobile processors, which makes it well suited to local proving.
 
@@ -313,20 +313,29 @@ The first four are full-width $64$-bit operations. For $v \in \BB_{64}$ and $s \
 \end{itemize}
 The remaining four operations are the \emph{$32$-bit parallel} variants $\textsf{sll32}, \textsf{srl32}, \textsf{sra32}, \textsf{ror32}$. Each treats $v$ as a pair of independent $32$-bit halves (the low and high halves of $v$) and applies the corresponding shift to both halves in parallel. The $32$-bit operations use only the five least-significant bits of the $6$-bit shift amount $s$; the most-significant bit of $s$ is ignored.
 
-Since $|\textsf{ShiftOps}| = 8$, we index the shift operations by the hypercube $\BB_3$: we write $\text{op}(o)$ for the $o$-th operation in the order listed above, under the little-endian identification of $\BB_3$ with $\set{0, \ldots, 7}$ (\S\ref{sec:notation}). The enumeration is chosen so that the top bit $o_2$ selects the width---$o_2 = 0$ for the four full-width operations, $o_2 = 1$ for the four $32$-bit parallel variants---while the low pair $(o_0, o_1)$ selects the base operation $\textsf{sll}, \textsf{srl}, \textsf{sra}, \textsf{ror}$ in either width.
+Since $|\textsf{ShiftOps}| = 8$, we index the shift operations by the hypercube $\BB_3$: we write $\text{op}(o)$ for the $o$-th operation in the order listed above, under the little-endian identification of $\BB_3$ with $\set{0, \ldots, 7}$ (\S\ref{sec:notation}). The enumeration is chosen so that the most-significant bit of $o$ selects the width---clear for the four full-width operations, set for the four $32$-bit parallel variants---while the two least-significant bits select the base operation $\textsf{sll}, \textsf{srl}, \textsf{sra}, \textsf{ror}$ in either width.
 
-A \emph{shifted value index} is a triple
+A \emph{shifted value index} names a prover word together with a pair of shift operations applied to it in sequence. Formally it is a tuple
 \[
-  (y, \text{op}, s) \in \set{0, \ldots, n_\text{words} - 1} \times \textsf{ShiftOps} \times \set{0, \ldots, 63}
+  (y, \text{op}_1, s_1, \text{op}_2, s_2) \in \set{0, \ldots, n_\text{words} - 1} \times \bigl( \textsf{ShiftOps} \times \set{0, \ldots, 63} \bigr)^2,
 \]
-naming a prover-data index $y$, a shift operation $\text{op}$, and a shift amount $s$. Each such triple represents the value $\text{op}(w[y], s) \in \BB_{64}$. For example, $(55, \textsf{sll}, 10)$ represents \texttt{w[55] << 10}.
+naming a prover-data index $y$, an \emph{inner} shift $(\text{op}_1, s_1)$, and an \emph{outer} shift $(\text{op}_2, s_2)$. We write $\textsf{val}$ for the value it represents:
+\[
+  \textsf{val}(y, \text{op}_1, s_1, \text{op}_2, s_2) \coloneqq \text{op}_2\bigl( \text{op}_1(w[y], s_1), s_2 \bigr) \in \BB_{64}.
+\]
+Since $s = 0$ acts as the identity for every $\text{op} \in \textsf{ShiftOps}$---$\textsf{sll}(v, 0) = \textsf{srl}(v, 0) = \cdots = v$---a zero amount in either slot suppresses that shift, so single shifts and raw prover words are the special cases $s_2 = 0$ and $s_1 = s_2 = 0$ rather than a separate form. For example, $(55, \textsf{sll}, 10, \textsf{sll}, 0)$ represents \texttt{w[55] << 10}; $(55, \textsf{sll}, 40, \textsf{sra}, 40)$ represents \texttt{(int64\_t) (w[55] << 40) >> 40}, the sign-extension of the low $24$ bits of \texttt{w[55]}; and $(55, \textsf{sll}, 0, \textsf{sll}, 0)$ represents \texttt{w[55]} itself.
+
+Composing two shifts inside a single index is strictly more expressive than composing them across two indices: the latter would need an intermediate prover word, hence a witness entry and a Zero constraint to define it, whereas the former is free at the level of the constraint system and, as \S\ref{sec:shift-reduction} shows, nearly free in the protocol. Common patterns that a single shift cannot express---sign-extension of a sub-word field, extraction of a bit field to a fixed position, masking off a byte by shifting it off one end and back---become single index entries.
+
+\paragraph{Canonical form.}
+A zero shift amount makes the accompanying operation immaterial, so a value can be named by several tuples. We fix a canonical form, which makes the representation unique: when $s_2 = 0$ we take $\text{op}_2 \coloneqq \textsf{sll}$, when $s_1 = 0$ we take $\text{op}_1 \coloneqq \textsf{sll}$, and a lone shift is placed in the inner slot, so that $s_1 = 0$ implies $s_2 = 0$. A canonical index with $s_2 \neq 0$ therefore has $s_1 \neq 0$ as well. We call such an index \emph{doubly shifted}, one with $s_2 = 0 \neq s_1$ \emph{singly shifted}, and one with $s_1 = s_2 = 0$ \emph{unshifted}. Nothing in the reduction of \S\ref{sec:shift-reduction} depends on this normalization for correctness.
 
 \subsection{Constraint Arrays}
 \label{sec:constraint-arrays}
 
 We use a notational device to package XOR-accumulations of shifted value indices. Fix some total count $n_\text{cons}$ of constraints, and assume that for each $x \in \set{0, \ldots, n_\text{cons} - 1}$ we are given a list $L_x$ of shifted value indices. The \emph{constraint array} associated with $(L_x)_{x = 0}^{n_\text{cons} - 1}$ is the length-$n_\text{cons}$ array $z \in \BB_{64}^{n_\text{cons}}$ defined by
 \[
-  z[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L_x} \text{op}(w[y], s).
+  z[x] \coloneqq \bigoplus_{(y, \text{op}_1, s_1, \text{op}_2, s_2) \in L_x} \text{op}_2\bigl( \text{op}_1(w[y], s_1), s_2 \bigr).
 \]
 We will define Zero, BitAnd, IntMul, and BinMul constraints in terms of arrays of this form.
 
@@ -339,7 +348,7 @@ The simplest constraint form asserts that a single constraint array vanishes. Th
 \]
 inducing one constraint array $d \in \BB_{64}^{n_\text{zero}}$ as in \S\ref{sec:constraint-arrays}. The prover data $w$ \emph{satisfies} the Zero constraints if for each $x \in \set{0, \ldots, n_\text{zero} - 1}$,
 \[
-  d[x] = \bigoplus_{(y, \text{op}, s) \in L^d_x} \text{op}(w[y], s) = 0.
+  d[x] = \bigoplus_{(y, \text{op}_1, s_1, \text{op}_2, s_2) \in L^d_x} \text{op}_2\bigl( \text{op}_1(w[y], s_1), s_2 \bigr) = 0.
 \]
 
 A Zero constraint is thus an arbitrary $\FF{2}$-linear relation among shifted prover words. In particular, taking $L^d_x$ to be a two-element list constrains two shifted values to be equal, and taking it to be a three-element list $\set{u, v, z}$ forces $z = u \oplus v$, so bitwise XOR is native. Such relations are already expressible with BitAnd constraints alone---mask one side with the all-ones constant (Appendix~\ref{sec:common-ops})---but a Zero constraint carries one constraint array rather than three, and \S\ref{sec:zero} discharges it with no prover message and no sumcheck round at all.
@@ -353,9 +362,9 @@ The constraint system specifies a total number $n_\text{and}$ of BitAnd constrai
 \]
 which together induce three constraint arrays $a, b, c \in \BB_{64}^{n_\text{and}}$ as in \S\ref{sec:constraint-arrays}: for each $x \in \set{0, \ldots, n_\text{and} - 1}$,
 \[
-  a[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^a_x} \text{op}(w[y], s), \quad
-  b[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^b_x} \text{op}(w[y], s), \quad
-  c[x] \coloneqq \bigoplus_{(y, \text{op}, s) \in L^c_x} \text{op}(w[y], s).
+  a[x] \coloneqq \bigoplus_{u \in L^a_x} \textsf{val}(u), \quad
+  b[x] \coloneqq \bigoplus_{u \in L^b_x} \textsf{val}(u), \quad
+  c[x] \coloneqq \bigoplus_{u \in L^c_x} \textsf{val}(u).
 \]
 The prover data $w$ \emph{satisfies} the BitAnd constraints if for each $x \in \set{0, \ldots, n_\text{and} - 1}$,
 \[
@@ -455,6 +464,14 @@ The defining identity of the shift indicator polynomial is, for each $\text{op}$
 To verify \eqref{eq:shift-indicator-identity}, it suffices to check it on the cube: fix $i, s \in \BB_6$ and $y \in \BB_{\ell_\text{words}}$. Either some unique $j^* \in \BB_6$ has $\textsf{shift-ind}_\text{op}(i, j^*, s) = 1$, in which case the right-hand side reduces to $\mle{w}(j^*, y) = w[y]_{j^*} = \text{op}(w[y], s)_i$; or no such $j^*$ exists, in which case $\text{op}(w[y], s)_i = 0$ by definition of $\text{op}$ on zero-fill bits, and the right-hand side is zero.
 
 Identity \eqref{eq:shift-indicator-identity} enables the standard reduction: given an evaluation claim on $\mle{\textsf{shift}}_\text{op}(\mle{w})$ at some point $(r_i, r_y, r_s) \in K^{6 + \ell_\text{words} + 6}$, a $6$-round sumcheck binds the index $j$, leaving evaluation claims on $\mle{\textsf{shift-ind}}_\text{op}(r_i, r_j, r_s)$ (which the verifier evaluates directly) and on $\mle{w}(r_j, r_y)$ (a single query to the witness oracle).
+
+\paragraph{Composing two shifts.}
+The shift indicators compose, which is what makes the doubly shifted value indices of \S\ref{sec:shifted-indices} tractable. The key structural fact, already used above, is that for each $(i, s)$ there is \emph{at most one} $j \in \BB_6$ with $\textsf{shift-ind}_\text{op}(i, j, s) = 1$: output bit $i$ of $\text{op}(v, s)$ is either a single fixed input bit of $v$ or the constant zero. This holds for all eight operations, including $\textsf{sra}$, where the vacated high positions all take the single input bit $j = 63$, and including the $32$-bit variants, where the property holds within each half. Consequently
+\begin{equation}
+  \text{op}_2\bigl( \text{op}_1(v, s_1), s_2 \bigr)_i = \sum_{k \in \BB_6} \sum_{j \in \BB_6} \textsf{shift-ind}_{\text{op}_2}(i, k, s_2) \cdot \textsf{shift-ind}_{\text{op}_1}(k, j, s_1) \cdot v_j
+  \label{eq:composite-indicator}
+\end{equation}
+for every $v \in \BB_{64}$: the inner factor selects the input bit $j$ that supplies bit $k$ of the intermediate word $\text{op}_1(v, s_1)$, and the outer factor selects the bit $k$ of that intermediate word which output bit $i$ reproduces. The index $k$ ranges over the bit positions of the intermediate word, which is never materialized as a witness value; it exists only as a summation index, and the shift reduction (\S\ref{sec:shift-reduction}) carries it as one more sumcheck variable.
 
 \paragraph{Interpolation over the operations.}
 The shift reduction treats the shift operation as one more hypercube coordinate, so we assemble the eight indicators into a single polynomial. Using the indexing $o \mapsto \text{op}(o)$ of $\textsf{ShiftOps}$ by $\BB_3$ (\S\ref{sec:shifted-indices}), define the \emph{interpolated shift indicator} $\textsf{shift-ind} \colon \BB_6 \times \BB_6 \times \BB_6 \times \BB_3 \to \FF{2}$ by
@@ -851,7 +868,7 @@ The shift reduction consumes the evaluation claims produced by the Zero, BitAnd,
 
 For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays by random batching, with the verifier sampling fresh batching coefficients before the sumcheck begins. In the full Binius64 LIOP, the outputs of all four constraint reductions are first brought to a common oblong point $r_{\widehat{i}}$ over the bit-index and batched, as described in \S\ref{sec:rz-unification}; a single shift reduction then processes the batched claim, over constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{zero}, \ell_\text{and}, \ell_\text{mul}, \ell_\text{binmul})$.
 
-Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrix $\mle{Z}_\text{cons}$ of \S\ref{sec:mathematizing}, which is a per-array object to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_\text{cons}(r'_x, y, S, O)$ by $\sum_z \eta_z \cdot \mle{Z}^z_\text{cons}(\rho_z, y, S, O)$ throughout: the factorization of \S\ref{sec:shift-reduction-prover} is untouched, the prover accumulates the sparse index there from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the $\mle{\delta}_D$ and shift-indicator factors, which the sumcheck binds jointly for all arrays.
+Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrix $\mle{Z}_\text{cons}$ of \S\ref{sec:mathematizing}, which is a per-array object to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_\text{cons}(r'_x, y, S_1, O_1, S_2, O_2)$ by $\sum_z \eta_z \cdot \mle{Z}^z_\text{cons}(\rho_z, y, S_1, O_1, S_2, O_2)$ throughout: the factorization of \S\ref{sec:shift-reduction-prover} is untouched, the prover accumulates the sparse index there from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the $\mle{\delta}_D$ and shift-indicator factors, which the sumcheck binds jointly for all arrays.
 
 \subsubsection{Unifying the Output Claims}
 \label{sec:rz-unification}
@@ -873,40 +890,43 @@ The fold reuses the BitAnd univariate-skip challenge $r_{\widehat{i}}$ as the co
 We first re-express the oblong-multilinearization $\widehat{z}(\widehat{I}, X)$ in terms of $\mle{w}$ and the shift indicators.
 
 \paragraph{Constraint matrix.}
-Define the four-dimensional $\FF{2}$-valued matrix $Z_\text{cons}$ of shape $n_\text{cons} \times n_\text{words} \times 64 \times 8$ by
+Define the six-dimensional $\FF{2}$-valued matrix $Z_\text{cons}$ of shape $n_\text{cons} \times n_\text{words} \times 64 \times 8 \times 64 \times 8$ by
 \[
-  Z_\text{cons}[x, y, s, o] \coloneqq \mathbb{1}\bigl[ (y, \text{op}(o), s) \in L^z_x \bigr],
+  Z_\text{cons}[x, y, s_1, o_1, s_2, o_2] \coloneqq \mathbb{1}\bigl[ (y, \text{op}(o_1), s_1, \text{op}(o_2), s_2) \in L^z_x \bigr],
 \]
-where $L^z_x$ is the list of shifted value indices generating $z[x]$ and $o \in \BB_3$ indexes $\textsf{ShiftOps}$ as in \S\ref{sec:shifted-indices}. The constraint array can be re-expressed as
+where $L^z_x$ is the list of shifted value indices generating $z[x]$ and $o_1, o_2 \in \BB_3$ index $\textsf{ShiftOps}$ as in \S\ref{sec:shifted-indices}. The constraint array can be re-expressed as
 \[
-  z[x] = \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} Z_\text{cons}[x, y, s, o] \cdot \textsf{shift}_{\text{op}(o)}(w)(y, s).
+  z[x] = \sum_{o_1, o_2 \in \BB_3} \sum_{s_1, s_2 \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} Z_\text{cons}[x, y, s_1, o_1, s_2, o_2] \cdot \text{op}(o_2)\bigl( \text{op}(o_1)(w[y], s_1), s_2 \bigr).
 \]
-Writing $\mle{Z}_\text{cons}$ for the multilinear extension of $Z_\text{cons}$, taking multilinear extensions and unrolling the shift-indicator identity \eqref{eq:shift-indicator-identity} gives
-\[
-  \mle{z}(I, X) = \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{j \in \BB_6} \mle{Z}_\text{cons}(X, y, s, o) \cdot \mle{\textsf{shift-ind}}(I, j, s, o) \cdot \mle{w}(j, y),
-\]
-where the shift indicators have been assembled into the interpolated indicator of \eqref{eq:shift-indicator-interpolation}, legitimately so because $o$ is summed over the cube. Applying the oblong-multilinearization construction of \S\ref{sec:oblong} (introducing $\delta_D(\widehat{I}, \widehat{i})$ and summing $i \in \BB_6$) yields the analogous expression for $\widehat{z}(\widehat{I}, X)$. Specializing at $(r_{\widehat{i}}, r'_x)$ produces the explicit form
-\begin{equation}
-  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_{o \in \BB_3} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{\textsf{shift-ind}}(i, j, s, o) \cdot \mle{w}(j, y).
+Writing $\mle{Z}_\text{cons}$ for the multilinear extension of $Z_\text{cons}$, taking multilinear extensions and unrolling the composition identity \eqref{eq:composite-indicator} gives
+\begin{align*}
+  \mle{z}(I, X) = \sum_{o_1, o_2 \in \BB_3} \sum_{s_1, s_2 \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{k, j \in \BB_6} &\mle{Z}_\text{cons}(X, y, s_1, o_1, s_2, o_2) \\
+  &{} \cdot \mle{\textsf{shift-ind}}(I, k, s_2, o_2) \cdot \mle{\textsf{shift-ind}}(k, j, s_1, o_1) \cdot \mle{w}(j, y),
+\end{align*}
+where the shift indicators have been assembled into the interpolated indicator of \eqref{eq:shift-indicator-interpolation}, legitimately so because $o_1$ and $o_2$ are summed over the cube. Applying the oblong-multilinearization construction of \S\ref{sec:oblong} (introducing $\delta_D(\widehat{I}, \widehat{i})$ and summing $i \in \BB_6$) yields the analogous expression for $\widehat{z}(\widehat{I}, X)$. Specializing at $(r_{\widehat{i}}, r'_x)$ produces the explicit form
+\begin{align}
+  \alpha_z \stackrel{?}{=} \sum_{o_1, o_2 \in \BB_3} \sum_{s_1, s_2 \in \BB_6} \sum_{j, k, i \in \BB_6} \sum_{y \in \BB_{\ell_\text{words}}} &\delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{Z}_\text{cons}(r'_x, y, s_1, o_1, s_2, o_2) \notag \\
+  &{} \cdot \mle{\textsf{shift-ind}}(i, k, s_2, o_2) \cdot \mle{\textsf{shift-ind}}(k, j, s_1, o_1) \cdot \mle{w}(j, y).
   \label{eq:shift-reduction-claim}
-\end{equation}
-This nested sum is over $\ell_\text{words} + 21$ variables.
+\end{align}
+This nested sum is over $\ell_\text{words} + 36$ variables.
 
 \paragraph{The sumcheck.}
-The parties discharge \eqref{eq:shift-reduction-claim} by a single sumcheck over its variables $(O, S, J, I, Y)$. Write $\mle{\delta}_D(r_{\widehat{i}}, I)$ for the multilinear extension in $I$ of the $64$ oblong weights $i \mapsto \delta_D(r_{\widehat{i}}, \widehat{i})$; it agrees with them on $\BB_6$, so putting it in place of the first factor leaves \eqref{eq:shift-reduction-claim} unchanged. Each of the four factors is then multilinear in the summation variables, and each variable occurs in exactly two of them---$I$ in $\mle{\delta}_D$ and $\mle{\textsf{shift-ind}}$; $J$ in $\mle{\textsf{shift-ind}}$ and $\mle{w}$; $S$ and $O$ in $\mle{Z}_\text{cons}$ and $\mle{\textsf{shift-ind}}$; $Y$ in $\mle{Z}_\text{cons}$ and $\mle{w}$---so the summand has degree $2$ in every variable, and the prover sends a degree-$2$ round polynomial in each of the $21 + \ell_\text{words}$ rounds.
+The parties discharge \eqref{eq:shift-reduction-claim} by a single sumcheck over its variables $(O_1, S_1, O_2, S_2, J, K, I, Y)$. Write $\mle{\delta}_D(r_{\widehat{i}}, I)$ for the multilinear extension in $I$ of the $64$ oblong weights $i \mapsto \delta_D(r_{\widehat{i}}, \widehat{i})$; it agrees with them on $\BB_6$, so putting it in place of the first factor leaves \eqref{eq:shift-reduction-claim} unchanged. Each of the five factors is then multilinear in the summation variables, and each variable occurs in exactly two of them---$I$ in $\mle{\delta}_D$ and the outer indicator; $K$ in the outer and the inner indicator; $J$ in the inner indicator and $\mle{w}$; $S_1$ and $O_1$ in $\mle{Z}_\text{cons}$ and the inner indicator; $S_2$ and $O_2$ in $\mle{Z}_\text{cons}$ and the outer indicator; $Y$ in $\mle{Z}_\text{cons}$ and $\mle{w}$---so the summand has degree $2$ in every variable, and the prover sends a degree-$2$ round polynomial in each of the $36 + \ell_\text{words}$ rounds.
 
 The variables are bound in the order
 \[
-  O, \quad S, \quad J, \quad I, \quad Y,
+  O_1, \quad S_1, \quad O_2, \quad S_2, \quad J, \quad K, \quad I, \quad Y,
 \]
-producing challenges $r_o \in K^3$, $r_s \in K^6$, $r_j \in K^6$, $r_i \in K^6$, and $r_y \in K^{\ell_\text{words}}$. This order is what admits the efficient multi-phase prover algorithm of \S\ref{sec:shift-reduction-prover}. The sumcheck closes with the claim
-\[
-  \gamma \stackrel{?}{=} \mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o) \cdot \mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o) \cdot \mle{w}(r_j, r_y).
-\]
-The verifier evaluates the first three factors on its own and outputs the single witness-evaluation claim $\mle{w}(r_j, r_y)$. This bit-level claim on the $\FF{2}$-valued witness is reduced to a linear query on the packed $K$-valued oracle $\pi$ in the ring-switching step of \S\ref{sec:ring-switching}.
+producing challenges $r_{o_1}, r_{o_2} \in K^3$, $r_{s_1}, r_{s_2} \in K^6$, $r_j, r_k, r_i \in K^6$, and $r_y \in K^{\ell_\text{words}}$. This order is what admits the efficient multi-phase prover algorithm of \S\ref{sec:shift-reduction-prover}. The sumcheck closes with the claim
+\begin{align*}
+  \gamma \stackrel{?}{=} \; &\mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_{s_1}, r_{o_1}, r_{s_2}, r_{o_2}) \\
+  &{} \cdot \mle{\textsf{shift-ind}}(r_i, r_k, r_{s_2}, r_{o_2}) \cdot \mle{\textsf{shift-ind}}(r_k, r_j, r_{s_1}, r_{o_1}) \cdot \mle{w}(r_j, r_y).
+\end{align*}
+The verifier evaluates the first four factors on its own and outputs the single witness-evaluation claim $\mle{w}(r_j, r_y)$. This bit-level claim on the $\FF{2}$-valued witness is reduced to a linear query on the packed $K$-valued oracle $\pi$ in the ring-switching step of \S\ref{sec:ring-switching}.
 
 \paragraph{Verifier evaluations.}
-The factor $\mle{\delta}_D(r_{\widehat{i}}, r_i)$ is the inner product of the $64$ oblong weights $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ (\S\ref{sec:oblong}) with $\textsf{TensorExpand}_6(r_i)$. The factor $\mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o)$ is a single evaluation of the interpolated shift indicator, which \eqref{eq:shift-indicator-interpolation} expands into the eight succinct arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$. For $\mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o)$ the straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
+The factor $\mle{\delta}_D(r_{\widehat{i}}, r_i)$ is the inner product of the $64$ oblong weights $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ (\S\ref{sec:oblong}) with $\textsf{TensorExpand}_6(r_i)$. The two shift-indicator factors are evaluations of the interpolated indicator, which \eqref{eq:shift-indicator-interpolation} expands into the eight succinct arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3$ of the operation challenge in the corresponding slot. For $\mle{Z}_\text{cons}(r'_x, r_y, r_{s_1}, r_{o_1}, r_{s_2}, r_{o_2})$ the straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
 
 \subsubsection{Prover Algorithm}
 \label{sec:shift-reduction-prover}
@@ -1494,7 +1514,7 @@ The argument is honest-verifier zero-knowledge: a simulator with no access to th
 The constraint system is far more expressive than its primitive forms suggest; bitwise NOT, OR, integer addition, and integer subtraction are all expressible using Zero and BitAnd constraints with appropriate shifted value indices. We sketch the encodings below, motivated by the RV64I instruction set.
 
 \paragraph{Bitwise AND, XOR, NOT, OR.}
-Bitwise AND and bitwise XOR are both native: AND is a BitAnd constraint, and $z = x \oplus y$ is the Zero constraint $x \oplus y \oplus z = 0$. To constrain that an unshifted value equals $w[y]$, one uses the shifted index $(y, \textsf{sll}, 0)$, which acts as the identity. Bitwise NOT is a Zero constraint naming the constant $\texttt{0xFFFFFFFFFFFFFFFF}$ (available because that constant is placed in the constant stretch): the constraint $x \oplus y \oplus \texttt{0xFFFFFFFFFFFFFFFF} = 0$ forces $y = \overline{x}$. Bitwise OR follows from the identity $x \lor y = (x \land y) \oplus x \oplus y$: the BitAnd constraint $x \land y = x \oplus y \oplus z$ forces $z = x \lor y$.
+Bitwise AND and bitwise XOR are both native: AND is a BitAnd constraint, and $z = x \oplus y$ is the Zero constraint $x \oplus y \oplus z = 0$. To constrain that an unshifted value equals $w[y]$, one uses the shifted index $(y, \textsf{sll}, 0, \textsf{sll}, 0)$, which acts as the identity. Bitwise NOT is a Zero constraint naming the constant $\texttt{0xFFFFFFFFFFFFFFFF}$ (available because that constant is placed in the constant stretch): the constraint $x \oplus y \oplus \texttt{0xFFFFFFFFFFFFFFFF} = 0$ forces $y = \overline{x}$. Bitwise OR follows from the identity $x \lor y = (x \land y) \oplus x \oplus y$: the BitAnd constraint $x \land y = x \oplus y \oplus z$ forces $z = x \lor y$.
 
 \paragraph{Integer addition.}
 To constrain $z = (x + y) \bmod 2^{64}$, the prover supplies an auxiliary witness word $c_\text{out}$ whose bits are the per-position carries. Writing $c_\text{in} \coloneqq \textsf{sll}(c_\text{out}, 1)$, the BitAnd constraint
