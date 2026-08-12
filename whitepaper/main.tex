@@ -422,7 +422,7 @@ The LIOP proceeds in nine phases:
 \item \textbf{BinMul reduction (\S\ref{sec:binmul}).} A zerocheck-based reduction transforms the satisfaction of the $n_\text{binmul}$ BinMul constraints into per-bit evaluation claims on the multilinear extensions of the six BinMul constraint arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi}$, leaving the bit-index free.
 \item \textbf{BitAnd reduction (\S\ref{sec:binand}).} A sumcheck-based reduction transforms the satisfaction of the $n_\text{and}$ BitAnd constraints into evaluation claims on the three oblong-multilinearizations $\widehat{a}, \widehat{b}, \widehat{c}$ of the BitAnd constraint arrays. Its univariate skip samples the shared bit-index oblong point $r_{\widehat{i}}$ against which the two multiplication reductions' outputs are folded (\S\ref{sec:rz-unification}).
 \item \textbf{Zero reduction (\S\ref{sec:zero}).} The satisfaction of the $n_\text{zero}$ Zero constraints is transformed into a single evaluation claim on the oblong-multilinearization $\widehat{d}$ of the Zero constraint array, at the point the BitAnd reduction's sumcheck has just output. The phase carries no prover message and no sumcheck round.
-\item \textbf{Shift reduction (\S\ref{sec:shift-reduction}).} The evaluation claims produced by the Zero, BitAnd, IntMul, and BinMul reductions are batched, and a two-phase sumcheck reduces them to a single evaluation claim on $\mle{w}$ at a point $(r_j, r_y) \in K^6 \times K^{\ell_\text{words}}$.
+\item \textbf{Shift reduction (\S\ref{sec:shift-reduction}).} The evaluation claims produced by the Zero, BitAnd, IntMul, and BinMul reductions are batched, and a single sumcheck reduces them to one evaluation claim on $\mle{w}$ at a point $(r_j, r_y) \in K^6 \times K^{\ell_\text{words}}$.
 \item \textbf{Ring-switching (\S\ref{sec:ring-switching}).} The evaluation claim $\mle{w}(r_j, r_y) = t$ on the $\FF{2}$-valued multilinear $\mle{w}$ is converted into a linear query on the packed $K$-valued oracle $\pi$, via the protocol of Diamond and Posen~\cite{Diamond:2024ab}.
 \item \textbf{Public input check (\S\ref{sec:public-input-check}).} A separate linear query on $\pi$ certifies that the packing of the public segment $C \mathbin{\Vert} u$ agrees with the prefix of $\pi$ that contains it. This query is then random-combined with the ring-switching query into a single linear query.
 \item \textbf{Witness query.} The verifier issues the combined linear query on $\pi$.
@@ -849,9 +849,9 @@ The prover forms the value tables of $\mle{A}, \mle{B}, \mle{C}$ on $\BB_{\ell_\
 
 The shift reduction consumes the evaluation claims produced by the Zero, BitAnd, IntMul, and BinMul reductions and transforms all of them into a single multilinear-evaluation claim on the witness $\mle{w}$. It is the largest single component of the LIOP, with a sumcheck whose underlying domain contains the witness; the prover algorithm therefore has to exploit the sparsity of the constraint system to run in time close to the witness size.
 
-For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays by random batching, with the verifier sampling fresh batching coefficients before phase 1. In the full Binius64 LIOP, the outputs of all four constraint reductions are first brought to a common oblong point $r_{\widehat{i}}$ over the bit-index and batched, as described in \S\ref{sec:rz-unification}; a single shift reduction then processes the batched claim, over constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{zero}, \ell_\text{and}, \ell_\text{mul}, \ell_\text{binmul})$.
+For exposition we describe the reduction for a single oblong-multilinearized constraint array $\widehat{z}(\widehat{I}, X)$ over $D \times \BB_{\ell_\text{cons}}$, with a single input evaluation claim $\alpha_z \stackrel{?}{=} \widehat{z}(r_{\widehat{i}}, r'_x)$. The protocol extends to multiple constraint arrays by random batching, with the verifier sampling fresh batching coefficients before the sumcheck begins. In the full Binius64 LIOP, the outputs of all four constraint reductions are first brought to a common oblong point $r_{\widehat{i}}$ over the bit-index and batched, as described in \S\ref{sec:rz-unification}; a single shift reduction then processes the batched claim, over constraint arrays padded to a common $\ell_\text{cons} \coloneqq \max(\ell_\text{zero}, \ell_\text{and}, \ell_\text{mul}, \ell_\text{binmul})$.
 
-Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrix $\mle{Z}_\text{cons}$ of \S\ref{sec:mathematizing}, which is a per-array object to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_\text{cons}(r'_x, y, S, O)$ by $\sum_z \eta_z \cdot \mle{Z}^z_\text{cons}(\rho_z, y, S, O)$ throughout: the factorization of \S\ref{sec:two-phase-sumcheck} is untouched, the prover accumulates the sparse index of \S\ref{sec:shift-reduction-prover} from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the factor $h$, which the phase-1 sumcheck binds jointly for all arrays.
+Only the oblong point must be shared. The reductions close at different constraint points---$r'_x$ for BitAnd, $\rho$ for Zero, and each multiplication reduction's own final challenge---and a constraint point enters the derivation below solely through the constraint matrix $\mle{Z}_\text{cons}$ of \S\ref{sec:mathematizing}, which is a per-array object to begin with. Batching arrays $z$ at points $\rho_z$ with coefficients $\eta_z$ therefore just replaces the single term $\mle{Z}_\text{cons}(r'_x, y, S, O)$ by $\sum_z \eta_z \cdot \mle{Z}^z_\text{cons}(\rho_z, y, S, O)$ throughout: the factorization of \S\ref{sec:shift-reduction-prover} is untouched, the prover accumulates the sparse index there from one tensor expansion per distinct point, and the verifier evaluates the per-array contributions separately at the end. The BitAnd and Zero points are moreover nested: when $\ell_\text{zero} \leq \ell_\text{and}$, the point $\rho$ of \S\ref{sec:zero} is a prefix of $r'_x$, so $\textsf{TensorExpand}_{\ell_\text{zero}}(\rho)$ is an intermediate stage of $\textsf{TensorExpand}_{\ell_\text{and}}(r'_x)$ and the two expansions cost no more than the larger one alone. The oblong point, by contrast, is shared out of necessity---it is carried by the $\mle{\delta}_D$ and shift-indicator factors, which the sumcheck binds jointly for all arrays.
 
 \subsubsection{Unifying the Output Claims}
 \label{sec:rz-unification}
@@ -890,52 +890,40 @@ where the shift indicators have been assembled into the interpolated indicator o
   \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_{o \in \BB_3} \sum_{y \in \BB_{\ell_\text{words}}} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{\textsf{shift-ind}}(i, j, s, o) \cdot \mle{w}(j, y).
   \label{eq:shift-reduction-claim}
 \end{equation}
-This nested sum is over $\ell_\text{words} + 21$ variables; running sumcheck on it naively is prohibitive. The next subsubsection shows how to factor it into two manageable phases.
+This nested sum is over $\ell_\text{words} + 21$ variables.
 
-\subsubsection{The Two-Phase Sumcheck}
-\label{sec:two-phase-sumcheck}
+\paragraph{The sumcheck.}
+The parties discharge \eqref{eq:shift-reduction-claim} by a single sumcheck over its variables $(O, S, J, I, Y)$. Write $\mle{\delta}_D(r_{\widehat{i}}, I)$ for the multilinear extension in $I$ of the $64$ oblong weights $i \mapsto \delta_D(r_{\widehat{i}}, \widehat{i})$; it agrees with them on $\BB_6$, so putting it in place of the first factor leaves \eqref{eq:shift-reduction-claim} unchanged. Each of the four factors is then multilinear in the summation variables, and each variable occurs in exactly two of them---$I$ in $\mle{\delta}_D$ and $\mle{\textsf{shift-ind}}$; $J$ in $\mle{\textsf{shift-ind}}$ and $\mle{w}$; $S$ and $O$ in $\mle{Z}_\text{cons}$ and $\mle{\textsf{shift-ind}}$; $Y$ in $\mle{Z}_\text{cons}$ and $\mle{w}$---so the summand has degree $2$ in every variable, and the prover sends a degree-$2$ round polynomial in each of the $21 + \ell_\text{words}$ rounds.
+
+The variables are bound in the order
+\[
+  O, \quad S, \quad J, \quad I, \quad Y,
+\]
+producing challenges $r_o \in K^3$, $r_s \in K^6$, $r_j \in K^6$, $r_i \in K^6$, and $r_y \in K^{\ell_\text{words}}$. This order is what admits the efficient multi-phase prover algorithm of \S\ref{sec:shift-reduction-prover}. The sumcheck closes with the claim
+\[
+  \gamma \stackrel{?}{=} \mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o) \cdot \mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o) \cdot \mle{w}(r_j, r_y).
+\]
+The verifier evaluates the first three factors on its own and outputs the single witness-evaluation claim $\mle{w}(r_j, r_y)$. This bit-level claim on the $\FF{2}$-valued witness is reduced to a linear query on the packed $K$-valued oracle $\pi$ in the ring-switching step of \S\ref{sec:ring-switching}.
+
+\paragraph{Verifier evaluations.}
+The factor $\mle{\delta}_D(r_{\widehat{i}}, r_i)$ is the inner product of the $64$ oblong weights $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ (\S\ref{sec:oblong}) with $\textsf{TensorExpand}_6(r_i)$. The factor $\mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o)$ is a single evaluation of the interpolated shift indicator, which \eqref{eq:shift-indicator-interpolation} expands into the eight succinct arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$. For $\mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o)$ the straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
+
+\subsubsection{Prover Algorithm}
+\label{sec:shift-reduction-prover}
+
+We sketch the prover-side data structures and the main loops. The binding order of \S\ref{sec:mathematizing} cuts the sumcheck into four phases---the nine rounds on $(O, S)$, the six on $J$, the six on $I$, and the $\ell_\text{words}$ on $Y$---of which only the last touches a table indexed by the witness. The goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 21$-dimensional sum.
 
 \paragraph{Factorization.}
-In \eqref{eq:shift-reduction-claim}, no single inner factor depends on both $i$ and $y$: $\delta_D(r_{\widehat{i}}, \widehat{i})$ and $\mle{\textsf{shift-ind}}(i, j, s, o)$ contain $i$ but not $y$, whereas $\mle{Z}_\text{cons}(r'_x, y, s, o)$ and $\mle{w}(j, y)$ contain $y$ but not $i$. We can therefore factor the two innermost sums and obtain
+In \eqref{eq:shift-reduction-claim}, no single factor depends on both $i$ and $y$: $\mle{\delta}_D(r_{\widehat{i}}, I)$ and $\mle{\textsf{shift-ind}}$ contain $i$ but not $y$, whereas $\mle{Z}_\text{cons}$ and $\mle{w}$ contain $y$ but not $i$. Through phases~1 and~2, while $O$, $S$, and $J$ are being bound, both $i$ and $y$ still range over the cube, so the two inner sums factor and the running claim reads
 \[
-  \alpha_z \stackrel{?}{=} \sum_{j \in \BB_6} \sum_{s \in \BB_6} \sum_{o \in \BB_3} h(j, s, o) \cdot g(j, s, o),
+  \alpha_z \stackrel{?}{=} \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{j \in \BB_6} h(j, s, o) \cdot g(j, s, o),
 \]
 where
 \begin{align*}
   h(J, S, O) &\coloneqq \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, J, S, O), \\
   g(J, S, O) &\coloneqq \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, S, O) \cdot \mle{w}(J, y).
 \end{align*}
-Both $h$ and $g$ are multilinear in the $15$ variables $(J, S, O)$: for $h$, the variable factors $\mle{\textsf{shift-ind}}(i, J, S, O)$ depend on $J, S, O$ multilinearly and $\delta_D(r_{\widehat{i}}, \widehat{i})$ is constant in them; for $g$, $\mle{Z}_\text{cons}(r'_x, y, S, O)$ depends on $S, O$ but not $J$ while $\mle{w}(J, y)$ depends on $J$ but not $S, O$, so each summand is multilinear in $(J, S, O)$.
-
-\paragraph{Phase 1: $15$ rounds.}
-The parties run a $15$-round sumcheck on
-\[
-  \alpha_z \stackrel{?}{=} \sum_{(j, s, o) \in \BB_{15}} h(j, s, o) \cdot g(j, s, o).
-\]
-The composing polynomial is the degree-$2$ product of two multilinears; the prover sends a degree-$2$ round polynomial in each round. The variables are bound in the order $S_0, \ldots, S_5, O_0, \ldots, O_2, J_0, \ldots, J_5$, so that the nine variables carrying the shift amount and the shift operation are bound before the six carrying the bit index; the prover algorithm of \S\ref{sec:shift-reduction-prover} exploits this order. After $15$ rounds, the sumcheck reduces $\alpha_z$ to a claim
-\[
-  \beta \stackrel{?}{=} h(r_j, r_s, r_o) \cdot g(r_j, r_s, r_o),
-\]
-where $r_s \in K^6$, $r_o \in K^3$, and $r_j \in K^6$ are the sumcheck challenges, in the order drawn. The verifier can evaluate $h(r_j, r_s, r_o)$ on its own: it expands the interpolated indicator by \eqref{eq:shift-indicator-interpolation} into the eight succinct shift-indicator arithmetizations of \S\ref{sec:shift-indicators}, weighted by $\textsf{TensorExpand}_3(r_o)$, after a single $O(2^6)$ precomputation of $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$.
-
-\paragraph{Phase 2: $\ell_\text{words}$ rounds.}
-Unrolling the definition of $g(r_j, r_s, r_o)$ and exchanging sums,
-\[
-  \beta \stackrel{?}{=} \sum_{y \in \BB_{\ell_\text{words}}} \Bigl[ h(r_j, r_s, r_o) \cdot \mle{Z}_\text{cons}(r'_x, y, r_s, r_o) \Bigr] \cdot \mle{w}(r_j, y).
-\]
-The bracketed quantity is multilinear in $y$, as is $\mle{w}(r_j, y)$, so the parties run an $\ell_\text{words}$-round sumcheck on this claim. The composing polynomials are degree-$2$ products of multilinears in $y$. After $\ell_\text{words}$ rounds, the sumcheck produces a challenge $r_y \in K^{\ell_\text{words}}$ and a final claim
-\[
-  \gamma \stackrel{?}{=} \Bigl[ h(r_j, r_s, r_o) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o) \Bigr] \cdot \mle{w}(r_j, r_y).
-\]
-The verifier evaluates the bracketed factor on its own (see below) and outputs the single witness-evaluation claim $\mle{w}(r_j, r_y)$. This bit-level claim on the $\FF{2}$-valued witness is reduced to a linear query on the packed $K$-valued oracle $\pi$ in the ring-switching step of \S\ref{sec:ring-switching}.
-
-\paragraph{Verifier evaluation of the constraint matrix.}
-At the very end, the verifier needs the single evaluation $\mle{Z}_\text{cons}(r'_x, r_y, r_s, r_o)$. The straightforward sparse-evaluation algorithm runs in $O(n_\text{cons}) + O(\text{circuit size})$ time by iterating over the constraint lists; succinct verification is left for future work, following e.g.\ the Spark compiler of Setty~\cite{Setty:2020aa}.
-
-\subsubsection{Prover Algorithm}
-\label{sec:shift-reduction-prover}
-
-We sketch the prover-side data structures and the main loops; the goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 21$-dimensional sum.
+Both $h$ and $g$ are multilinear in the $15$ variables $(J, S, O)$: for $h$, the variable factors $\mle{\textsf{shift-ind}}(i, J, S, O)$ depend on $J, S, O$ multilinearly and $\delta_D(r_{\widehat{i}}, \widehat{i})$ is constant in them; for $g$, $\mle{Z}_\text{cons}(r'_x, y, S, O)$ depends on $S, O$ but not $J$ while $\mle{w}(J, y)$ depends on $J$ but not $S, O$, so each summand is multilinear in $(J, S, O)$. The prover therefore runs the first fifteen rounds from value tables of $h$ and $g$.
 
 \paragraph{Computing $h$.}
 The prover precomputes $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ once (\S\ref{sec:oblong}) and then fills the $2^{15}$-entry value table $h[j][s][o]$ one $\text{op}$-slice at a time, exploiting the structure of each $\mle{\textsf{shift-ind}}_{\text{op}(o)}$. For $\textsf{srl}$, the indicator $\textsf{shift-ind}_\textsf{srl}(i, j, s)$ is $\mathbb{1}[j = i + s]$ on the cube, so the corresponding slice holds $\delta_D(r_{\widehat{i}}, \widehat{i})$ for $i = j - s$ when valid (and $0$ otherwise); similar shape patterns apply to $\textsf{sll}$, $\textsf{sra}$, $\textsf{ror}$, and their $32$-bit variants. For $\textsf{sra}$, the case $j = 63$ admits multiple contributing $i$ values; these are accumulated in a running prefix sum over $s$.
@@ -961,15 +949,33 @@ of \emph{active} pairs---taken across the Zero, BitAnd, IntMul, and BinMul array
 \paragraph{Computing $g$.}
 Using $\textsf{index}$, the prover forms the $2^6 \cdot n_\text{shift}$-entry table $g[j][(s, o)] = \sum_y \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{w}(j, y)$, indexed by the bit position and by an active pair, by iterating over $y$ and, for each populated key $(s, o)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(s, o)]$ into $g[j][(s, o)]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size. This loop is the reduction's one pass over the whole circuit, and the accumulator it scatters into stays cache-resident throughout.
 
-\paragraph{Sparse rounds of phase 1.}
-The nine rounds binding $(S, O)$ fold $h$ and $g$ against the verifier's challenges. Let $L_t$ denote the image of the active pairs under the map forgetting the $t$ coordinates bound so far; since binding a variable merges two indices into one, $|L_t| \leq \min(n_\text{shift}, 2^{9 - t})$. The folded $g$ is supported on $L_t$, so the prover folds and forms round polynomials over those entries alone, at $O(2^6 \cdot |L_t|)$ field operations in round $t$ and
+\paragraph{Phase 1: binding $O$ and $S$.}
+The nine rounds binding $O$ and $S$ fold $h$ and $g$ against the verifier's challenges. Let $L_t$ denote the image of the active pairs under the map forgetting the $t$ coordinates bound so far; since binding a variable merges two indices into one, $|L_t| \leq \min(n_\text{shift}, 2^{9 - t})$. The folded $g$ is supported on $L_t$, so the prover folds and forms round polynomials over those entries alone, at $O(2^6 \cdot |L_t|)$ field operations in round $t$ and
 \[
   O\bigl( 2^6 \cdot n_\text{shift} \cdot \log_2 (2^9 / n_\text{shift}) \bigr)
 \]
-across the nine rounds. The table $h$ is folded in full: its folded value at an active pair is a weighted sum over that index's whole subtree, inactive pairs included, so the dense table is what supplies it. This costs at most $2^{15}$ multiplications over the nine rounds, a fixed charge independent of the circuit. After the ninth round both tables have length $2^6$ in $J$ alone, and the remaining six rounds are an ordinary dense sumcheck.
+across the nine rounds. The table $h$ is folded in full: its folded value at an active pair is a weighted sum over that index's whole subtree, inactive pairs included, so the dense table is what supplies it. This costs at most $2^{15}$ multiplications over the nine rounds, a fixed charge independent of the circuit.
 
-\paragraph{Phase-2 multilinear tables.}
-For phase 2 the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_s, r_o)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$ and $\textsf{TensorExpand}_3(r_o)$, then accumulate, for each $y$ and each populated $(s, o) \in \textsf{index}[y]$, the product $\textsf{index}[y][(s, o)] \cdot \mle{\eq}_6(r_s, s) \cdot \mle{\eq}_3(r_o, o)$ into a length-$n_\text{words}$ vector.
+\paragraph{Phase 2: binding $J$.}
+After the ninth round both tables have length $2^6$ in $J$ alone, and the six rounds binding $J$ are an ordinary dense sumcheck on their product, at $O(2^6)$ field operations. The two phases close with the claim
+\[
+  \beta \stackrel{?}{=} h(r_j, r_s, r_o) \cdot g(r_j, r_s, r_o).
+\]
+
+\paragraph{Phase 3: binding $I$.}
+Unrolling $h(r_j, r_s, r_o)$ exposes the six rounds binding $I$ as a sumcheck on
+\[
+  \beta \stackrel{?}{=} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o) \cdot G, \qquad G \coloneqq g(r_j, r_s, r_o).
+\]
+The scalar $G$ carries the summation over $y$ of $\mle{Z}_\text{cons} \cdot \mle{w}$, and the prover already holds it: that summation is what built the value table of $g$ in the first place, and phases~1 and~2 fold the table down to the single entry $g(r_j, r_s, r_o)$.
+
+The two $I$-dependent factors the prover keeps as separate $2^6$-entry tables, $d[i] = \delta_D(r_{\widehat{i}}, \widehat{i})$ from the precomputation above and $v[i] = \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o)$ from $2^6$ evaluations of the succinct arithmetizations of \S\ref{sec:shift-indicators}; keeping the two apart is what makes the round polynomials degree $2$. The phase costs $O(2^6)$ field operations and touches no table indexed by $y$. Phase 3 closes with the claim
+\[
+  \varepsilon \stackrel{?}{=} \Bigl[ \mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o) \Bigr] \cdot \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, r_s, r_o) \cdot \mle{w}(r_j, y).
+\]
+
+\paragraph{Phase 4: binding $Y$.}
+For the $\ell_\text{words}$ rounds binding $Y$ the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_s, r_o)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$ and $\textsf{TensorExpand}_3(r_o)$, then accumulate, for each $y$ and each populated $(s, o) \in \textsf{index}[y]$, the product $\textsf{index}[y][(s, o)] \cdot \mle{\eq}_6(r_s, s) \cdot \mle{\eq}_3(r_o, o)$ into a length-$n_\text{words}$ vector. The bracketed scalar of phase~3 rides along as a constant factor.
 
 \subsection{Ring-Switching to the Packed Witness}
 \label{sec:ring-switching}
