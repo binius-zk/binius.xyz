@@ -916,9 +916,9 @@ The parties discharge \eqref{eq:shift-reduction-claim} by a single sumcheck over
 
 The variables are bound in the order
 \[
-  O_1, \quad S_1, \quad O_2, \quad S_2, \quad J, \quad K, \quad I, \quad Y,
+  O_2, \quad S_2, \quad O_1, \quad S_1, \quad J, \quad K, \quad I, \quad Y,
 \]
-producing challenges $r_{o_1}, r_{o_2} \in K^3$, $r_{s_1}, r_{s_2} \in K^6$, $r_j, r_k, r_i \in K^6$, and $r_y \in K^{\ell_\text{words}}$. This order is what admits the efficient multi-phase prover algorithm of \S\ref{sec:shift-reduction-prover}. The sumcheck closes with the claim
+the outer shift ahead of the inner one, producing challenges $r_{o_2}, r_{o_1} \in K^3$, $r_{s_2}, r_{s_1} \in K^6$, $r_j, r_k, r_i \in K^6$, and $r_y \in K^{\ell_\text{words}}$. This order is what admits the efficient multi-phase prover algorithm of \S\ref{sec:shift-reduction-prover}, which peels the shifts from the output end inward. The sumcheck closes with the claim
 \begin{align*}
   \gamma \stackrel{?}{=} \; &\mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{Z}_\text{cons}(r'_x, r_y, r_{s_1}, r_{o_1}, r_{s_2}, r_{o_2}) \\
   &{} \cdot \mle{\textsf{shift-ind}}(r_i, r_k, r_{s_2}, r_{o_2}) \cdot \mle{\textsf{shift-ind}}(r_k, r_j, r_{s_1}, r_{o_1}) \cdot \mle{w}(r_j, r_y).
@@ -931,71 +931,89 @@ The factor $\mle{\delta}_D(r_{\widehat{i}}, r_i)$ is the inner product of the $6
 \subsubsection{Prover Algorithm}
 \label{sec:shift-reduction-prover}
 
-We sketch the prover-side data structures and the main loops. The binding order of \S\ref{sec:mathematizing} cuts the sumcheck into four phases---the nine rounds on $(O, S)$, the six on $J$, the six on $I$, and the $\ell_\text{words}$ on $Y$---of which only the last touches a table indexed by the witness. The goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 21$-dimensional sum.
+We sketch the prover-side data structures and the main loops. The binding order of \S\ref{sec:mathematizing} cuts the sumcheck into six phases---nine rounds on $(O_2, S_2)$, nine on $(O_1, S_1)$, then six each on $J$, $K$, and $I$, and finally $\ell_\text{words}$ on $Y$---of which only the last touches a table indexed by the witness. The goal is to make the prover's work close to linear in the witness size despite the formal $\ell_\text{words} + 36$-dimensional sum.
 
 \paragraph{Factorization.}
-In \eqref{eq:shift-reduction-claim}, no single factor depends on both $i$ and $y$: $\mle{\delta}_D(r_{\widehat{i}}, I)$ and $\mle{\textsf{shift-ind}}$ contain $i$ but not $y$, whereas $\mle{Z}_\text{cons}$ and $\mle{w}$ contain $y$ but not $i$. Through phases~1 and~2, while $O$, $S$, and $J$ are being bound, both $i$ and $y$ still range over the cube, so the two inner sums factor and the running claim reads
+In \eqref{eq:shift-reduction-claim}, no single factor depends on both $i$ and $y$: the oblong weights and the two shift indicators reach from $i$ down to $j$, whereas $\mle{Z}_\text{cons}$ and $\mle{w}$ reach from $y$ up to $j$. The two sides meet only at $J$. Through the first three phases, while the shift variables and $J$ are being bound, $i$, $k$, and $y$ all still range over the cube, so the sums over $(i, k)$ and over $y$ factor and the running claim reads
 \[
-  \alpha_z \stackrel{?}{=} \sum_{o \in \BB_3} \sum_{s \in \BB_6} \sum_{j \in \BB_6} h(j, s, o) \cdot g(j, s, o),
+  \alpha_z \stackrel{?}{=} \sum_{o_1, o_2 \in \BB_3} \sum_{s_1, s_2 \in \BB_6} \sum_{j \in \BB_6} h(j, s_2, o_2, s_1, o_1) \cdot g(j, s_1, o_1, s_2, o_2),
 \]
 where
 \begin{align*}
-  h(J, S, O) &\coloneqq \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, J, S, O), \\
-  g(J, S, O) &\coloneqq \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, S, O) \cdot \mle{w}(J, y).
+  h(J, S_2, O_2, S_1, O_1) &\coloneqq \sum_{i, k \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, k, S_2, O_2) \cdot \mle{\textsf{shift-ind}}(k, J, S_1, O_1), \\
+  g(J, S_1, O_1, S_2, O_2) &\coloneqq \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, S_1, O_1, S_2, O_2) \cdot \mle{w}(J, y).
 \end{align*}
-Both $h$ and $g$ are multilinear in the $15$ variables $(J, S, O)$: for $h$, the variable factors $\mle{\textsf{shift-ind}}(i, J, S, O)$ depend on $J, S, O$ multilinearly and $\delta_D(r_{\widehat{i}}, \widehat{i})$ is constant in them; for $g$, $\mle{Z}_\text{cons}(r'_x, y, S, O)$ depends on $S, O$ but not $J$ while $\mle{w}(J, y)$ depends on $J$ but not $S, O$, so each summand is multilinear in $(J, S, O)$. The prover therefore runs the first fifteen rounds from value tables of $h$ and $g$.
+Both are multilinear in their $24$ variables: in each summand the factors depend multilinearly on disjoint blocks of them, the shared indices $i, k, y$ being summed over the cube. A value table of $h$ would have $2^{24}$ entries, too large to form. The prover never materializes it, working instead from two successive $2^{15}$ tables built by the operator below.
 
-\paragraph{Computing $h$.}
-The prover precomputes $\bigl( \delta_D(r_{\widehat{i}}, \widehat{i}) \bigr)_{i \in \BB_6}$ once (\S\ref{sec:oblong}) and then fills the $2^{15}$-entry value table $h[j][s][o]$ one $\text{op}$-slice at a time, exploiting the structure of each $\mle{\textsf{shift-ind}}_{\text{op}(o)}$. For $\textsf{srl}$, the indicator $\textsf{shift-ind}_\textsf{srl}(i, j, s)$ is $\mathbb{1}[j = i + s]$ on the cube, so the corresponding slice holds $\delta_D(r_{\widehat{i}}, \widehat{i})$ for $i = j - s$ when valid (and $0$ otherwise); similar shape patterns apply to $\textsf{sll}$, $\textsf{sra}$, $\textsf{ror}$, and their $32$-bit variants. For $\textsf{sra}$, the case $j = 63$ admits multiple contributing $i$ values; these are accumulated in a running prefix sum over $s$.
+\paragraph{The shift operator.}
+For a vector $\psi \in K^{\BB_6}$ write $T[\psi]$ for the $2^{15}$-entry table
+\[
+  T[\psi](J, S, O) \coloneqq \sum_{k \in \BB_6} \psi(k) \cdot \mle{\textsf{shift-ind}}(k, J, S, O).
+\]
+Each $(s, o)$ slice of $T[\psi]$ is a shift of $\psi$. For $\textsf{srl}$ the indicator $\textsf{shift-ind}_\textsf{srl}(k, j, s)$ is $\mathbb{1}[j = k + s]$ on the cube, so the slice holds $\psi(j - s)$ where that is valid and $0$ elsewhere; similar shape patterns apply to $\textsf{sll}$, $\textsf{sra}$, $\textsf{ror}$, and their $32$-bit variants. For $\textsf{sra}$ the entry at $j = 63$ collects several values of $k$, and these are accumulated in a running prefix sum over $s$. The whole table costs $O(2^{15})$ field operations, a single slice $O(2^6)$.
+
+Writing $d \in K^{\BB_6}$ for the oblong weights $d(i) \coloneqq \delta_D(r_{\widehat{i}}, \widehat{i})$, precomputed once (\S\ref{sec:oblong}), both contractions in $h$ are applications of $T$. Setting $\eta \coloneqq T[d]$ and naming its first index $K$,
+\[
+  \eta(K, S_2, O_2) = \sum_{i \in \BB_6} d(i) \cdot \mle{\textsf{shift-ind}}(i, K, S_2, O_2), \qquad h(J, s_2, o_2, s_1, o_1) = T\bigl[ \eta(\cdot, s_2, o_2) \bigr](J, s_1, o_1).
+\]
+So $h$ is reached by applying $T$ to the oblong weights, taking the outer slice, and applying $T$ again.
+
+\paragraph{Active shift quadruples.}
+A constraint system draws on only a few of the $2^{18}$ quadruples $(s_1, o_1, s_2, o_2)$. Hash and cipher circuits fix a handful of shift and rotation amounts and reuse them throughout, so the count
+\[
+  n_\text{shift} \coloneqq \bigl| \set{(s_1, o_1, s_2, o_2) : (y, \text{op}(o_1), s_1, \text{op}(o_2), s_2) \in L^z_x \text{ for some } x \text{ and some array } z \text{ of the batch}} \bigr|
+\]
+of \emph{active} quadruples---taken across the Zero, BitAnd, IntMul, and BinMul arrays that the batched reduction consumes---is typically in the tens. For an inactive quadruple the entire slice $Z_\text{cons}[\cdot, \cdot, s_1, o_1, s_2, o_2]$ vanishes, hence so does $g(J, s_1, o_1, s_2, o_2)$. The prover accordingly carries $g$ on the active quadruples alone.
 
 \paragraph{Constraint-column index.}
-Most shifted value indices in practice are sparse: each constraint list $L^z_x$ has $O(1)$ entries on average. The prover builds, in a single linear pass over the constraint system, a sparse index data structure $\textsf{index} \colon \BB_{\ell_\text{words}} \to (\BB_6 \times \BB_3 \to K)$ such that
+Most shifted value indices in practice are sparse: each constraint list $L^z_x$ has $O(1)$ entries on average. The prover builds, in a single linear pass over the constraint system, a sparse index data structure $\textsf{index} \colon \BB_{\ell_\text{words}} \to (\BB_6 \times \BB_3 \times \BB_6 \times \BB_3 \to K)$ such that
 \[
-  \textsf{index}[y][(s, o)] = \mle{Z}_\text{cons}(r'_x, y, s, o)
+  \textsf{index}[y][(s_1, o_1, s_2, o_2)] = \mle{Z}_\text{cons}(r'_x, y, s_1, o_1, s_2, o_2)
 \]
-exactly for those $(y, s, o)$ triples for which the value is nonzero (otherwise the key is absent). The build is
+exactly for those keys at which the value is nonzero (otherwise the key is absent). The build is
 \begin{quote}
-  precompute $\textsf{TensorExpand}_{\ell_\text{cons}}(r'_x)$; then for each $x \in \BB_{\ell_\text{cons}}$ and each $(y, \text{op}(o), s) \in L^z_x$, add $\textsf{TensorExpand}(r'_x)[x]$ to $\textsf{index}[y][(s, o)]$.
+  precompute $\textsf{TensorExpand}_{\ell_\text{cons}}(r'_x)$; then for each $x \in \BB_{\ell_\text{cons}}$ and each $(y, \text{op}(o_1), s_1, \text{op}(o_2), s_2) \in L^z_x$, add $\textsf{TensorExpand}(r'_x)[x]$ to $\textsf{index}[y][(s_1, o_1, s_2, o_2)]$.
 \end{quote}
 Total work and space are $O(\text{circuit size}) + O(n_\text{words})$ field elements.
 
-\paragraph{Active shift pairs.}
-A constraint system draws on only a few of the $2^9$ pairs $(s, o) \in \BB_6 \times \BB_3$. Hash and cipher circuits fix a handful of shift and rotation amounts and reuse them throughout, so the count
-\[
-  n_\text{shift} \coloneqq \bigl| \set{(s, o) : (y, \text{op}(o), s) \in L^z_x \text{ for some } x \text{ and some array } z \text{ of the batch}} \bigr|
-\]
-of \emph{active} pairs---taken across the Zero, BitAnd, IntMul, and BinMul arrays that the batched reduction consumes---is typically in the tens. For an inactive pair the entire slice $Z_\text{cons}[\cdot, \cdot, s, o]$ vanishes, hence so does $g(J, s, o)$. The prover accordingly carries $g$ on the active pairs alone.
-
 \paragraph{Computing $g$.}
-Using $\textsf{index}$, the prover forms the $2^6 \cdot n_\text{shift}$-entry table $g[j][(s, o)] = \sum_y \mle{Z}_\text{cons}(r'_x, y, s, o) \cdot \mle{w}(j, y)$, indexed by the bit position and by an active pair, by iterating over $y$ and, for each populated key $(s, o)$ in $\textsf{index}[y]$, adding $\textsf{index}[y][(s, o)]$ into $g[j][(s, o)]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size. This loop is the reduction's one pass over the whole circuit, and the accumulator it scatters into stays cache-resident throughout.
+Using $\textsf{index}$, the prover forms the $2^6 \cdot n_\text{shift}$-entry table $g[j][q] = \sum_y \mle{Z}_\text{cons}(r'_x, y, q) \cdot \mle{w}(j, y)$, indexed by the bit position and by an active quadruple $q$, by iterating over $y$ and, for each populated key $q$ in $\textsf{index}[y]$, adding $\textsf{index}[y][q]$ into $g[j][q]$ for each bit $j$ where $w[y]_j = 1$. Total work is proportional to the (sparse) circuit size. This loop is the reduction's one pass over the whole circuit, and the accumulator it scatters into stays cache-resident throughout.
 
-\paragraph{Phase 1: binding $O$ and $S$.}
-The nine rounds binding $O$ and $S$ fold $h$ and $g$ against the verifier's challenges. Let $L_t$ denote the image of the active pairs under the map forgetting the $t$ coordinates bound so far; since binding a variable merges two indices into one, $|L_t| \leq \min(n_\text{shift}, 2^{9 - t})$. The folded $g$ is supported on $L_t$, so the prover folds and forms round polynomials over those entries alone, at $O(2^6 \cdot |L_t|)$ field operations in round $t$ and
+\paragraph{Phase 1: binding the outer shift.}
+The prover materializes $\eta = T[d]$ and folds it over $(O_2, S_2)$ as the nine rounds proceed, at $2^{15}$ multiplications in total. In round $t$ it needs, for each active quadruple whose outer pair is still live, the $2^6$-vector
 \[
-  O\bigl( 2^6 \cdot n_\text{shift} \cdot \log_2 (2^9 / n_\text{shift}) \bigr)
+  h_t(\cdot) = T\bigl[ \eta_t(\cdot, u) \bigr](\cdot, s_1, o_1),
 \]
-across the nine rounds. The table $h$ is folded in full: its folded value at an active pair is a weighted sum over that index's whole subtree, inactive pairs included, so the dense table is what supplies it. This costs at most $2^{15}$ multiplications over the nine rounds, a fixed charge independent of the circuit.
+where $u$ is the partially bound outer index and $\eta_t$ the folded table: one slice of $T$ applied to one stride of $\eta_t$, hence $O(2^6)$ apiece. Pairing these against the sparse $g$ costs another $O(2^6)$ per active combination, so a round costs $O(2^6 \cdot n_\text{shift})$.
 
-\paragraph{Phase 2: binding $J$.}
-After the ninth round both tables have length $2^6$ in $J$ alone, and the six rounds binding $J$ are an ordinary dense sumcheck on their product, at $O(2^6)$ field operations. The two phases close with the claim
+The inner pair $(s_1, o_1)$ is still a cube index throughout this phase, and that is what keeps the slice of $T$ a shift. Under the opposite order the outer indicator would be folded to a dense $2^6 \times 2^6$ matrix by the time the inner pair was reached, and each active combination would cost a full matrix--vector product in place of a shift.
+
+\paragraph{Phase 2: binding the inner shift.}
+Phase 1 leaves $\eta$ folded to the single $2^6$-vector $\psi \coloneqq \eta(\cdot, r_{s_2}, r_{o_2})$. The prover forms $T[\psi]$, whose slices are the concatenated shifts of $\psi$, and runs the nine rounds binding $(O_1, S_1)$ against it. This is an ordinary sparse--dense sumcheck. Let $L_t$ denote the image of the active inner pairs under the map forgetting the $t$ coordinates bound so far; since binding a variable merges two indices into one, $|L_t| \leq \min(n_\text{shift}, 2^{9 - t})$. The folded $g$ is supported on $L_t$, so the prover folds and forms round polynomials over those entries alone, at $O(2^6 \cdot |L_t|)$ field operations in round $t$ and $O\bigl( 2^6 \cdot n_\text{shift} \cdot \log_2 (2^9 / n_\text{shift}) \bigr)$ across the phase. The table $T[\psi]$ is folded in full: its folded value at an active pair is a weighted sum over that index's whole subtree, inactive pairs included, so the dense table is what supplies it. This costs at most $2^{15}$ multiplications, a fixed charge independent of the circuit.
+
+\paragraph{Phase 3: binding $J$.}
+Both tables now have length $2^6$ in $J$ alone, and the six rounds binding $J$ are a dense sumcheck on their product, at $O(2^6)$ field operations. The phase closes with
 \[
-  \beta \stackrel{?}{=} h(r_j, r_s, r_o) \cdot g(r_j, r_s, r_o).
+  \beta \stackrel{?}{=} h(r_j, r_{s_2}, r_{o_2}, r_{s_1}, r_{o_1}) \cdot G, \qquad G \coloneqq g(r_j, r_{s_1}, r_{o_1}, r_{s_2}, r_{o_2}),
 \]
+both factors being the terminal entries of the two folds. In particular $G$ carries the summation over $y$ of $\mle{Z}_\text{cons} \cdot \mle{w}$, which is what built the table of $g$ in the first place.
 
-\paragraph{Phase 3: binding $I$.}
-Unrolling $h(r_j, r_s, r_o)$ exposes the six rounds binding $I$ as a sumcheck on
+\paragraph{Phase 4: binding $K$.}
+Unrolling $h$ at the bound shift point exposes the six rounds binding $K$ as a sumcheck on
 \[
-  \beta \stackrel{?}{=} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o) \cdot G, \qquad G \coloneqq g(r_j, r_s, r_o).
+  \beta \stackrel{?}{=} \sum_{k \in \BB_6} \psi(k) \cdot \mle{\textsf{shift-ind}}(k, r_j, r_{s_1}, r_{o_1}) \cdot G.
 \]
-The scalar $G$ carries the summation over $y$ of $\mle{Z}_\text{cons} \cdot \mle{w}$, and the prover already holds it: that summation is what built the value table of $g$ in the first place, and phases~1 and~2 fold the table down to the single entry $g(r_j, r_s, r_o)$.
+The first factor is the vector $\psi$ that phase 1 left behind: the terminal fold of $\eta$ is exactly the partial evaluation $\sum_{i \in \BB_6} d(i) \cdot \mle{\textsf{shift-ind}}(i, K, r_{s_2}, r_{o_2})$, the multilinear extension commuting with the finite sum over $i$. The second the prover tabulates as $\chi(k) \coloneqq \mle{\textsf{shift-ind}}(k, r_j, r_{s_1}, r_{o_1})$, from $2^6$ evaluations of the succinct arithmetizations of \S\ref{sec:shift-indicators}. Keeping $\psi$ and $\chi$ apart is what makes the round polynomials degree $2$; the phase costs $O(2^6)$ field operations.
 
-The two $I$-dependent factors the prover keeps as separate $2^6$-entry tables, $d[i] = \delta_D(r_{\widehat{i}}, \widehat{i})$ from the precomputation above and $v[i] = \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o)$ from $2^6$ evaluations of the succinct arithmetizations of \S\ref{sec:shift-indicators}; keeping the two apart is what makes the round polynomials degree $2$. The phase costs $O(2^6)$ field operations and touches no table indexed by $y$. Phase 3 closes with the claim
+\paragraph{Phase 5: binding $I$.}
+The same step once more, one link further up the chain. The prover holds $d$ from the outset and tabulates $v(i) \coloneqq \mle{\textsf{shift-ind}}(i, r_k, r_{s_2}, r_{o_2})$ from another $2^6$ succinct evaluations, then runs six rounds on
 \[
-  \varepsilon \stackrel{?}{=} \Bigl[ \mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o) \Bigr] \cdot \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, r_s, r_o) \cdot \mle{w}(r_j, y).
+  \sum_{i \in \BB_6} d(i) \cdot v(i) \cdot \Lambda, \qquad \Lambda \coloneqq \mle{\textsf{shift-ind}}(r_k, r_j, r_{s_1}, r_{o_1}) \cdot G,
 \]
+where $\Lambda$ collects the scalars already fixed, the first being the terminal entry of the $\chi$ fold. Neither of the last two phases touches a table indexed by $y$.
 
-\paragraph{Phase 4: binding $Y$.}
-For the $\ell_\text{words}$ rounds binding $Y$ the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_s, r_o)$. The second again uses $\textsf{index}$: precompute $\textsf{TensorExpand}_6(r_s)$ and $\textsf{TensorExpand}_3(r_o)$, then accumulate, for each $y$ and each populated $(s, o) \in \textsf{index}[y]$, the product $\textsf{index}[y][(s, o)] \cdot \mle{\eq}_6(r_s, s) \cdot \mle{\eq}_3(r_o, o)$ into a length-$n_\text{words}$ vector. The bracketed scalar of phase~3 rides along as a constant factor.
+\paragraph{Phase 6: binding $Y$.}
+For the $\ell_\text{words}$ rounds binding $Y$ the prover needs the value tables of the multilinears $\mle{w}(r_j, Y)$ (a standard partial specialization of $\mle{w}$, computed via $\textsf{TensorExpand}_6(r_j)$) and $\mle{Z}_\text{cons}(r'_x, Y, r_{s_1}, r_{o_1}, r_{s_2}, r_{o_2})$. The second again uses $\textsf{index}$: precompute the four tensor expansions $\textsf{TensorExpand}_6(r_{s_1})$, $\textsf{TensorExpand}_3(r_{o_1})$, $\textsf{TensorExpand}_6(r_{s_2})$, $\textsf{TensorExpand}_3(r_{o_2})$, then accumulate, for each $y$ and each populated $q = (s_1, o_1, s_2, o_2) \in \textsf{index}[y]$, the product of $\textsf{index}[y][q]$ with $\mle{\eq}_6(r_{s_1}, s_1) \cdot \mle{\eq}_3(r_{o_1}, o_1) \cdot \mle{\eq}_6(r_{s_2}, s_2) \cdot \mle{\eq}_3(r_{o_2}, o_2)$ into a length-$n_\text{words}$ vector. The scalars fixed by the earlier phases ride along as a constant factor.
 
 \subsection{Ring-Switching to the Packed Witness}
 \label{sec:ring-switching}
