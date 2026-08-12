@@ -967,9 +967,9 @@ Unrolling $h(r_j, r_s, r_o)$ exposes the six rounds binding $I$ as a sumcheck on
 \[
   \beta \stackrel{?}{=} \sum_{i \in \BB_6} \delta_D(r_{\widehat{i}}, \widehat{i}) \cdot \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o) \cdot G, \qquad G \coloneqq g(r_j, r_s, r_o).
 \]
-The prover holds the two $I$-dependent factors as separate $2^6$-entry tables, $d[i] = \delta_D(r_{\widehat{i}}, \widehat{i})$ from the precomputation above and $v[i] = \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o)$ from $2^6$ evaluations of the succinct arithmetizations of \S\ref{sec:shift-indicators}; keeping the two apart is what makes the round polynomials degree $2$.
+The scalar $G$ carries the summation over $y$ of $\mle{Z}_\text{cons} \cdot \mle{w}$, and the prover already holds it: that summation is what built the value table of $g$ in the first place, and phases~1 and~2 fold the table down to the single entry $g(r_j, r_s, r_o)$.
 
-The scalar $G$ carries the summation over $y$ of $\mle{Z}_\text{cons} \cdot \mle{w}$, and the prover obtains it by division rather than by summing: it forms $h(r_j, r_s, r_o) = \sum_{i \in \BB_6} d[i] \cdot v[i]$, a $2^6$-term sum, and sets $G \coloneqq \beta / h(r_j, r_s, r_o)$. The phase therefore costs $O(2^6)$ field operations and one inversion, and touches no table indexed by $y$. In the exceptional case $h(r_j, r_s, r_o) = 0$ the prover instead computes $G$ directly, as the inner product of the two phase-4 tables below. Phase 3 closes with the claim
+The two $I$-dependent factors the prover keeps as separate $2^6$-entry tables, $d[i] = \delta_D(r_{\widehat{i}}, \widehat{i})$ from the precomputation above and $v[i] = \mle{\textsf{shift-ind}}(i, r_j, r_s, r_o)$ from $2^6$ evaluations of the succinct arithmetizations of \S\ref{sec:shift-indicators}; keeping the two apart is what makes the round polynomials degree $2$. The phase costs $O(2^6)$ field operations and touches no table indexed by $y$. Phase 3 closes with the claim
 \[
   \varepsilon \stackrel{?}{=} \Bigl[ \mle{\delta}_D(r_{\widehat{i}}, r_i) \cdot \mle{\textsf{shift-ind}}(r_i, r_j, r_s, r_o) \Bigr] \cdot \sum_{y \in \BB_{\ell_\text{words}}} \mle{Z}_\text{cons}(r'_x, y, r_s, r_o) \cdot \mle{w}(r_j, y).
 \]
