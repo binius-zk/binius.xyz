@@ -12,4 +12,5 @@ main.pdf: main.tex main.bbl
 	pdflatex main.tex
 
 clean:
-	rm main.aux main.bbl main.bcf main.blg main.log main.out main.pdf main.run.xml
+	rm main.aux main.bbl main.bcf main.blg main.log main.out main.pdf main.toc main.run.xml
+
