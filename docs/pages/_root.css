@@ -52,24 +52,20 @@
 
   --vocs-text-h1: 40px;
 
-  /* Content column: up to 900px, as on the Vocs 1 site, but never wider than
-     fits between the sidebar and the outline. Vocs puts the sidebar and the
-     outline in gutters of max((100vw - content) / 2, sidebar), so once the
-     content is wider than 100vw - 2 * sidebar those gutters stop shrinking
-     and the outline is drawn on top of the content. The outline is a side
-     column only from 1376px (hard-coded in Vocs's Outline); below that only
-     the sidebar needs room. */
-  --vocs-spacing-content: calc(
-    min(900px, 100vw - var(--vocs-spacing-sidebar) - (var(--vocs-spacing-content-px) * 2)) +
-      (var(--vocs-spacing-content-px) * 2)
-  );
+  /* Content column: 900px of text, as on the Vocs 1 site. */
+  --vocs-spacing-content: calc(900px + (var(--vocs-spacing-content-px) * 2));
 }
 
+/* From 1376px Vocs shows the outline as a fixed column on the right, in a
+   gutter at least as wide as the sidebar. Vocs's default content width leaves
+   room for it, but 900px does not on narrower screens, so shrink the content
+   to fit between the sidebar and the outline. (Below 1376px the column already
+   shrinks to fit beside the sidebar, and on mobile it takes the full width.) */
 @media (width >= 1376px) {
   :root {
-    --vocs-spacing-content: calc(
-      min(900px, 100vw - (var(--vocs-spacing-sidebar) * 2) - (var(--vocs-spacing-content-px) * 2)) +
-        (var(--vocs-spacing-content-px) * 2)
+    --vocs-spacing-content: min(
+      900px + (var(--vocs-spacing-content-px) * 2),
+      100vw - (var(--vocs-spacing-sidebar) * 2)
     );
   }
 }
