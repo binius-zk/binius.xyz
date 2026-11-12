@@ -58,11 +58,19 @@
      content is wider than 100vw - 2 * sidebar those gutters stop shrinking
      and the outline is drawn on top of the content. The outline is a side
      column only from 1376px (hard-coded in Vocs's Outline); below that only
-     the sidebar needs room. */
-  --vocs-spacing-content: calc(
-    min(900px, 100vw - var(--vocs-spacing-sidebar) - (var(--vocs-spacing-content-px) * 2)) +
-      (var(--vocs-spacing-content-px) * 2)
-  );
+     the sidebar needs room. The sidebar is a side column only from Vocs's
+     `lg` breakpoint (1080px); below that it is a drawer and the content
+     takes the full width, so nothing needs to be subtracted. */
+  --vocs-spacing-content: calc(900px + (var(--vocs-spacing-content-px) * 2));
+}
+
+@media (width >= 1080px) {
+  :root {
+    --vocs-spacing-content: calc(
+      min(900px, 100vw - var(--vocs-spacing-sidebar) - (var(--vocs-spacing-content-px) * 2)) +
+        (var(--vocs-spacing-content-px) * 2)
+    );
+  }
 }
 
 @media (width >= 1376px) {

@@ -208,3 +208,17 @@ for (const width of [1100, 1376, 1500, 1595, 1600, 2443]) {
     }
   });
 }
+
+// BINIUS-710: below Vocs's `lg` breakpoint (1080px) the sidebar is a drawer, so
+// the content column must span the viewport rather than being
+// narrowed to leave room for a sidebar that is not there.
+for (const width of [375, 768, 1079]) {
+  test(`content fills the viewport at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/basics");
+    const content = (await page.locator("[data-v-content]").first().boundingBox())!;
+    expect(content.width).toBeGreaterThanOrEqual(Math.min(width, 900));
+    expect(content.x).toBeGreaterThanOrEqual(0);
+    expect(content.x + content.width).toBeLessThanOrEqual(width + 0.5);
+  });
+}
