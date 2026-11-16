@@ -1,0 +1,130 @@
+# Lasso Lookup [Lookups within the M3 formalism]
+
+_Lookup protocols_ are essential in modern SNARKs. At their core, they allow a sort of _unstructured access_. While a typical polynomial constraint might decree, for example, that one column be the element-wise _product_ of two other columns—an algebraic relationship—a lookup allows us to prove that a column's values are merely _present_ in some other column—and in an unstructured way, no less, in the sense that we don't care _where_ in that latter column the first column's values appear.
+
+As a brief technical explanation, a lookup argument pertains to a _table_ column $T$ and a _looked-up_ column $U$. The statement is that all of $U$'s values appear in $T$ (somewhere). Here, $T$ can be thought of as the global lookup table, which tells us which values are "allowed".
+
+:::info
+In the example below, the pair $(T, U)$ satisfy the lookup relation.
+
+| Lookup Table $T$ | Looked-Up Column $U$ |
+| ---------------: | -------------------: |
+|                5 |                    8 |
+|                6 |                    6 |
+|                7 |                    6 |
+|                8 |                    7 |
+
+We note that each of $U$'s entries reside in $T$—somewhere, that is. If we were to change one of $U$'s entries to a 4, let's say, then the lookup condition would no longer be satisfied.
+:::
+
+As it turns out, lookups allow us to "bootstrap" many flexible sorts of operations. For example, they let us achieve efficient _unsigned integer multplication_ even in Binius's tower setting; this fact is explained at length in [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 5.3].
+
+Here, we explain how to express Lasso naturally as an M3 instance.
+
+## Background
+
+Binius achieves lookups in the binary tower setting using _Lasso_, a technique developed by Setty, Thaler and Wahby [[STW23](https://eprint.iacr.org/2023/1216)]. Under the hood, the essential idea here is _offline memory checking_, a technique which originates with Blum et al. [[Blu+91](https://ieeexplore.ieee.org/document/185352)]. In [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 4.4], we describe how to adapt Lasso's offline-memory-checking argument to the binary setting. Our treatment here follows that latter work.
+
+We note that that work's Lasso rendition doesn't _explicitly_ mention M3, tables, channels, or anything like that, but _was_ nonetheless essentially those things. I.e., it's not much work to recast that treatment as an M3 instance.
+
+## The Instance Specification
+
+We begin by describing the instance specification. For background, we fix a ground field $\mathcal{T}_\iota$ and a length parameter $\ell$. We are going to treat tables $T$ and looked-up columns $U$ both with values in $\mathcal{T}_\iota$, and _both_ of length $2^\ell$. (The requirement whereby these columns' lengths are equal can be relaxed.)
+
+For technical reasons, we are moreover going to choose a further tower field $\mathcal{T}_\zeta$; we are going to choose the tower height $\zeta \coloneqq \lceil \text{log}(\ell + 1) \rceil$ (this is explained in [[DP23](https://eprint.iacr.org/2023/1784.pdf), § 4.4]). Finally, we fix an element $\alpha \in \mathcal{T}_\zeta$ which generates the multiplicative group of units $\mathcal{T}_\zeta^*$.
+
+### Channels
+
+We will create just a single channel, of type signature $(\mathcal{T}_\iota, \mathcal{T}_\zeta)$. That is, the things we're allowed to flush into it (i.e., whether pushing or pulling) will be tuples, consisting of a $\mathcal{T}_\iota$-element and $\mathcal{T}_\zeta$-element. In our setting here, these two items will have the semantic roles of an _element_ and a _timestamp_, respectively.
+
+### Tables
+
+Our first table consists simply of the statement $(T, U)$. It is of height $2^\ell$, and of type signature $(\mathcal{T}_\iota, \mathcal{T}_\iota)$. This table is already fixed as of the beginning of the protocol.
+
+We're going to create a single _further_ table, of type signature $(\mathcal{T}_\zeta, \mathcal{T}_\zeta)$. That is, it will have two columns, both valued in $\mathcal{T}_\zeta$; we will call these $R$ (for _read timestamps_) and $F$ (for _final timestamps_). Its height will be $2^\ell$, the same as $T$ and $U$.
+
+We will allow the prover to populate the second table $(R, F)$ arbitrarily during its execution. This table will have only the constraint whereby $R$ be _identically nonzero_. Though this is technically not an algebraic constraint, we have a way in Binius of dealing with this (essentially, we run a grand product, and check that the _product_ of its elements is nonzero). We thus suppress this technicality for now.
+
+### Flushing rules
+
+We are going to have 4 main flushing rules.
+
+- **Pull $(T, F)$.** Note that this typechecks (it matches the type signature of the channel).
+- **Push $(T, O)$.** Here, we write $O$ for the trivial, transparent virtual column which simply takes the value $1$ identically everywhere.
+- **Pull $(U, R)$.** Again, we are pulling two committed things, and the types are right.
+- **Push $(U, W)$.** Here, we define $W$ to be the virtual column $W \coloneqq \alpha \cdot R$. This is a simple scaling operation, and is definitely a legal way to come up with a virtual column.
+
+### Boundary conditions
+
+We're not going to have any boundary conditions in this M3 instance.
+
+## The Claim
+
+The claim is that _if_ $(T, U)$ satisfies the lookup table relation (that is, if every element of $U$ is contained somewhere in $T$) _then_ there will be an easy way to populate the table $(R, F)$ in such a way as to make the attempt succeed.
+
+Conversely, if $(T, U)$ does _not_ satisfy the relation (i.e., some element of $U$ appears nowhere in $T$), then this will be unsatisfiable, in that _no possible_ population of the table $(R, F)$ will cause the channel to balance.
+
+Proving this rigorously turns out to be fairly tricky; this gets done in [[DP23](https://eprint.iacr.org/2023/1784.pdf), Thm. 4.28]. Below, we are going to give some intuition for why this is true.
+
+## Worked Example
+
+Here, we will work through an explicit example, and get some intuitions for why this works. Using the table $T$ and looked-up column $U$ from the boxed example above, we see that the total list of pushes and pulls will lead to a state like:
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+   (5, 0)     :   :           :  (5, F₀)
+   (6, 0)      \_/___________/   (6, F₁)
+   (7, 0)                        (7, F₂)
+   (8, 0)                        (8, F₃)
+  
+ (8, R₀ + 1)                     (8, R₀)
+ (6, R₁ + 1)                     (6, R₁)
+ (6, R₂ + 1)                     (6, R₂)
+ (7, R₃ + 1)                     (7, R₃)
+```
+Here, we cheat a bit notationally, by "taking discrete logarithms" of the columns $R$ and $F$ with respect to $\alpha$. I.e., instead of writing $1 = \alpha^0$, we instead write `0`, and more generally write `i` instead of $\alpha^i$, for each $i \in \{0, \ldots , |\mathcal{T}_\zeta| - 2\}$. Note that we required that these columns be nonzero, so this makes sense.
+
+### Populating the tables
+
+We have "dummied out" the values of $F$ and $R$, since we (as the prover) don't know them yet. Adopting the prover's point of view, we now must ask: how should the prover populate the _as-yet empty_ table $(R, F)$ in order to cause the above channel to balance? Indeed, we can perfectly anticipate which pushes and pulls the verifier is going to do, and what the picture will look like (it's exactly the one above).
+
+Let's walk our way down the table $U$, row by row. First, we hit the 8. We know that our only hope of cancelling out the verifier's initial push `(8, 0)` (way on the top left) hinges on setting $R_0 \coloneqq 0$. On the other hand, as we do this, we simultaneously induce a push—or a "liability"—of `(8, 1)` in the bottom left quadrant. We mentally remark this for later, since we will need to cancel it out (this is where $F$ will come in!).
+
+:::note
+If we instead set $F_3 \coloneqq 0$, then that too would counterbalance `(8, 0)`. But then we would run into a problem right away: whatever value we set $R_0$ to, we would induce an unbalanced push of $(8, R_0 + 1)$, which we would have no way to later eliminate.
+:::
+
+Next up is 6. Here, we have a similar story: in order to cancel out the preemptive push `(6, 0)`, we have to set $R_1 \coloneqq 0$. This has the effect of _pulling_ (i.e., counterbalancing) `(6, 0)`, but also of _pushing_ the outstanding liability `(6, 1)`. More on this later.
+
+Now, on the next row of $U$, we hit 6 _again_. Now, the relevant outstanding liability is not `(6, 0)` (which already got cancelled above!) but rather `(6, 1)`, the one we just pushed in the last step. We thus set $R_2 \coloneqq 1$. This has the effect of cancelling off `(6, 1)`, but pushing `(6, 2)`.
+
+In the final row, we hit 7; here, we again need to set $R_3 \coloneqq 0$, since `(7, 0)` is still outstanding.
+
+At the very end of doing this, we have stricken off _some_ (though not all) of the initial pushes in the top left, and replaced these with new pushes on the bottom left. At this final stage, we will use our _final counts_ to counterbalance these stray pushes. It's not hard to check that by setting $F(v)$ to be the _total number of times_ $T(v)$ got read throughout $U$, we get exactly what we want. Thus we will set $F_0 \coloneqq 0$, $F_1 \coloneqq 2$, $F_2 \coloneqq 1$, and $F_3 \coloneqq 1$. At the very end, we get the channel state:
+
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+   (5, 0)     :   :           :  (5, 0)
+   (6, 0)      \_/___________/   (6, 2)
+   (7, 0)                        (7, 1)
+   (8, 0)                        (8, 1)
+  
+   (8, 1)                        (8, 0)
+   (6, 1)                        (6, 0)
+   (6, 2)                        (6, 1)
+   (7, 1)                        (7, 0)
+```
+which is totally balanced, as desired.
+
+### Soundness
+
+The above discussion shows that the prover _can_ succeed if he is honest. What if he's dishonest? Why should the above game become impossible to win?
+
+Let's assume for the sake of argument that $U$'s final element were $4$, instead of $7$. Note that $4$ is _not_ in the table $T$. In this case, on the very bottom row of the above diagram, we would have the pair of elements $(4, R_3 + 1)$ on the push side and $(4, R_3)$ on the pull side. Since $4$ doesn't appear in $T$, so there are no tuples whatsoever containing $4$ as their first component in the upper half of the diagram.
+
+It seems intuitively clear that whatever the prover sets $R_3$ to, the pair of _different_ tuples $(4, R_3 + 1)$ and $(4, R_3)$ will stick out like a sore thumb, with nothing to balance them. In fact, a problem like this is going to persist even of $U$ had many $4$s in it (or other bad values, etc.): even after setting the relevant entries of $R$ cleverly, there is nothing the prover is going to be able to do to lead to a balanced channel overall.
+
+The key subtlety is that if the prover can trigger an overflow in the "counter space", then it can get away with this after all. That is why we required above that $\zeta$ be "sufficiently large" relative to $\ell$ (as well as that everything be nonzero!).

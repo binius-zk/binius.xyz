@@ -1,0 +1,105 @@
+# A Toy Example [Illustrating how M3 lets us solve problems]
+
+Since M3 is so conceptually new, we illustrate it first using an example.
+
+## The Game
+
+_I_, the verifier, am going to set up a way for _you_, the prover, to prove to me that:
+
+:::note
+You know the prime factorization of some integer.
+:::
+
+Let's pick an integer—3,135. I'm going to set up a "channel", a sort of abstract, bidirectional data stream. I'm going to start by "pushing" 3,135, the number I'm interested in, to the channel. I'm also going to "pull" the terminal number 1.
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+    3135      :   :           :      1
+               \_/___________/
+```
+Right now, this channel is _unbalanced_—it has an unbalanced _push_ of 3,135 and an unbalanced _pull_ of 1.
+
+I'm also going to set up a table, containing three columns:
+
+| Total $a$ | Remaining $b$ | Prime Factor $p$ |
+| ---------:| -------------:| ----------------:|
+
+Here are the rules of the game.
+- You, the prover, get to append _arbitrary_ rows $(a, b, p)$ to this table, subject to the constraints that:
+  - $a = b \cdot p$ holds, and
+  - $p$ is prime.
+  
+  Subject to these constraints, you can do whatever you want. (The constraint "$p$ is prime" is not _algebraic_, as our constraints will all be; this is just for the sake of illustration.)
+- For each row you append, I will
+  - _pull_ $a$ from and
+  - _push_ $b$ to
+  
+  my channel.
+- Your goal is to append rows to the table (obeying its constraints) in such a way that my channel becomes balanced.
+
+The claim here is that _if_ you somehow manage to balance my channel, then I become convinced that you know the prime factorization of 3,135. I don't need to know anything more—in particular, I care nothing for what rows you actually append (over and above, of course, the fact that they cause my channel to balance).
+
+### Winning the game
+
+Intuitively, the only way that you, the prover, can possibly nullify my initial pull of 3,135 is to append a row to the table for which $a = 3135$. On the other hand, the constraints of the table dictate that you must simultaneously choose values $b$ and $p$ for which $a = b \cdot p$ holds and $p$ is prime. In fact, the triple $(3135, 165, 19)$ does the trick. Let's append it:
+
+| Total $a$ | Remaining $b$ | Prime Factor $p$ |
+| ---------:| -------------:| ----------------:|
+|      3135 |           165 |               19 |
+
+The effect of this row is to _pull_ 3,135 and _push_ 165. That pull "strikes off", or "counterbalances", or "nullifies", my initial push of 3,135. On the other hand, it creates a new outstanding liability, namely 165. My channel state is now:
+
+```txt
+               /¯\¯¯¯¯¯¯¯¯¯¯¯\
+    PUSH      :   :           :    PULL
+ ---------->  |   |  channel  | ---------->
+     165      :   :           :      1
+               \_/___________/
+```
+
+In a sense, you have gotten "closer", since you have shrunk the size of the outstanding liability. Let's push a few more rows:
+
+| Total $a$ | Remaining $b$ | Prime Factor $p$ |
+| ---------:| -------------:| ----------------:|
+|      3135 |           165 |               19 |
+|       165 |            15 |               11 |
+|        15 |             3 |                5 |
+|         3 |             1 |                3 |
+
+Note that these rows all satisfy the required rules. Finally, they cause my channel to balance.
+
+### Why this is convincing
+
+Why is this sound? Why should I, the verifier, be completely convinced that you know the prime factorization of 3,135, _merely_ upon learning that you've managed to balance my channel (i.e., without bothering to look any further at your rows)?
+
+Roughly, this channel game allows you—the prover—to make "unsupervised progress" towards the goal. It forces you to find a "path" from 3,135 to 1, where a "legal step" entails breaking off a prime factor. That is, I only allow you to take a step—i.e., to "walk away" from a number—at the cost of replacing that number with a smaller one, which differs from it by a prime factor.
+
+### Some interesting aspects
+
+We note that this paradigm leaves many things completely up to the prover—which path to take, for example. Indeed, the following table would also have equally served the verifier's ends:
+
+| Total $a$ | Remaining $b$ | Prime Factor $p$ |
+| ---------:| -------------:| ----------------:|
+|      3135 |           627 |                5 |
+|       627 |            33 |               19 |
+|        33 |             3 |               11 |
+|         3 |             1 |                3 |
+
+Here, the prover "breaks off" his prime factors in a different order.
+
+Moreover, the _order_ of the prover's rows is completely irrelevant. If a table causes the verifier's channel to balance, then all permutations of that table also will, and vice versa.
+
+Roughly, M3 is a _general strategy_ of formulating problems in this way. In general, it features "path-agnosticism" and "order-invariance". It allows the prover to make incremental, unsupervised progress towards a goal, while leaving the prover's _particular_ path—and even the order he takes his steps in—as nondeterministic choices.
+
+## M3 in General
+
+Before we proceed to full-blown M3, we distill a few principles from the above example.
+
+First, we note that the verifier made pushes and pulls that were _uniform across rows_; i.e., the verifier did the exact same thing to each row (push $a$ and pull $b$, in our case). As we'll see below, these pushes and pulls were what we'll call _flushing rules_. In general, flushing rules have to be row-uniform—though they _can_ entail virtual columns, derived indirectly from the table's committed columns. Separately, the prover's freedom was restricted in an important way: he was only allowed to append pairs $(a, b, p)$ for which $a = b \cdot p$ held and $p$ was prime. (If either of these rules were relaxed, then the protocol would have become completely insecure.) As we will see soon, these were examples of _constraints_ that applied to the prover's table. In general, our constraints will be _algebraic_, formulated in terms of polynomial relations (so for example, "$p$ is prime" is off the table—unless you can come with an M3 instance for it!).
+
+In general M3 instances, we will have _a number of channels_, as well as a plurality of tables. Moreover, these tables will interact with the channels according to generally complex flushing rules. (Note: The MPT (Merkle-Patricia Inclusion) examples were not included in the recovered V0 documentation.)
+
+## The Primality Constraint
+
+As we've mentioned repeatedly, the constraint "$p$ is prime" used within our example above is _not_ algebraic, and couldn't be used in a "proper" M3 instance. As a final taste, we hint that even this constraint could be replaced  by an appropriate M3 sub-instance. Roughly, there seems to be a general correspondence whereby verification algorithms (that use nondeterministic advice) can be reduced to M3 instances. The relevant idea here seems to be [Pratt certificates](https://en.wikipedia.org/wiki/Primality_certificate#Pratt_certificates), or possibly some other kind of primality certificate. We will soon see examples of much-more-complex M3 instances.
