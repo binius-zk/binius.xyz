@@ -234,7 +234,7 @@ the bivariate $\mle{\eq}(0, X) = 1 - X$ for the current variable times the const
 \]
 where $R_F^{(i - \nu)}$ is the round polynomial of the original $n$-variate sumcheck on $F$ in its round $i - \nu$.
 \end{itemize}
-A polynomial entering the batch below the common variable count therefore costs only a string of trivial padding rounds before its ordinary sumcheck begins. Claims of differing lengths align on their \emph{low} variables: a claim on $\ell$ variables has them bound in the last $\ell$ rounds and closes at $r|_\ell \coloneqq (r_0, \ldots, r_{\ell - 1})$, the low $\ell$ coordinates of the common challenge vector $r$, so the output points of any two claims are nested, the shorter being a prefix of the longer. The document uses this padding twice: the constraint-index unification of \S\ref{sec:rz-unification} batches the constraint reductions' sumchecks this way, and its nested output points are what let the shift reduction serve every constraint array from a single tensor expansion; and the lift of \S\ref{sec:lifted-basefold} is the same device applied to an oracle, with the padding variables placed lowest and the indicator $\mle{\eq}(1^\eta, \cdot)$, by identity \eqref{eq:lift-mle}, which is what lets Batched BaseFold (\S\ref{sec:batched-basefold}) bring oracles of unequal size to a common count.
+A polynomial entering the batch below the common variable count therefore costs only a string of trivial padding rounds before its ordinary sumcheck begins. Claims of differing lengths align on their \emph{low} variables: a claim on $\ell$ variables has them bound in the last $\ell$ rounds and closes at $r|_\ell \coloneqq (r_0, \ldots, r_{\ell - 1})$, the low $\ell$ coordinates of the common challenge vector $r$, so the output points of any two claims are nested, the shorter being a prefix of the longer. The document uses this padding twice: the constraint-index unification of \S\ref{sec:rz-unification} batches the constraint reductions' sumchecks this way, and its nested output points are what let the shift reduction serve every constraint array from a single tensor expansion; and the lift of \S\ref{sec:lifted-basefold} is the same device applied to an oracle, with the padding variables placed lowest and the indicator $\mle{\eq}_\nu(1^\nu, \cdot)$, by identity \eqref{eq:lift-mle}, which is what lets Batched BaseFold (\S\ref{sec:batched-basefold}) bring oracles of unequal size to a common count.
 
 The multiplicative analog of this padding---batching binary-tree grand-product arguments over trees of unequal depths---is developed in Appendix~\ref{app:padded-prodcheck}.
 
@@ -1202,15 +1202,15 @@ BaseFold is an IOPP for constrained Reed--Solomon codes (Arnon, Chiesa, Fenzi, a
 \paragraph{Setup.}
 Fix a power-of-two rate parameter $\mathcal{R} \geq 2$ and a nested chain of additive $\FF{2}$-linear subspaces $\set{0} = E_0 \subset E_1 \subset \cdots \subset E_n \subset K$, where each $E_k$ has dimension $k + \log_2 \mathcal{R}$.
 
-The encoding map $\textsf{Enc}_k \colon K^{2^k} \to K^{|E_k|}$ takes a message $a \in K^{2^k}$ to its evaluation on $E_k$ of the polynomial
+The encoding map $\textsf{Enc}_k \colon K^{2^k} \to K^{|E_k|}$ takes an oracle $\pi \colon \BB_k \to K$ to its evaluation on $E_k$ of the polynomial
 \[
-  f_a(X) \coloneqq \sum_{c = 0}^{2^k - 1} a_c \cdot X_c(X),
+  f_\pi(X) \coloneqq \sum_{i = 0}^{2^k - 1} \pi_i \cdot X_i(X),
 \]
-where $X_0, \ldots, X_{2^k - 1}$ is the novel polynomial basis of Lin, Chung, and Han~\cite{Lin:2014aa}, with $\deg X_c = c$; message entry $c$ is the coefficient of $X_c$. The fold of a level-$k$ codeword with a challenge $\sigma \in K$ is that of~\cite{Diamond:2024ab}; it binds the \emph{lowest} variable of the message, sending $\textsf{Enc}_k(a)$ to $\textsf{Enc}_{k - 1}(a(\sigma, \cdot))$, where $a(\sigma, \cdot) \coloneqq \textsf{lerp}(\sigma, a(0, \cdot), a(1, \cdot))$.
+where $X_0, \ldots, X_{2^k - 1}$ is the novel polynomial basis of Lin, Chung, and Han~\cite{Lin:2014aa}, with $\deg X_i = i$; entry $i$ of $\pi$ is the coefficient of $X_i$. The fold of a level-$k$ codeword with a challenge $\sigma \in K$ is that of~\cite{Diamond:2024ab}; it binds the \emph{lowest} variable of the oracle, sending $\textsf{Enc}_k(\pi)$ to $\textsf{Enc}_{k - 1}(\pi(\sigma, \cdot))$, where $\pi(\sigma, \cdot) \coloneqq \textsf{lerp}(\sigma, \pi(0, \cdot), \pi(1, \cdot))$.
 
-An oracle is committed \emph{reversed}. For $\pi \colon \BB_k \to K$, its reversal $\pi^\textsf{rev}$ has entries $\pi^\textsf{rev}_i \coloneqq \pi_{2^k - 1 - i}$; reversing a table complements every index bit, so its multilinear extension is $\mle{\pi}^\textsf{rev}(y) = \mle{\pi}(1 - y)$, where $1 - y \coloneqq (1 - y_0, \ldots, 1 - y_{k - 1})$. The commitment to $\pi$ is the codeword $\textsf{Enc}_k(\pi^\textsf{rev})$, which places the top coordinates of $\pi$ in the lowest-degree coefficients; the ZK pad of \S\ref{sec:batched-zk-basefold} relies on this.
+An oracle is committed \emph{reversed}. For $\pi \colon \BB_k \to K$, its reversal $\textsf{rev}(\pi) \colon \BB_k \to K$ has entries $\textsf{rev}(\pi)_i \coloneqq \pi_{2^k - 1 - i}$; reversing a table complements every index bit, so $\mle{\textsf{rev}(\pi)}(y) = \mle{\pi}(1 - y)$, where $1 - y \coloneqq (1 - y_0, \ldots, 1 - y_{k - 1})$. The commitment to $\pi$ is the codeword $\textsf{Enc}_k(\textsf{rev}(\pi))$, which places the top coordinates of $\pi$ in the lowest-degree coefficients; the ZK pad of \S\ref{sec:batched-zk-basefold} relies on this.
 
-The constrained Reed--Solomon code at level $n$ is parameterized by a multilinear \emph{multiplicand} $t \colon \BB_n \to K$ and a target $s \in K$; it is the set of codewords $c = \textsf{Enc}_n(\pi^\textsf{rev})$ for $\pi \colon \BB_n \to K$ satisfying
+The constrained Reed--Solomon code at level $n$ is parameterized by a multilinear \emph{multiplicand} $t \colon \BB_n \to K$ and a target $s \in K$; it is the set of codewords $c = \textsf{Enc}_n(\textsf{rev}(\pi))$ for $\pi \colon \BB_n \to K$ satisfying
 \[
   \pi \cdot t = s \qquad \text{i.e.,} \qquad \sum_{w \in \BB_n} \pi(w) \cdot t(w) = s.
 \]
@@ -1219,8 +1219,8 @@ The constrained Reed--Solomon code at level $n$ is parameterized by a multilinea
 On input an oracle $c_n \in K^{|E_n|}$ and a constraint $(t, s)$, BaseFold proceeds in two phases:
 
 \begin{enumerate}
-\item \emph{Folding phase.} For each round $i = 0, \ldots, n - 1$, the parties interleave one round of a sumcheck on the constraint $\sum_{w \in \BB_n} \pi(w) \cdot t(w) = s$ with a single fold of the codeword. The sumcheck binds the variables from the lowest index up, round $i$ binding $X_i$, matching the fold. The prover sends a sumcheck round polynomial; the verifier samples $\rho_i \gets K$ and updates the running sumcheck claim; both parties fold the codeword from $c_{n - i} \in K^{|E_{n - i}|}$ to $c_{n - i - 1} \in K^{|E_{n - i - 1}|}$ using the complemented challenge $1 - \rho_i$, which is uniform since $\rho_i \mapsto 1 - \rho_i$ is a bijection. As $\mle{\pi}^\textsf{rev}(1 - \rho_0, \ldots, 1 - \rho_i, y) = \mle{\pi}(\rho_0, \ldots, \rho_i, 1 - y)$, an honest $c_{n - i - 1}$ is $\textsf{Enc}_{n - i - 1}\bigl( \pi(\rho_0, \ldots, \rho_i, \cdot)^\textsf{rev} \bigr)$, and the final codeword $c_0$ is constant with value $\mle{\pi}(\rho)$. The prover provides $c_{n - i - 1}$ as a new oracle each round.
-\item \emph{Query phase.} After $n$ rounds, the codeword $c_0 \in K^{|E_0|}$ is short (of length $\mathcal{R}$) and the sumcheck claim reduces to a single multilinear-extension evaluation that the verifier can check against the prover's claimed reduced codeword. The verifier additionally samples $\mu$ random query positions in $E_n$, and for each position requests the corresponding entries of $c_n, c_{n - 1}, \ldots, c_0$ from the prover oracles. The verifier checks two things at each query position: that the entries are consistent with each successive fold given the challenges $1 - \rho_i$, and that the chain bottoms out in the sent $c_0$.
+\item \emph{Folding phase.} For each round $k = 0, \ldots, n - 1$, the parties interleave one round of a sumcheck on the constraint $\sum_{w \in \BB_n} \pi(w) \cdot t(w) = s$ with a single fold of the codeword. The sumcheck binds the variables from the lowest index up, round $k$ binding $X_k$, matching the fold. The prover sends a sumcheck round polynomial; the verifier samples $\rho_k \gets K$ and updates the running sumcheck claim; both parties fold the codeword from $c_{n - k} \in K^{|E_{n - k}|}$ to $c_{n - k - 1} \in K^{|E_{n - k - 1}|}$ using the complemented challenge $1 - \rho_k$, which is uniform since $\rho_k \mapsto 1 - \rho_k$ is a bijection. As $\mle{\textsf{rev}(\pi)}(1 - \rho_0, \ldots, 1 - \rho_k, y) = \mle{\pi}(\rho_0, \ldots, \rho_k, 1 - y)$, an honest $c_{n - k - 1}$ is $\textsf{Enc}_{n - k - 1}\bigl( \textsf{rev}(\pi(\rho_0, \ldots, \rho_k, \cdot)) \bigr)$, and the final codeword $c_0$ is constant with value $\mle{\pi}(\rho)$. The prover provides $c_{n - k - 1}$ as a new oracle each round.
+\item \emph{Query phase.} After $n$ rounds, the codeword $c_0 \in K^{|E_0|}$ is short (of length $\mathcal{R}$) and the sumcheck claim reduces to a single multilinear-extension evaluation that the verifier can check against the prover's claimed reduced codeword. The verifier additionally samples $\mu$ random query positions in $E_n$, and for each position requests the corresponding entries of $c_n, c_{n - 1}, \ldots, c_0$ from the prover oracles. The verifier checks two things at each query position: that the entries are consistent with each successive fold given the challenges $1 - \rho_k$, and that the chain bottoms out in the sent $c_0$.
 \end{enumerate}
 
 The verifier accepts iff all sumcheck round-polynomial checks pass, the final reduced claim matches, and all $\mu$ fold-consistency checks pass.
@@ -1243,23 +1243,23 @@ The Lin--Chung--Han additive NTT exhibits a clean zero-pad/duplicate corresponde
 
 \begin{theorem}[LCH NTT zero-pad correspondence]
 \label{thm:lch-ntt-zeropad}
-For all $\mu, \eta \geq 0$ and any message $a \in K^{2^\mu}$,
+For all $\mu, \eta \geq 0$ and any coefficient vector $a \in K^{2^\mu}$ with respect to the novel polynomial basis of \S\ref{sec:basefold},
 \[
   \textsf{Enc}_{\mu + \eta}\bigl( \textsf{ZeroPadLSB}_\eta(a) \bigr) = \textsf{Duplicate}_\eta\bigl( \textsf{Enc}_\mu(a) \bigr).
 \]
 \end{theorem}
 
-Now fix an oracle $\pi \colon \BB_n \to K$ with $n \leq \boldsymbol{\ell}$, and set $\eta \coloneqq \boldsymbol{\ell} - n$. Its \emph{lift} $\pi^{(\uparrow)} \colon \BB_{\boldsymbol{\ell}} \to K$ is the oracle whose reversal is $\textsf{ZeroPadLSB}_\eta(\pi^\textsf{rev})$: it holds $\pi_i$ at index $i \cdot 2^\eta + 2^\eta - 1$ and zero elsewhere, so it is supported where its low $\eta$ index bits are all $1$, and has multilinear extension
+Now fix an oracle $\pi \colon \BB_n \to K$ with $n \leq \boldsymbol{\ell}$. Its \emph{lift} $\pi^{(\uparrow)} \colon \BB_{\boldsymbol{\ell}} \to K$ is the oracle whose reversal is $\textsf{ZeroPadLSB}_{\boldsymbol{\ell} - n}(\textsf{rev}(\pi))$: it holds $\pi_i$ at index $i \cdot 2^{\boldsymbol{\ell} - n} + 2^{\boldsymbol{\ell} - n} - 1$ and zero elsewhere, so it is supported where its low $\boldsymbol{\ell} - n$ index bits are all $1$, and has multilinear extension
 \begin{equation}
-  \mle{\pi}^{(\uparrow)}(X_0, \ldots, X_{\boldsymbol{\ell} - 1}) = \mle{\eq}_\eta\bigl( 1^\eta, X_0, \ldots, X_{\eta - 1} \bigr) \cdot \mle{\pi}(X_\eta, \ldots, X_{\boldsymbol{\ell} - 1}),
+  \mle{\pi}^{(\uparrow)}(X_0, \ldots, X_{\boldsymbol{\ell} - 1}) = \mle{\eq}_{\boldsymbol{\ell} - n}\bigl( 1^{\boldsymbol{\ell} - n}, X_0, \ldots, X_{\boldsymbol{\ell} - n - 1} \bigr) \cdot \mle{\pi}(X_{\boldsymbol{\ell} - n}, \ldots, X_{\boldsymbol{\ell} - 1}),
   \label{eq:lift-mle}
 \end{equation}
-where $\mle{\eq}_\eta(1^\eta, Y_0, \ldots, Y_{\eta - 1}) = \prod_j Y_j$. The right-hand side is the variable padding of \S\ref{sec:variable-padding} with the padding variables placed lowest and fixed to $1$, which is what lets the batched sumcheck of \S\ref{sec:batched-basefold} treat the lifted oracles as claims on a common variable count. Since the commitment encodes the reversal (\S\ref{sec:basefold}), Theorem~\ref{thm:lch-ntt-zeropad} gives the central identity of Lifted BaseFold:
+where $\mle{\eq}_{\boldsymbol{\ell} - n}(1^{\boldsymbol{\ell} - n}, Y_0, \ldots, Y_{\boldsymbol{\ell} - n - 1}) = \prod_j Y_j$. The right-hand side is the variable padding of \S\ref{sec:variable-padding} with the padding variables placed lowest and fixed to $1$, which is what lets the batched sumcheck of \S\ref{sec:batched-basefold} treat the lifted oracles as claims on a common variable count. Since the commitment encodes the reversal (\S\ref{sec:basefold}), Theorem~\ref{thm:lch-ntt-zeropad} gives the central identity of Lifted BaseFold:
 \begin{equation}
-  \textsf{Enc}_{\boldsymbol{\ell}}\bigl( (\pi^{(\uparrow)})^\textsf{rev} \bigr) = \textsf{Duplicate}_\eta\bigl( \textsf{Enc}_n(\pi^\textsf{rev}) \bigr).
+  \textsf{Enc}_{\boldsymbol{\ell}}\bigl( \textsf{rev}(\pi^{(\uparrow)}) \bigr) = \textsf{Duplicate}_{\boldsymbol{\ell} - n}\bigl( \textsf{Enc}_n(\textsf{rev}(\pi)) \bigr).
   \label{eq:lifted-basefold-identity}
 \end{equation}
-The lifted codeword is therefore the original codeword with each entry duplicated $2^{\boldsymbol{\ell} - n}$ times. Given Merkle access to the original codeword $c = \textsf{Enc}_n(\pi^\textsf{rev})$, the verifier emulates oracle access to the lifted codeword by translating a query at position $e \in E_{\boldsymbol{\ell}}$ into a query at $\lfloor e \cdot |E_n| / |E_{\boldsymbol{\ell}}| \rfloor \in E_n$.
+The lifted codeword is therefore the original codeword with each entry duplicated $2^{\boldsymbol{\ell} - n}$ times. Given Merkle access to the original codeword $c = \textsf{Enc}_n(\textsf{rev}(\pi))$, the verifier emulates oracle access to the lifted codeword by translating a query at position $e \in E_{\boldsymbol{\ell}}$ into a query at $\lfloor e \cdot |E_n| / |E_{\boldsymbol{\ell}}| \rfloor \in E_n$.
 
 Using this lift, every LIOP oracle is virtually placed at a common level $\boldsymbol{\ell} = \max_i \ell_i$ (where $\ell_i$ is the variable count of the $i$-th oracle) before the parties run Batched BaseFold (\S\ref{sec:batched-basefold}). Soundness of the lift requires a refined proximity-gap analysis (the lifted codeword's proximity to the level-$\boldsymbol{\ell}$ code is constrained by the original's proximity to the level-$n$ code, with a scaling factor of $2^{\boldsymbol{\ell} - n}$); see \cite{youtube:LiftedFRI} for details.
 
@@ -1289,7 +1289,7 @@ To verify the $k$ evaluation claims $\alpha_i$ via a single BaseFold instance, w
 \[
   \boldsymbol{\pi}(Y, X) \coloneqq \sum_{i = 0}^{k - 1} \mle{\eq}_{\log_2 k}(\bar{\imath}, Y) \cdot \mle{\pi}_i^{(\uparrow)}(X),
 \]
-in $\log_2 k$ fresh oracle-index variables $Y \in K^{\log_2 k}$, the low variables, and $X \in K^{\boldsymbol{\ell}}$, where $\bar{\imath} \coloneqq 1 - i$ is the bitwise complement of $i \in \BB_{\log_2 k}$; thus $\boldsymbol{\pi}(\bar{\imath}, X) = \mle{\pi}_i^{(\uparrow)}(X)$. The complement makes the reversal of $\boldsymbol{\pi}$ the interleaved message $\boldsymbol{\pi}^\textsf{rev}(Y, X) = \sum_i \mle{\eq}_{\log_2 k}(i, Y) \cdot (\mle{\pi}_i^{(\uparrow)})^\textsf{rev}(X)$, whose row $i$ is the committed message of $\pi_i$.
+in $\log_2 k$ fresh oracle-index variables $Y \in K^{\log_2 k}$, the low variables, and $X \in K^{\boldsymbol{\ell}}$, where $\bar{\imath} \coloneqq 1 - i$ is the bitwise complement of $i \in \BB_{\log_2 k}$; thus $\boldsymbol{\pi}(\bar{\imath}, X) = \mle{\pi}_i^{(\uparrow)}(X)$. The complement makes the reversal of $\boldsymbol{\pi}$ the interleaved message $\mle{\textsf{rev}(\boldsymbol{\pi})}(Y, X) = \sum_i \mle{\eq}_{\log_2 k}(i, Y) \cdot \mle{\textsf{rev}(\pi_i^{(\uparrow)})}(X)$, whose row $i$ is the committed message of $\pi_i$.
 
 The verifier samples $r' \gets K^{\log_2 k}$ and computes the target
 \[
@@ -1304,7 +1304,7 @@ The Binius64 SNARK is the result of applying the compiler of \S\ref{sec:liop-to-
 
 Concretely, the non-interactive proof consists of:
 \begin{itemize}
-\item the Merkle root of $\textsf{Enc}_{\ell_\text{pack}}(\pi^\textsf{rev})$, sent at the start (commitment to the oracle);
+\item the Merkle root of $\textsf{Enc}_{\ell_\text{pack}}(\textsf{rev}(\pi))$, sent at the start (commitment to the oracle);
 \item the LIOP's non-oracle messages (the univariate polynomial $g(\widehat{I})$ of the BitAnd reduction, GKR-step claimed evaluations and Frobenius-step values of the IntMul reduction, the per-bit column values of the BinMul reduction, the round polynomials of the various sumchecks, the vector $\hat{s}$ of the ring-switching step), with verifier challenges Fiat--Shamir-derived from the running transcript;
 \item the BaseFold transcript verifying the LIOP's final linear query: Merkle roots of the folded codewords, the sumcheck round polynomials of BaseFold's folding phase, and the Merkle openings answering the $\mu$ query positions.
 \end{itemize}
@@ -1554,7 +1554,7 @@ each involving any number of oracles, with operands vanishing above their oracle
 \paragraph{Leakage channels.}
 Two kinds of message in the compiled protocol depend on the oracles, and we hide each with its own source of randomness.
 \begin{itemize}
-\item The \emph{query phase} opens each committed codeword at verifier-chosen positions, exposing symbols of the commitments $\textsf{Enc}(\pi_i^\textsf{rev})$. These are hidden by a \emph{ZK pad}: uniform coordinates the compiler appends to each committed message.
+\item The \emph{query phase} opens each committed codeword at verifier-chosen positions, exposing symbols of the commitments $\textsf{Enc}(\textsf{rev}(\pi_i))$. These are hidden by a \emph{ZK pad}: uniform coordinates the compiler appends to each committed message.
 \item The \emph{folding phase} of BaseFold reveals sumcheck round polynomials, folded codewords, and a final evaluation, all of which depend on the oracles. These are hidden by a \emph{ZK mask}: an independent uniform codeword committed alongside each oracle, in the manner of Aurora. The prover folds each oracle with its mask \emph{before} the sumcheck begins, so that the sumcheck and the folding phase run entirely on uniform data; the only message that touches the mask alone is its claimed inner product, sent before the fold.
 \end{itemize}
 
@@ -1574,10 +1574,10 @@ Write $q$ for a bound on the number of distinct positions of each committed code
 \[
   P_r \coloneqq \set{2^{\ell_r} - q, \ldots, 2^{\ell_r} - 1},
 \]
-as the \emph{ZK pad}, above every constituent's extent, and the prover fills $P_r$ with independent uniform field elements. In the committed message $M_r^\textsf{rev}$ (\S\ref{sec:basefold}) the pad is the coefficients $0, \ldots, q - 1$. Every extended operand $t^{(b_i)}$ vanishes on $P_r$, so the pad enters no query. The opened codeword symbols are the only linear functionals of $M_r$ that the opening phase reveals on their own, and by Lemma~\ref{lem:pad-independence} below the pad makes any $q$ of them jointly uniform. No further coordinate is needed to make the Merkle commitment hiding: every opened leaf of a masked oracle also carries a symbol of the uniform mask $\omega_r$ introduced next, which already salts it.
+as the \emph{ZK pad}, above every constituent's extent, and the prover fills $P_r$ with independent uniform field elements. In the committed message $\textsf{rev}(M_r)$ (\S\ref{sec:basefold}) the pad is the coefficients $0, \ldots, q - 1$. Every extended operand $t^{(b_i)}$ vanishes on $P_r$, so the pad enters no query. The opened codeword symbols are the only linear functionals of $M_r$ that the opening phase reveals on their own, and by Lemma~\ref{lem:pad-independence} below the pad makes any $q$ of them jointly uniform. No further coordinate is needed to make the Merkle commitment hiding: every opened leaf of a masked oracle also carries a symbol of the uniform mask $\omega_r$ introduced next, which already salts it.
 
 \paragraph{ZK mask and commit phase.}
-When the LIOP prover completes a round, the compiled prover forms $M_r$ as above. If the round is not witness-dependent it commits $\textsf{Enc}_{\ell_r}(M_r^\textsf{rev})$ as in \S\ref{sec:basefold}. Otherwise it samples a uniform \emph{mask} $\omega_r \colon \BB_{\ell_r} \to K$ and commits the \emph{interleaved} Reed--Solomon codeword whose two rows are $\textsf{Enc}_{\ell_r}(M_r^\textsf{rev})$ and $\textsf{Enc}_{\ell_r}(\omega_r^\textsf{rev})$: the Merkle commitment is taken over the columns of this $2 \times |E_{\ell_r}|$ array, so that opening a single position $e$ exposes both symbols under one authentication path. We regard the pair as the single multilinear
+When the LIOP prover completes a round, the compiled prover forms $M_r$ as above. If the round is not witness-dependent it commits $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))$ as in \S\ref{sec:basefold}. Otherwise it samples a uniform \emph{mask} $\omega_r \colon \BB_{\ell_r} \to K$ and commits the \emph{interleaved} Reed--Solomon codeword whose two rows are $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))$ and $\textsf{Enc}_{\ell_r}(\textsf{rev}(\omega_r))$: the Merkle commitment is taken over the columns of this $2 \times |E_{\ell_r}|$ array, so that opening a single position $e$ exposes both symbols under one authentication path. We regard the pair as the single multilinear
 \[
   \mle{G}_r(Y, X) \coloneqq (1 - Y) \cdot \mle{M}_r(X) + Y \cdot \mle{\omega}_r(X), \qquad Y \in K,\ X \in K^{\ell_r},
 \]
@@ -1596,7 +1596,11 @@ After the LIOP's final challenge the parties hold the queries on the merged orac
 \[
   \sum_r \langle M^\gamma_r, T_r \rangle = \textsf{lerp}(\gamma, s, s').
 \]
-The verifier emulates the codeword $\textsf{Enc}_{\ell_r}\bigl( (M^\gamma_r)^\textsf{rev} \bigr) = \textsf{lerp}\bigl(\gamma, \textsf{Enc}_{\ell_r}(M_r^\textsf{rev}), \textsf{Enc}_{\ell_r}(\omega_r^\textsf{rev})\bigr)$ at a queried column from the two rows of the commitment. The mask-fold challenge $\gamma$ is used as sampled.
+The verifier emulates the codeword
+\[
+  \textsf{Enc}_{\ell_r}\bigl( \textsf{rev}(M^\gamma_r) \bigr) = \textsf{lerp}\bigl(\gamma, \textsf{Enc}_{\ell_r}(\textsf{rev}(M_r)), \textsf{Enc}_{\ell_r}(\textsf{rev}(\omega_r))\bigr)
+\]
+at a queried column from the two rows of the commitment. The mask-fold challenge $\gamma$ is used as sampled.
 \item \emph{BaseFold.} Form the piecewise concatenations (\S\ref{sec:batched-basefold}) of the lifts (\S\ref{sec:lifted-basefold}),
 \[
   \boldsymbol{G}(Z, X) \coloneqq \sum_r \mle{\eq}_\kappa(\bar{r}, Z) \cdot \mle{M}_r^{\gamma (\uparrow)}(X), \qquad \boldsymbol{T}(Z, X) \coloneqq \sum_r \mle{\eq}_\kappa(\bar{r}, Z) \cdot \mle{T}_r^{(\uparrow)}(X),
@@ -1612,7 +1616,7 @@ Fix the committed $M_r$ and $\omega_r$. If some query is unsatisfied then $\sum_
 \[
   \sum_r \langle M^\gamma_r, T_r \rangle - \textsf{lerp}(\gamma, s, s') = (1 - \gamma) \Bigl( \sum_r \langle M_r, T_r \rangle - s \Bigr) + \gamma \Bigl( \sum_r \langle \omega_r, T_r \rangle - s' \Bigr)
 \]
-is a nonzero affine function of $\gamma$, since $s'$ is fixed before $\gamma$ is sampled, so the folded claim is false except with probability $1 / |K|$. The fold $\textsf{lerp}(\gamma, \textsf{Enc}(M_r^\textsf{rev}), \textsf{Enc}(\omega_r^\textsf{rev}))$ is BaseFold's fold over the interleave coordinate and is again a codeword of the same code, so the remaining analysis is that of BaseFold and Lifted BaseFold (\S\ref{sec:basefold}, \S\ref{sec:lifted-basefold}). Knowledge soundness is preserved: the extractor recovers each $M_r$ from the first row of its interleaved commitment, and each constituent is the extent of its block.
+is a nonzero affine function of $\gamma$, since $s'$ is fixed before $\gamma$ is sampled, so the folded claim is false except with probability $1 / |K|$. The fold $\textsf{lerp}(\gamma, \textsf{Enc}(\textsf{rev}(M_r)), \textsf{Enc}(\textsf{rev}(\omega_r)))$ is BaseFold's fold over the interleave coordinate and is again a codeword of the same code, so the remaining analysis is that of BaseFold and Lifted BaseFold (\S\ref{sec:basefold}, \S\ref{sec:lifted-basefold}). Knowledge soundness is preserved: the extractor recovers each $M_r$ from the first row of its interleaved commitment, and each constituent is the extent of its block.
 
 \paragraph{Zero knowledge.}
 Fix the merged oracles $M_r$ and condition on $\gamma \ne 0$, an event of probability $1 - 1/|K|$. For each masked round the map $\omega_r \mapsto M^\gamma_r = (1 - \gamma) M_r + \gamma\, \omega_r$ is a bijection, so $M^\gamma_r$ is uniform and independent of $M_r$; for an unmasked round $M^\gamma_r = M_r$ is public. The mask claim is not independent of the folded oracles: since $\sum_r \langle M_r, T_r \rangle = s$ in an honest run,
@@ -1620,18 +1624,18 @@ Fix the merged oracles $M_r$ and condition on $\gamma \ne 0$, an event of probab
   s' = \gamma^{-1} \Bigl( \sum_r \langle M^\gamma_r, T_r \rangle - (1 - \gamma)\, s \Bigr),
   \label{eq:mask-claim}
 \end{equation}
-so $s'$ is a function of the $M^\gamma_r$ and public values. In particular a simulator may not sample $s'$ independently of the $M^\gamma_r$, as the verifier's check would then fail; it samples the $M^\gamma_r$ and computes $s'$ from \eqref{eq:mask-claim}. Everything the folding phase reveals -- round polynomials, folded codewords, and the final evaluation -- is the honest BaseFold prover's output on $\boldsymbol{G}$ and is likewise a function of the $M^\gamma_r$ and the verifier's coins. Write $\textsf{C}(M) \coloneqq \textsf{Enc}_{\ell_r}(M^\textsf{rev})$ for the commitment codeword. The query phase opens, at each queried column of a masked commitment, $\textsf{C}(M_r)[e]$ and $\textsf{C}(\omega_r)[e] = \gamma^{-1} \bigl( \textsf{C}(M^\gamma_r)[e] - (1 - \gamma)\, \textsf{C}(M_r)[e] \bigr)$. The symbols of $\textsf{C}(M_r)$ are independent of the $M^\gamma_r$, and they are uniform given the query targets by the following lemma, since the pad enters no operand.
+so $s'$ is a function of the $M^\gamma_r$ and public values. In particular a simulator may not sample $s'$ independently of the $M^\gamma_r$, as the verifier's check would then fail; it samples the $M^\gamma_r$ and computes $s'$ from \eqref{eq:mask-claim}. Everything the folding phase reveals -- round polynomials, folded codewords, and the final evaluation -- is the honest BaseFold prover's output on $\boldsymbol{G}$ and is likewise a function of the $M^\gamma_r$ and the verifier's coins. The query phase opens, at each queried column of a masked commitment, $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))[e]$ and $\textsf{Enc}_{\ell_r}(\textsf{rev}(\omega_r))[e] = \gamma^{-1} \bigl( \textsf{Enc}_{\ell_r}(\textsf{rev}(M^\gamma_r))[e] - (1 - \gamma)\, \textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))[e] \bigr)$. The symbols of $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))$ are independent of the $M^\gamma_r$, and they are uniform given the query targets by the following lemma, since the pad enters no operand.
 
 \begin{lemma}[Pad independence]
 \label{lem:pad-independence}
-Let $M_r$ be a witness-dependent merged oracle whose pad $P_r$ holds independent uniform field elements. For every set $Q$ of at most $q$ distinct positions of $E_{\ell_r}$, the symbols $\textsf{C}(M_r)[e]$, $e \in Q$, are jointly uniform given the coordinates of $M_r$ outside $P_r$.
+Let $M_r$ be a witness-dependent merged oracle whose pad $P_r$ holds independent uniform field elements. For every set $Q$ of at most $q$ distinct positions of $E_{\ell_r}$, the symbols $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))[e]$, $e \in Q$, are jointly uniform given the coordinates of $M_r$ outside $P_r$.
 \end{lemma}
 
 \begin{proof}
-The pad is the coefficients $0, \ldots, q - 1$ of $M_r^\textsf{rev}$, so it contributes $p(x) \coloneqq \sum_{j < q} v_j X_j(x)$ to the symbol at the point $x$, with $v$ the uniform pad entries; the rest of each symbol is a function of the coordinates outside $P_r$. The $X_j$, $j < q$, are a basis of the polynomials of degree below $q$, so $v \mapsto (p(x_e))_{e \in Q}$ is surjective onto $K^{|Q|}$ for distinct points $x_e$ (polynomial interpolation), and the values $p(x_e)$ are jointly uniform.
+The pad is the coefficients $0, \ldots, q - 1$ of $\textsf{rev}(M_r)$, so it contributes $p(x) \coloneqq \sum_{j < q} v_j X_j(x)$ to the symbol at the point $x$, with $v$ the uniform pad entries; the rest of each symbol is a function of the coordinates outside $P_r$. The $X_j$, $j < q$, are a basis of the polynomials of degree below $q$, so $v \mapsto (p(x_e))_{e \in Q}$ is surjective onto $K^{|Q|}$ for distinct points $x_e$ (polynomial interpolation), and the values $p(x_e)$ are jointly uniform.
 \end{proof}
 
-The lemma must hold for every opened set, since the query positions range over a small domain and admit no $1/|K|$ failure term. A simulator reproduces the compiled transcript from the targets $s_j$ alone. It samples $\alpha$, $\gamma$, and the query positions; samples each masked $M^\gamma_r$ uniformly; computes $s'$ by \eqref{eq:mask-claim}; runs the honest BaseFold prover on $\boldsymbol{G}$; and at each opened column samples $\textsf{C}(M_r)[e]$ uniformly and sets $\textsf{C}(\omega_r)[e]$ as above. The HVZK simulator of the source LIOP supplies the targets $s_j$ and the rest of the transcript. Its output is $1/|K|$-close to an honest transcript, the distance being the event $\gamma = 0$. The two sources of randomness cover disjoint messages -- the masks $\omega_r$ the mask claim and the folding phase, the pads the opened symbols of $M_r$ -- and each is sampled fresh per proof.
+The lemma must hold for every opened set, since the query positions range over a small domain and admit no $1/|K|$ failure term. A simulator reproduces the compiled transcript from the targets $s_j$ alone. It samples $\alpha$, $\gamma$, and the query positions; samples each masked $M^\gamma_r$ uniformly; computes $s'$ by \eqref{eq:mask-claim}; runs the honest BaseFold prover on $\boldsymbol{G}$; and at each opened column samples $\textsf{Enc}_{\ell_r}(\textsf{rev}(M_r))[e]$ uniformly and sets $\textsf{Enc}_{\ell_r}(\textsf{rev}(\omega_r))[e]$ as above. The HVZK simulator of the source LIOP supplies the targets $s_j$ and the rest of the transcript. Its output is $1/|K|$-close to an honest transcript, the distance being the event $\gamma = 0$. The two sources of randomness cover disjoint messages -- the masks $\omega_r$ the mask claim and the folding phase, the pads the opened symbols of $M_r$ -- and each is sampled fresh per proof.
 
 \subsection{Compiling Binius64 to a ZK-SNARK}
 \label{sec:binius-zk-snark}
