@@ -1200,56 +1200,17 @@ The compiled SNARK is succinct (proof size and verification time polylogarithmic
 BaseFold is an IOPP for constrained Reed--Solomon codes (Arnon, Chiesa, Fenzi, and Yogev~\cite[\S 4.1]{Arnon:2025aa}). The original construction is due to Zeilberger, Chen, and Fisch~\cite{Zeilberger:2024aa}; we use the binary-field adaptation of Diamond and Posen~\cite{Diamond:2024ab}, with encoding via the additive number-theoretic transform (NTT) of Lin, Chung, and Han~\cite{Lin:2014aa}. Tightened soundness analyses are given by Haböck~\cite{Habock:2024ab}.
 
 \paragraph{Setup.}
-Fix a power-of-two rate parameter $\mathcal{R} \geq 2$ and a top level $n$, at least every level at which a code is used, and write $m \coloneqq n + \log_2 \mathcal{R}$. Fix $\FF{2}$-linearly independent elements $\beta_0, \ldots, \beta_m \in K$, and for $b \le m$ let $U_b \coloneqq \operatorname{span}_{\FF{2}}(\beta_0, \ldots, \beta_{b - 1})$, so that $U_0 = \set{0}$. The \emph{normalized subspace polynomial}
+Fix a power-of-two rate parameter $\mathcal{R} \geq 2$ and a top level $n$, at least every level at which a code is used. We use the novel polynomial basis $X_0, X_1, \ldots$ of Lin, Chung, and Han~\cite{Lin:2014aa}, with $\deg X_c = c$, built from the normalized subspace polynomials of a fixed $\FF{2}$-basis $\beta_0, \beta_1, \ldots$ of a subspace of $K$, together with the evaluation domains and folding maps of Diamond and Posen~\cite{Diamond:2024ab}; write $U_b \coloneqq \operatorname{span}_{\FF{2}}(\beta_0, \ldots, \beta_{b - 1})$. The domain at the top level is the coset
 \[
-  \widehat{W}_b(X) \coloneqq \prod_{u \in U_b} \frac{X - u}{\beta_b - u}
+  E_n \coloneqq \beta_m + U_m, \qquad m \coloneqq n + \log_2 \mathcal{R},
 \]
-is an $\FF{2}$-linear polynomial of degree $2^b$ with kernel $U_b$ and $\widehat{W}_b(\beta_b) = 1$. The \emph{novel polynomial basis} underlying the Lin--Chung--Han additive NTT~\cite{Lin:2014aa} is
-\[
-  X_c(X) \coloneqq \prod_{b \,:\, c_b = 1} \widehat{W}_b(X), \qquad c \ge 0,
-\]
-the product over the set bits of $c$. Since $\deg X_c = c$, the polynomials $X_0, \ldots, X_{2^k - 1}$ are a basis of the polynomials of degree below $2^k$. We use two properties of this basis. First, if $a$ is a multiple of $2^k$ and $j < 2^k$, the set bits of $a$ and $j$ are disjoint, so
-\begin{equation}
-  X_{a + j} = X_a \cdot X_j.
-  \label{eq:novel-basis-product}
-\end{equation}
-Second, $X_c$ vanishes at $x$ iff $x \in U_b$ for some set bit $b$ of $c$. In particular every $X_c$ with $c \ge 2^k$ vanishes on $U_k$, and every $X_c$ with $c \ge 1$ vanishes at $0$.
+the upper half of $U_{m + 1}$, rather than the subspace $U_m$, with position $e$ the point $\beta_m + \sum_b e_b \beta_b$. Each lower domain $E_k$ is its image under the subspace-polynomial maps of~\cite{Diamond:2024ab}, again a coset of the same form, of size $2^k \mathcal{R}$, carrying the novel basis that~\cite{Diamond:2024ab} attaches to it; we write $X_c$ for that basis at every level. Shifting the domain by $\beta_m$ is a degree-preserving substitution, so the set of codewords, as vectors indexed by position, is that of the Reed--Solomon code on the subspace; only the map from messages to codewords changes.
 
-The evaluation domain at the top level is the coset
+The encoding map $\textsf{Enc}_k \colon K^{2^k} \to K^{|E_k|}$ takes an oracle $\pi \colon \BB_k \to K$ to its evaluation on $E_k$ of the polynomial
 \[
-  E_n \coloneqq \beta_m + U_m,
+  f_\pi(X) \coloneqq \sum_{c = 0}^{2^k - 1} \pi_c \cdot X_c(X).
 \]
-the upper half of $U_{m + 1}$, of size $2^m = 2^n \mathcal{R}$, whose position $e \in \set{0, \ldots, 2^m - 1}$ is the point $\beta_m + \sum_b e_b \beta_b$. No point of $E_n$ lies in $U_m$, so no $X_c$ with $c < 2^m$ vanishes anywhere on $E_n$. The lower levels are its images. For $0 \le i \le n$, set $\beta^{(i)}_b \coloneqq \widehat{W}_i(\beta_{i + b})$ for $b \le m - i$; define $U^{(i)}_b$, $\widehat{W}^{(i)}_b$, and $X^{(i)}_c$ from this basis as above; and let
-\[
-  E_{n - i} \coloneqq \widehat{W}_i(E_n) = \beta^{(i)}_{m - i} + U^{(i)}_{m - i}.
-\]
-Since $\widehat{W}_i$ is $\FF{2}$-linear with kernel $U_i$, the $\beta^{(i)}_b$ are linearly independent, $E_{n - i}$ is a coset of the same form of size $2^{n - i} \mathcal{R}$, and $\widehat{W}_i$ maps position $e$ of $E_n$ to position $\lfloor e / 2^i \rfloor$ of $E_{n - i}$. Comparing kernels, degrees, and values at $\beta_{i + b}$ gives $\widehat{W}^{(i)}_b \circ \widehat{W}_i = \widehat{W}_{i + b}$, and hence
-\begin{equation}
-  X^{(i)}_c \circ \widehat{W}_i = X_{c \cdot 2^i}.
-  \label{eq:novel-basis-compose}
-\end{equation}
-The same construction run from the basis $\beta^{(i)}$ reproduces the levels below $n - i$, so everything stated here for level $n$ holds at every level, with the basis $\beta^{(n - k)}$ in place of $\beta$ at level $k$.
-
-The encoding map $\textsf{Enc}_k \colon K^{2^k} \to K^{|E_k|}$, for $k \le n$ and $i \coloneqq n - k$, takes an oracle $\pi \colon \BB_k \to K$ to its evaluation on $E_k$ of the polynomial
-\[
-  f_\pi(X) \coloneqq \sum_{c = 0}^{2^k - 1} \pi_c \cdot X^{(i)}_c(X).
-\]
-Message entry $c$ is the coefficient of $X^{(i)}_c$, with no reindexing. Taking a coset rather than the subspace $U^{(i)}_{m - i}$ does not change the set of codewords: the substitution $X \mapsto X + \beta^{(i)}_{m - i}$ is a degree-preserving bijection on polynomials that carries each position of the subspace to the same position of the coset, so the codewords, as vectors indexed by position, are exactly those of the Reed--Solomon code of dimension $2^k$ on $U^{(i)}_{m - i}$. Only the map from messages to codewords changes, so the proximity and soundness analyses cited below apply unchanged. The additive NTT computes $\textsf{Enc}_k$ with the butterfly network of the subspace domain; its twiddles are those of the upper-half blocks of the NTT over $U^{(i)}_{m - i + 1}$, which shift each layer's twiddles by a constant. The coset is what makes the ZK pad of \S\ref{sec:batched-zk-basefold} hide the opened symbols (Lemma~\ref{lem:pad-independence}).
-
-\paragraph{Folding.}
-For a level $k \ge 1$, with $i \coloneqq n - k$, and a challenge $\rho \in K$, the \emph{fold} of $c \in K^{|E_k|}$ is $c' \in K^{|E_{k - 1}|}$ with
-\[
-  c'[e] \coloneqq (1 - \rho) \cdot \bigl( c[2e] - \tau_e \cdot d_e \bigr) + \rho \cdot d_e, \qquad d_e \coloneqq c[2e + 1] - c[2e],
-\]
-at each position $e$ of $E_{k - 1}$, where positions $2e$ and $2e + 1$ are the two points $x$ and $x + \beta^{(i)}_0$ of $E_k$ that $\widehat{W}^{(i)}_1$ maps to position $e$ of $E_{k - 1}$, and $\tau_e \coloneqq \widehat{W}^{(i)}_0(x)$ is the butterfly twiddle at the actual point $x$. Folding commutes with encoding,
-\[
-  \textsf{fold}\bigl( \textsf{Enc}_k(\pi), \rho \bigr) = \textsf{Enc}_{k - 1}\bigl( \pi(\rho, \cdot) \bigr),
-\]
-where $\pi(\rho, \cdot) = \textsf{lerp}(\rho, \pi(0, \cdot), \pi(1, \cdot))$, the message with entries $(1 - \rho) \pi_{2c} + \rho\, \pi_{2c + 1}$, binds the \emph{lowest} variable of $\pi$. Indeed, splitting $f_\pi$ by the parity of the index and applying \eqref{eq:novel-basis-compose} at level $k$,
-\[
-  f_\pi = f_\text{even} \circ \widehat{W}^{(i)}_1 + \widehat{W}^{(i)}_0 \cdot f_\text{odd} \circ \widehat{W}^{(i)}_1,
-\]
-where $f_\text{even}$ and $f_\text{odd}$ have coefficients $\pi_{2c}$ and $\pi_{2c + 1}$ in the level-$(k - 1)$ basis. As $\widehat{W}^{(i)}_0(x + \beta^{(i)}_0) = \widehat{W}^{(i)}_0(x) + 1$, we get $d_e = f_\text{odd}(y)$ and $c[2e] - \tau_e d_e = f_\text{even}(y)$ at $y = \widehat{W}^{(i)}_1(x)$. This is a polynomial identity, so it holds at every point of a coset as of a subspace, and each folded domain is again the image coset.
+Message entry $c$ is the coefficient of $X_c$, with no bit-index reversal. BaseFold's fold is that of~\cite{Diamond:2024ab}, which applies on the coset unchanged and maps each domain onto the next. Folding $\textsf{Enc}_k(\pi)$ with challenge $\rho$ yields $\textsf{Enc}_{k - 1}(\pi(\rho, \cdot))$, where $\pi(\rho, \cdot) = \textsf{lerp}(\rho, \pi(0, \cdot), \pi(1, \cdot))$: a fold binds the \emph{lowest} variable of the message.
 
 The constrained Reed--Solomon code at level $n$ is parameterized by a multilinear \emph{multiplicand} $t \colon \BB_n \to K$ and a target $s \in K$; it is the set of codewords $c = \textsf{Enc}_n(\pi)$ for $\pi \colon \BB_n \to K$ satisfying
 \[
@@ -1291,9 +1252,6 @@ For all $\mu, \eta \geq 0$ with $\mu + \eta \le n$ and any message $a \in K^{2^\
 \]
 \end{theorem}
 
-\begin{proof}
-With $i \coloneqq n - \mu - \eta$, identity \eqref{eq:novel-basis-compose} at level $\mu + \eta$ gives $X^{(i)}_{c \cdot 2^\eta} = X^{(i + \eta)}_c \circ \widehat{W}^{(i)}_\eta$, so the polynomial encoding $\textsf{ZeroPadLSB}_\eta(a)$ is $f_a \circ \widehat{W}^{(i)}_\eta$, and $\widehat{W}^{(i)}_\eta$ maps position $e$ of $E_{\mu + \eta}$ to position $\lfloor e / 2^\eta \rfloor$ of $E_\mu$.
-\end{proof}
 
 Now fix an oracle $\pi \colon \BB_n \to K$ with $n \leq \boldsymbol{\ell}$, identified with its value vector in $K^{2^n}$ when applying the operators. Its lift $\textsf{ZeroPadLSB}_{\boldsymbol{\ell} - n}(\pi) \colon \BB_{\boldsymbol{\ell}} \to K$ has multilinear extension
 \begin{equation}
@@ -1672,14 +1630,14 @@ so $s'$ is a function of the $M^\gamma_r$ and public values. In particular a sim
 
 \begin{lemma}[Pad independence]
 \label{lem:pad-independence}
-Let $M_r$ be a witness-dependent merged oracle whose pad is $P_r = \set{a_r, \ldots, a_r + q - 1}$, with $a_r$ a multiple of $2^{\lceil \log_2 q \rceil}$. For every set $Q$ of at most $q$ distinct positions of $E_{\ell_r}$, the restrictions to the coordinates $P_r$ of the linear functionals $M_r \mapsto \textsf{Enc}_{\ell_r}(M_r)[e]$, $e \in Q$, of $M_r \in K^{\BB_{\ell_r}}$ are linearly independent. Hence, for a uniform pad, the symbols $\textsf{Enc}_{\ell_r}(M_r)[e]$, $e \in Q$, are jointly uniform given the coordinates of $M_r$ outside $P_r$.
+Let $M_r$ be a witness-dependent merged oracle whose pad is $P_r = \set{a_r, \ldots, a_r + q - 1}$, with $a_r$ a multiple of $2^{\lceil \log_2 q \rceil}$, filled with independent uniform field elements. For every set $Q$ of at most $q$ distinct positions of $E_{\ell_r}$, the symbols $\textsf{Enc}_{\ell_r}(M_r)[e]$, $e \in Q$, are jointly uniform given the coordinates of $M_r$ outside $P_r$.
 \end{lemma}
 
 \begin{proof}
-Let $i \coloneqq n - \ell_r$ index the basis of level $\ell_r$ (\S\ref{sec:basefold}), let $h \coloneqq \lceil \log_2 q \rceil$, so that $q \le 2^h$, and write $x_e$ for the point of $E_{\ell_r}$ at position $e$. Restricted to $P_r$, the functional at $e$ is the row $\bigl( X^{(i)}_{a_r + j}(x_e) \bigr)_{j < q}$, which by \eqref{eq:novel-basis-product} is $X^{(i)}_{a_r}(x_e) \cdot \bigl( X^{(i)}_j(x_e) \bigr)_{j < q}$. The $X^{(i)}_j$, $j < q$, are a basis of the polynomials of degree below $q$, so the matrix $\bigl( X^{(i)}_j(x_e) \bigr)_{e \in Q,\, j < q}$ is the Vandermonde matrix of the distinct points $x_e$ times an invertible change of basis, and has full row rank $|Q| \le q$. Scaling its rows by the $X^{(i)}_{a_r}(x_e)$ keeps the rank, since $a_r < 2^{\ell_r}$ and no $X^{(i)}_c$ with $c < 2^{\ell_r}$ vanishes on the coset $E_{\ell_r}$. The symbols at $Q$ are a function of the coordinates outside $P_r$ plus a full-row-rank linear map of the uniform pad, hence jointly uniform.
+We use three facts about the novel basis~\cite{Lin:2014aa,Diamond:2024ab}. (i) For $a$ a multiple of $2^h$ and $j < 2^h$, $X_{a + j} = X_a \cdot X_j$. (ii) The $X_j$, $j < q$, are a basis of the polynomials of degree below $q$, so a polynomial $p = \sum_{j < q} v_j X_j$ with uniform coefficients $v_j$ has jointly uniform evaluations at any $q$ distinct points. (iii) $X_c$ vanishes only on the subspaces $U_b$ for the set bits $b$ of $c$, so no $X_c$ with $c < 2^{\ell_r}$ vanishes on the coset $E_{\ell_r}$. By (i) with $h = \lceil \log_2 q \rceil$, the pad contributes $X_{a_r}(x) \cdot p(x)$ to the symbol at the point $x$, where $p$ has the pad entries as coefficients. By (ii) and (iii), these contributions at the points of $Q$ are jointly uniform, and the remainder of each symbol is a function of the coordinates outside $P_r$.
 \end{proof}
 
-The lemma must hold for every opened set, since the query positions range over a small domain and admit no $1/|K|$ failure term. It needs both the coset domain and the natural-order message of \S\ref{sec:basefold}. On the subspace $U^{(i)}_{m - i}$ in place of the coset, $X^{(i)}_{a_r}$ vanishes on $U^{(i)}_b$ for $b$ the highest set bit of $a_r \ne 0$, so the symbols at those points see none of the pad; the symbol at the point $0$, for instance, is the coefficient $M_r[0]$ alone. With a bit-reversed message, an aligned block of message coordinates is a strided set of coefficients $c + j \cdot 2^s$, with $c < 2^s$ and $s \ge 1$ whenever the pad is shorter than the message. By \eqref{eq:novel-basis-product} and \eqref{eq:novel-basis-compose}, written at the top level, their basis polynomials are $X_c \cdot (X^{(s)}_j \circ \widehat{W}_s)$, so two opened positions in one coset of $U_s$, such as the sibling pair that a first fold opens, see proportional pad contributions, and a pad-free combination of their two symbols reveals a linear function of the witness. The property needed is thus not that the message is fully encoded by an MDS code, which every Reed--Solomon code is, but that the subcode spanned by the pad's basis polynomials, $\set{\sum_{j < q} v_j X^{(i)}_{a_r + j}}$ evaluated on $E_{\ell_r}$, is itself MDS; in both failures above it is not.
+The lemma must hold for every opened set, since the query positions range over a small domain and admit no $1/|K|$ failure term. Both the coset and the natural-order coefficients are needed: on the subspace $U_m$, $X_{a_r}$ vanishes on $U_b$ for the highest set bit $b$ of $a_r \ne 0$, and with bit-reversed coefficients an aligned message block is a strided coefficient set, whose contributions to the two sibling positions a first fold opens are proportional. What is needed is that the pad's own subcode be MDS, not merely the whole code.
 
 By the lemma, a simulator reproduces the compiled transcript from the targets $s_j$ alone. It samples $\alpha$, $\gamma$, and the query positions; samples each masked $M^\gamma_r$ uniformly; computes $s'$ by \eqref{eq:mask-claim}; runs the honest BaseFold prover on $\boldsymbol{G}$; and at each opened column samples $\textsf{Enc}_{\ell_r}(M_r)[e]$ uniformly and sets $\textsf{Enc}_{\ell_r}(\omega_r)[e]$ as above. The HVZK simulator of the source LIOP supplies the targets $s_j$ and the rest of the transcript. Its output is $1/|K|$-close to an honest transcript, the distance being the event $\gamma = 0$. The two sources of randomness cover disjoint messages -- the masks $\omega_r$ the mask claim and the folding phase, the pads the opened symbols of $M_r$ -- and each is sampled fresh per proof.
 
