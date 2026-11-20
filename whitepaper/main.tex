@@ -85,7 +85,7 @@ The document develops Binius64 in layers, separating the information-theoretic p
 
 \S\ref{sec:constraint-system} defines the constraint system as a self-contained combinatorial object: prover data laid out as $64$-bit words, the eight shift operations and the shifted value indices that name shifted words, and the BitAnd, IntMul, and BinMul constraints built from XOR-accumulations of these. Appendix~\ref{sec:common-ops} shows how the everyday operations of a $64$-bit instruction set reduce to this language.
 
-\S\ref{sec:binius-liop} specifies the \emph{Binius64 LIOP}, the heart of the protocol. The prover commits a single oracle---the packed witness---and a sequence of sumcheck-based reductions (the GKR-based IntMul reduction, the BinMul reduction, the BitAnd reduction, the shift reduction, ring-switching to the packed witness, and the public-input check) collapse satisfaction of the entire constraint system into a single linear query on that oracle.
+\S\ref{sec:binius-liop} specifies the \emph{Binius64 LIOP}, the heart of the protocol. The prover commits the packed witness, together with two small pushforward oracles of the IntMul reduction's lookup argument, and a sequence of sumcheck-based reductions (the GKR- and lookup-based IntMul reduction, the BinMul reduction, the BitAnd reduction, the shift reduction, ring-switching to the packed witness, and the public-input check) collapse satisfaction of the entire constraint system into one linear query on each committed oracle.
 
 \S\ref{sec:basic-snark-compiler} gives a generic compiler turning any LIOP into a SNARK, through the chain $\text{LIOP} \xrightarrow{\text{BaseFold}} \text{IOP} \xrightarrow{\text{BCS}} \text{IP} \xrightarrow{\text{Fiat--Shamir}} \text{SNARK}$. Each LIOP linear query is discharged by a BaseFold~\cite{Zeilberger:2024aa} proximity test on a constrained Reed--Solomon code over $K$, the oracles are replaced by Merkle commitments via the BCS transform~\cite{Ben-Sasson:2016aa}, and the interaction is removed by Fiat--Shamir. Applied to the Binius64 LIOP, this yields the (non-zero-knowledge) Binius64 SNARK of \S\ref{sec:binius64-snark}.
 
@@ -438,7 +438,7 @@ the round count of the batched sumcheck that produces it. The deterministic zero
 \subsection{Protocol Overview}
 \label{sec:protocol-overview}
 
-The protocol commits to a single $K$-valued oracle obtained by packing the witness $w$ word-by-word, runs a sequence of sumcheck-based reductions, and finally issues a single linear query on the packed oracle. Concretely, $w$ is viewed as a function $w \colon \BB_6 \times \BB_{\ell_\text{words}} \to \FF{2}$, where $(j, y) \in \BB_6 \times \BB_{\ell_\text{words}}$ indexes bit $j$ of word $y$; its multilinear extension is the $6 + \ell_\text{words}$-variate multilinear
+The protocol commits to a $K$-valued oracle obtained by packing the witness $w$ word-by-word, runs a sequence of sumcheck-based reductions, and finally issues a single linear query on the packed oracle. The IntMul reduction additionally commits two pushforward oracles of $2^{16}$ entries each, mid-protocol, and closes with one linear query on each. Concretely, $w$ is viewed as a function $w \colon \BB_6 \times \BB_{\ell_\text{words}} \to \FF{2}$, where $(j, y) \in \BB_6 \times \BB_{\ell_\text{words}}$ indexes bit $j$ of word $y$; its multilinear extension is the $6 + \ell_\text{words}$-variate multilinear
 \[
   \mle{w}(J_0, \ldots, J_5, Y_0, \ldots, Y_{\ell_\text{words} - 1}) \in K[J, Y]^\mlin.
 \]
@@ -447,14 +447,14 @@ The prover does not commit to $w$ directly: it instead commits to the packed vec
 The LIOP proceeds in nine phases:
 \begin{enumerate}
 \item \textbf{Packed witness commitment.} The prover sends the packed witness oracle $\pi \coloneqq \textsf{pack}_\lambda(w) \in K^{n_\text{pack}}$, where $n_\text{pack} \coloneqq 64 \cdot n_\text{words} / \lambda$ and $\textsf{pack}_\lambda$ is the packing map defined in \S\ref{sec:ring-switching}. (Implementations commit to $\pi$ via the polynomial commitment scheme of \S\ref{sec:basic-snark-compiler}, but the LIOP itself treats $\pi$ as an oracle of length $n_\text{pack}$.)
-\item \textbf{IntMul reduction (\S\ref{sec:intmul}).} A GKR-based reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints into per-bit evaluation claims on the four multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays, leaving the bit-index free.
+\item \textbf{IntMul reduction (\S\ref{sec:intmul}).} A reduction built from GKR product trees and logUp* indexed lookups transforms the satisfaction of the $n_\text{mul}$ IntMul constraints into per-bit evaluation claims on the four multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays, leaving the bit-index free. The prover sends two pushforward oracles $Y_\times, Y_\text{pow} \in K^{2^{16}}$ during this phase, and each gets one succinct linear query, issued with the witness query.
 \item \textbf{BinMul reduction (\S\ref{sec:binmul}).} A zerocheck-based reduction transforms the satisfaction of the $n_\text{binmul}$ BinMul constraints into per-bit evaluation claims on the multilinear extensions of the six BinMul constraint arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi}$, leaving the bit-index free.
 \item \textbf{BitAnd reduction (\S\ref{sec:binand}).} A sumcheck-based reduction transforms the satisfaction of the $n_\text{and}$ BitAnd constraints into evaluation claims on the three oblong-multilinearizations $\widehat{a}, \widehat{b}, \widehat{c}$ of the BitAnd constraint arrays. Its univariate skip samples the shared bit-index oblong point $r_{\widehat{i}}$ against which the two multiplication reductions' outputs are folded, and its sumcheck carries, batched into it, the re-randomization that moves those outputs onto the unified constraint point $r^\star_x$ (\S\ref{sec:rz-unification}).
 \item \textbf{Zero reduction (\S\ref{sec:zero}).} The satisfaction of the $n_\text{zero}$ Zero constraints is transformed into a single evaluation claim on the oblong-multilinearization $\widehat{d}$ of the Zero constraint array, at the unified point the previous phase's sumcheck has just output. The phase carries no prover message and no sumcheck round.
 \item \textbf{Shift reduction (\S\ref{sec:shift-reduction}).} The evaluation claims produced by the Zero, BitAnd, IntMul, and BinMul reductions---by now all stated at the shared oblong point $r_{\widehat{i}}$ and at the unified constraint point $r^\star_x$---are batched, and a single sumcheck reduces them to one evaluation claim on $\mle{w}$ at a point $(r_j, r_y) \in K^6 \times K^{\ell_\text{words}}$.
 \item \textbf{Ring-switching (\S\ref{sec:ring-switching}).} The evaluation claim $\mle{w}(r_j, r_y) = t$ on the $\FF{2}$-valued multilinear $\mle{w}$ is converted into a linear query on the packed $K$-valued oracle $\pi$, via the protocol of Diamond and Posen~\cite{Diamond:2024ab}.
 \item \textbf{Public input check (\S\ref{sec:public-input-check}).} A separate linear query on $\pi$ certifies that the packing of the public segment $C \mathbin{\Vert} u$ agrees with the prefix of $\pi$ that contains it. This query is then random-combined with the ring-switching query into a single linear query.
-\item \textbf{Witness query.} The verifier issues the combined linear query on $\pi$.
+\item \textbf{Terminal queries.} The verifier issues the combined linear query on $\pi$, together with the linear queries on the pushforward oracles $Y_\times$ and $Y_\text{pow}$ from the IntMul reduction.
 \end{enumerate}
 
 The two multiplication reductions (phases 2 and 3) must precede the BitAnd reduction (phase 4): the BitAnd univariate skip samples the shared bit-index oblong point $r_{\widehat{i}}$, and soundness requires that the multiplication reductions' per-bit outputs already be fixed when $r_{\widehat{i}}$ is drawn (\S\ref{sec:rz-unification}). Their outputs, once folded against $r_{\widehat{i}}$, are also the input of the re-randomization that phase 4 batches into its own sumcheck, so phase 4 is where the two axes are unified. Phases 2 and 3 are mutually independent and may run in either order. Phase 5 evaluates at the point produced by that sumcheck and so must follow phase 4; since it carries no message, this is a matter of bookkeeping rather than of interaction.
@@ -631,7 +631,7 @@ The batched sumcheck's \emph{output} point is what makes the argument this short
 \subsection{The IntMul Reduction}
 \label{sec:intmul}
 
-The IntMul reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints (\S\ref{sec:intmul-constraints}) into per-bit evaluation claims on the multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays---the $64$ values $\mle{a}(r_x, i), \ldots$ at every bit-position $i \in \BB_6$ of a shared constraint point $r_x \in K^{\ell_\text{mul}}$. Unlike the BitAnd reduction, which exploits that bitwise AND is just per-bit field multiplication, IntMul concerns an integer-arithmetic relation that has no direct expression in $K$; we instead encode it as a multiplicative-group identity in $K^*$ and reduce that identity via a tree of small-degree sumchecks.
+The IntMul reduction transforms the satisfaction of the $n_\text{mul}$ IntMul constraints (\S\ref{sec:intmul-constraints}) into per-bit evaluation claims on the multilinear extensions $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$ of the IntMul constraint arrays---the $64$ values $\mle{a}(r_x, i), \ldots$ at every bit-position $i \in \BB_6$ of a shared constraint point $r_x \in K^{\ell_\text{mul}}$. Unlike the BitAnd reduction, which exploits that bitwise AND is just per-bit field multiplication, IntMul concerns an integer-arithmetic relation that has no direct expression in $K$; we instead encode it as a multiplicative-group identity in $K^*$, factor both sides into products of table entries indexed by small limbs of the operands (\S\ref{sec:intmul-limbs}), and reduce that identity via GKR product trees (\S\ref{sec:exp-subprotocols}) and an indexed lookup argument (\S\ref{sec:intmul-lookups}).
 
 \subsubsection{Multiplying in the Exponent}
 \label{sec:multiplying-in-exponent}
@@ -659,172 +659,215 @@ When $\lambda = 128$, the system default, the order is exactly $2^{128} - 1$, wh
 \end{equation}
 a condition on a single bit per constraint. Together, \eqref{eq:exp-identity} and \eqref{eq:lsb-parity} are then the two conditions whose simultaneous satisfaction is equivalent to the IntMul relation $\intval{a}[x] \cdot \intval{b}[x] = 2^{64} \cdot \intval{c_\text{hi}}[x] + \intval{c_\text{lo}}[x]$: the multiplicative-group identity captures it modulo $2^\lambda - 1$, and the parity condition pins down the one residue the cyclic group cannot see.
 
-\subsubsection{Exponentiation Subprotocols}
+\subsubsection{The Product Tree}
 \label{sec:exp-subprotocols}
 
-Identity \eqref{eq:exp-identity} is verified by composing two generic exponentiation subprotocols. Throughout, fix the generator $g \in K^*$ and let $z \in \FF{2}^{\BB_{\ell_\text{mul}} \times \BB_k}$ be a bit vector, with $k = 6$ and entries $z[x, i] \in \FF{2}$, written with the constraint index first and the bit position last---the transpose of the bit indexing of \S\ref{sec:intmul-constraints}, to which the shift reduction (\S\ref{sec:shift-reduction}) reverts---so that the bit index occupies the high variables, matching the layer structure of the product trees below and the implementation's data layout. We index the $2^k = 64$ bit positions by $i \in \set{0, \ldots, 2^k - 1}$, identified with the hypercube $\BB_k$ via binary representation. Its multilinear extension $\mle{z}(X, I) \in K[X_0, \ldots, X_{\ell_\text{mul} - 1}, I_0, \ldots, I_{k - 1}]^\mlin$ has $\mle{z}(X, i)$ for the multilinear section at the $i$-th hypercube point, with $\mle{\eq}_k(\cdot, i)$ the corresponding Lagrange basis function. The integer encoded at each constraint index is $\intval{z}[x] = \sum_{i = 0}^{2^k - 1} 2^i \cdot z[x, i]$, with $\intval{\cdot}$ as in \S\ref{sec:intmul-constraints}.
+Both sides of \eqref{eq:exp-identity} will be written as products of a fixed number of \emph{leaves} per constraint, and the products are verified by the binary-tree GKR grand-product argument~\cite{Thaler:2013aa}, which we recall in the generality needed here. Throughout, operand bits are written with the constraint index first and the bit position last, $z[x, i] \in \FF{2}$ for $x \in \BB_{\ell_\text{mul}}$ and $i \in \BB_6$---the transpose of the bit indexing of \S\ref{sec:intmul-constraints}, to which the shift reduction (\S\ref{sec:shift-reduction}) reverts---so that the bit and column indices occupy the high variables, matching the layer structure of the product trees and the implementation's data layout. We identify $i \in \BB_6$ with $\set{0, \ldots, 63}$ via binary representation. We also use the \emph{selector} $\sel(s, v) \coloneqq 1 + (v - 1) s$, which returns $v$ when the bit $s = 1$ and $1$ when $s = 0$.
 
-\paragraph{The two operators.}
-The \emph{fixed-base} operator raises the public generator to the encoded exponents,
-\[
-  \textsf{gen-exp}(z)[x] \coloneqq g^{\intval{z}[x]} \in K^*, \qquad x \in \BB_{\ell_\text{mul}},
-\]
-while the \emph{variable-base} operator raises a multilinear base $\mle{f}(X) \in K[X_0, \ldots, X_{\ell_\text{mul} - 1}]^\mlin$, whose cube values $f[x] \coloneqq \mle{f}(x)$ all lie in $K^*$, to the same exponents,
-\[
-  \textsf{var-exp}(f, z)[x] \coloneqq f[x]^{\intval{z}[x]} \in K^*, \qquad x \in \BB_{\ell_\text{mul}}.
-\]
-We denote by $\mle{\textsf{gen-exp}}(z)$ and $\mle{\textsf{var-exp}}(f, z)$ their multilinear extensions. The fixed-base subprotocol (\S\ref{sec:fixed-base-exp}) reduces an evaluation claim on $\mle{\textsf{gen-exp}}(z)$ to the $2^k$ per-bit evaluation claims $\mle{z}(r'_x, i)$; the variable-base subprotocol (\S\ref{sec:var-base-exp}) reduces an evaluation claim on $\mle{\textsf{var-exp}}(f, z)$ to one evaluation claim on $\mle{f}$ together with the $2^k$ per-bit claims $\mle{z}(r'_x, i)$. Both run the same GKR product tree that splits the exponent into its $2^k$ bits, differing only in how the product-tree leaves are discharged into the per-bit claims.
-
-\paragraph{The product tree.}
-Define the \emph{selector} $\sel(s, v) \coloneqq 1 + (v - 1) s$, which returns $v$ when the bit $s = 1$ and $1$ when $s = 0$. Collect the $2^k$ leaves into a vector $L \in K^{\BB_{\ell_\text{mul}} \times \BB_k}$ with entries
-\[
-  L[x, i] \coloneqq \bigl( f[x]^{2^i} \bigr)^{z[x, i]} = \sel\bigl( z[x, i],\, f[x]^{2^i} \bigr), \qquad x \in \BB_{\ell_\text{mul}}, \quad i \in \BB_k,
-\]
-where the second equality uses that $z[x, i] \in \set{0, 1}$. The operator output is the product of the leaves over the bit index,
-\[
-  \textsf{var-exp}(f, z)[x] = \prod_{i \in \BB_k} L[x, i]
-\]
-(for the fixed-base operator, $f[x] \equiv g$ and the product is $\textsf{gen-exp}(z)[x]$). We evaluate this product by a balanced binary tree of depth $k$, whose layers are vectors $L^{(j)} \in K^{\BB_{\ell_\text{mul}} \times \BB_{k - j}}$, for $j = 0, \ldots, k$, with leaf layer $L^{(0)} \coloneqq L$ and each node the product of its two children,
+\paragraph{Layers.}
+Let $L \in K^{\BB_{\ell_\text{mul}} \times \BB_k}$ be a leaf vector with $2^k$ \emph{columns} $L[\cdot, i]$, $i \in \BB_k$. Its product tree has layers $L^{(j)} \in K^{\BB_{\ell_\text{mul}} \times \BB_{k - j}}$, for $j = 0, \ldots, k$, with leaf layer $L^{(0)} \coloneqq L$ and each node the product of its two children,
 \[
   L^{(j)}[x, i] = L^{(j - 1)}[x, (i, 0)] \cdot L^{(j - 1)}[x, (i, 1)], \qquad x \in \BB_{\ell_\text{mul}}, \quad i \in \BB_{k - j},
 \]
-the trailing bit selecting the child; the root is $L^{(k)} = \textsf{var-exp}(f, z)$. Write $\mle{L}^{(j)}$ for the multilinear extension of the layer vector $L^{(j)}$.
+the trailing bit selecting the child; the root $L^{(k)}[x] = \prod_{i \in \BB_k} L[x, i]$ is the per-constraint product of the columns. Write $\mle{L}^{(j)}$ for the multilinear extension of the layer vector $L^{(j)}$.
 
-Starting from the root claim $s^{(k)} \stackrel{?}{=} \mle{L}^{(k)}(r^{(k)})$ (the root layer has no node index, so we write $r_x^{(k)} \coloneqq r^{(k)}$), the parties run the binary-tree GKR grand-product argument~\cite{Thaler:2013aa} for $j = k, k - 1, \ldots, 1$. At layer $j$ the parties hold a claim $\mle{L}^{(j)}(r_x^{(j)}, \rho^{(j)})$ at an $x$-point $r_x^{(j)} \in K^{\ell_\text{mul}}$ and a folded node-index point $\rho^{(j)} \in K^{k - j}$. Expanding the product relation,
+\paragraph{Layer loop.}
+Starting from a root claim $s^{(k)} \stackrel{?}{=} \mle{L}^{(k)}(r^{(k)})$, the parties run, for $j = k, k - 1, \ldots, 1$, the following step. At layer $j$ they hold a claim $\mle{L}^{(j)}(r_x^{(j)}, \rho^{(j)})$ at an $x$-point $r_x^{(j)} \in K^{\ell_\text{mul}}$ and a folded node-index point $\rho^{(j)} \in K^{k - j}$ (initially $r_x^{(k)} \coloneqq r^{(k)}$ and $\rho^{(k)}$ empty). Expanding the product relation,
 \[
   \mle{L}^{(j)}(r_x^{(j)}, \rho^{(j)}) = \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i \in \BB_{k - j}} \mle{\eq}_{\ell_\text{mul}}(r_x^{(j)}, x) \cdot \mle{\eq}_{k - j}(\rho^{(j)}, i) \cdot \mle{L}^{(j - 1)}(x, i, 0) \cdot \mle{L}^{(j - 1)}(x, i, 1),
 \]
-the parties run a $\bigl( \ell_\text{mul} + (k - j) \bigr)$-round MLE-check, whose composition polynomials have individual degree $\leq 2$. It produces the two child evaluations $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 0)$ and $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 1)$, which a line reduction~\cite{Goldwasser:2015aa} collapses into the single layer-$(j - 1)$ claim $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho^{(j - 1)})$ with $\rho^{(j - 1)} \in K^{k - j + 1}$, the line challenge appended as the new trailing node coordinate. After $k$ layers the parties hold a single leaf claim
-\[
-  s^{(0)} \stackrel{?}{=} \mle{L}(r_x, \rho), \qquad (r_x, \rho) \in K^{\ell_\text{mul}} \times K^k,
-\]
-at the final $x$-point $r_x \coloneqq r_x^{(0)}$ and fully folded node-index $\rho \coloneqq \rho^{(0)}$. Soundness error is the standard GKR sum over layers, $O\bigl( k(k + \ell_\text{mul}) \bigr) / |K|$.
+the parties run a $\bigl( \ell_\text{mul} + (k - j) \bigr)$-round MLE-check, whose composition polynomials have individual degree $\leq 2$. It produces the two child evaluations $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 0)$ and $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho', 1)$, which a line reduction~\cite{Goldwasser:2015aa} collapses into the single layer-$(j - 1)$ claim $\mle{L}^{(j - 1)}(r_x^{(j - 1)}, \rho^{(j - 1)})$ with $\rho^{(j - 1)} \in K^{k - j + 1}$, the line challenge appended as the new trailing node coordinate. After $k$ layers the parties hold a single leaf claim $s^{(0)} \stackrel{?}{=} \mle{L}(r_x, \rho)$ at $(r_x, \rho) \in K^{\ell_\text{mul}} \times K^k$. Soundness error is the standard GKR sum over layers, $O\bigl( k(k + \ell_\text{mul}) \bigr) / |K|$. Several trees of unequal depths, rooted at a common $x$-point, run as one batched layer loop (Appendix~\ref{app:padded-prodcheck}); this is how the reduction uses them.
 
-\paragraph{Leaf extrapolation.}
-Each subprotocol discharges the leaves one bit at a time, re-exposing them from the single folded claim $s^{(0)}$. In the general case---when the base is a witness value, as in the variable-base subprotocol---the prover sends the $2^k = 64$ leaf evaluations
+\paragraph{Column extraction.}
+The leaf claim folds all $2^k$ columns at $\rho$. To discharge the columns individually, the prover sends the $2^k$ column evaluations
 \[
-  s^{(0)}_i \stackrel{?}{=} \mle{L}(r_x, i), \qquad i \in \BB_k,
+  \lambda_i \stackrel{?}{=} \mle{L}(r_x, i), \qquad i \in \BB_k,
 \]
-and the verifier checks that they interpolate to the folded claim,
+and the verifier checks that they interpolate to the folded claim, $\sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot \lambda_i \stackrel{?}{=} s^{(0)}$. The column claims, all at the common $x$-point $r_x$, are then discharged against committed data with fresh randomness, which catches a prover that sends inconsistent values.
+
+\subsubsection{Limb Decomposition and Lookup Tables}
+\label{sec:intmul-limbs}
+
+\paragraph{Limbs.}
+Split the factors into $8$-bit limbs and the product into $16$-bit limbs. For $x \in \BB_{\ell_\text{mul}}$ and $j \in \set{0, \ldots, 7}$, let
 \[
-  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot s^{(0)}_i \stackrel{?}{=} s^{(0)} = \mle{L}(r_x, \rho).
+  a_j[x] \coloneqq \sum_{u = 0}^{7} 2^u \cdot a[x, 8j + u], \qquad b_j[x] \coloneqq \sum_{u = 0}^{7} 2^u \cdot b[x, 8j + u],
 \]
-The $2^k$ per-bit claims, all at the common $x$-point $r_x$, are the input to the leaf discharge. The interpolation check binds them to the GKR-verified product value $s^{(0)}$; a prover that sends inconsistent values is caught downstream, where each subprotocol reduces the $s^{(0)}_i$ against the committed witness with fresh randomness. When the base is public (the fixed-base subprotocol, \S\ref{sec:fixed-base-exp}), the prover instead re-exposes the exponent bits and the verifier reconstructs the leaves itself, folding this step into the same interpolation check.
-
-\subsubsection{Fixed-Base Exponentiation}
-\label{sec:fixed-base-exp}
-
-The fixed-base subprotocol reduces a claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{gen-exp}}(z)(r^{(k)})$ to the $2^k$ per-bit claims on $\mle{z}$. With the constant base $f[x] \equiv g$, the leaf vector is affine in the exponent bit, so its multilinear extension is already linear,
+so that $\intval{a}[x] = \sum_{j} 2^{8j} a_j[x]$ and likewise for $b$; and for $l \in \set{0, \ldots, 7}$, let $c_l[x]$ be the $l$-th $16$-bit limb of the $128$-bit product word $(c_\text{lo}[x], c_\text{hi}[x])$,
 \[
-  \mle{L}(X, i) = \sel\bigl( \mle{z}(X, i),\, g^{2^i} \bigr) = 1 + (g^{2^i} - 1) \cdot \mle{z}(X, i),
+  c_l[x] \coloneqq \sum_{u = 0}^{15} 2^u \cdot c_\text{lo}[x, 16l + u] \quad (l < 4), \qquad c_l[x] \coloneqq \sum_{u = 0}^{15} 2^u \cdot c_\text{hi}[x, 16(l - 4) + u] \quad (l \geq 4),
 \]
-since $g^{2^i}$ is constant and $\mle{z}(X, i)$ is multilinear in $X$.
+so that $\intval{c_\text{lo}}[x] + 2^{64} \cdot \intval{c_\text{hi}}[x] = \sum_l 2^{16 l} c_l[x]$. We identify each limb with its bit vector, $a_j[x], b_j[x] \in \BB_8$ and $c_l[x] \in \BB_{16}$, whenever it serves as a table index. Schoolbook expansion of the product over the limbs gives $\intval{a}[x] \cdot \intval{b}[x] = \sum_{j, k} 2^{8(j + k)} a_j[x] \, b_k[x]$, so the two sides of \eqref{eq:exp-identity} factor as
+\begin{equation}
+  g^{\intval{a}[x] \cdot \intval{b}[x]} = \prod_{j, k = 0}^{7} \bigl( g^{2^{8(j + k)}} \bigr)^{a_j[x] \, b_k[x]}, \qquad g^{\intval{c_\text{lo}}[x] + 2^{64} \intval{c_\text{hi}}[x]} = \prod_{l = 0}^{7} \bigl( g^{2^{16 l}} \bigr)^{c_l[x]}.
+  \label{eq:limb-identity}
+\end{equation}
+The left side has $64$ factors, one per pair of $8$-bit limbs; the right side has $8$, one per $16$-bit limb. Each factor is a fixed function of $16$ witness bits.
 
-The parties run the product-tree GKR loop (\S\ref{sec:exp-subprotocols}) on the root claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{gen-exp}}(z)(r^{(k)})$, folding to the single leaf claim $s^{(0)} \stackrel{?}{=} \mle{L}(r_x, \rho)$ at the common point $r'_x \coloneqq r_x$. Because the powers $g^{2^i}$ are public, the verifier can evaluate the leaf selector itself, so the prover re-exposes the exponent rather than the leaves: it sends the $2^k$ values
+\paragraph{Tables.}
+Define the \emph{product table} and the \emph{power table}
 \[
-  \alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i), \qquad i \in \BB_k,
+  T_\times[u, v] \coloneqq g^{\intval{u} \cdot \intval{v}}, \quad (u, v) \in \BB_8 \times \BB_8, \qquad\qquad T_\text{pow}[e] \coloneqq g^{\intval{e}}, \quad e \in \BB_{16},
 \]
-and the verifier reconstructs each leaf evaluation locally as $\sel(\alpha_{z, i}, g^{2^i})$ and checks that the reconstructed leaves interpolate to the folded claim,
+both with $2^{16}$ entries in $K^*$, where $\intval{\cdot}$ reads a bit vector as an unsigned integer and $u$ occupies the low $8$ index variables of $T_\times$. Since the Frobenius endomorphism acts on powers of $g$ by $\varphi^t(g^e) = g^{2^t e}$, each factor of \eqref{eq:limb-identity} is a Frobenius power of a table entry:
 \[
-  \sum_{i \in \BB_k} \mle{\eq}_k(\rho, i) \cdot \sel\bigl( \alpha_{z, i},\, g^{2^i} \bigr) \stackrel{?}{=} s^{(0)} = \mle{L}(r_x, \rho).
+  \bigl( g^{2^{8(j + k)}} \bigr)^{a_j[x] \, b_k[x]} = \varphi^{8(j + k)}\bigl( T_\times[a_j[x], b_k[x]] \bigr), \qquad \bigl( g^{2^{16 l}} \bigr)^{c_l[x]} = \varphi^{16 l}\bigl( T_\text{pow}[c_l[x]] \bigr).
 \]
-The $2^k$ per-bit claims $\alpha_{z, i}$, all at the common point $r'_x$, are the subprotocol output; a prover that sends inconsistent values is caught downstream, where they are reduced against the committed witness with fresh randomness. The subprotocol is therefore the depth-$k$ GKR tree and one interpolation check, with total soundness error $O\bigl(k(k + \ell_\text{mul})\bigr) / |K|$.
+A single table on each side therefore serves every limb position, the position entering only through the twist.
 
-The subprotocol never uses that the base is the generator: for any public base $h \in K^*$ it applies verbatim to the vector with entries $h^{\intval{z}[x]}$, reducing an evaluation claim on it to the per-bit claims on $\mle{z}$, with the leaf constants $g^{2^i}$ replaced by $h^{2^i}$. The combined protocol invokes this with $h = g^{2^{64}}$ for the high-half factor (\S\ref{sec:intmul-combined}).
-
-\subsubsection{Variable-Base Exponentiation}
-\label{sec:var-base-exp}
-
-The variable-base subprotocol reduces a claim $s^{(k)} \stackrel{?}{=} \mle{\textsf{var-exp}}(f, z)(r^{(k)})$ to one claim on $\mle{f}$ and the $2^k$ per-bit claims on $\mle{z}$. The parties first run the product-tree GKR loop and leaf extrapolation (\S\ref{sec:exp-subprotocols}), obtaining $2^k$ leaf claims $s^{(0)}_i \stackrel{?}{=} \mle{L}(r_x, i)$ at the common point $r_x$. Unlike the fixed-base case, the leaves couple the base and the exponent: the entry $L[x, i] = \sel(z[x, i], f[x]^{2^i}) = 1 + z[x, i] \cdot (f[x]^{2^i} - 1)$. Naively reducing the leaf claim to a claim on $\mle{f}$ would involve the polynomial $\mle{f}(X)^{2^i}$, whose degree blows up; we sidestep this using the Frobenius endomorphism $\varphi(\alpha) = \alpha^2$ (\S\ref{sec:binary-fields}). Applying $\varphi^{-i}$ (well-defined because $\varphi$ is invertible on $K$, with inverse $\varphi^{\lambda - 1}$) to the leaf claim:
+Both tables are public and \emph{transparent}: the verifier evaluates their multilinear extensions on its own, so they are never committed. For the power table, $g^{\intval{e}} = \prod_u (g^{2^u})^{e_u}$ is a product of selectors, so
 \[
-  \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(x, i) \cdot (\mle{f}(x) - 1) \bigr),
+  \mle{T}_\text{pow}(Y_0, \ldots, Y_{15}) = \prod_{u = 0}^{15} \sel\bigl( Y_u, g^{2^u} \bigr),
 \]
-using that $\varphi^{-i}$ is a ring automorphism that fixes the $\FF{2}$-coefficients of $\mle{\eq}$ and of $\mle{z}(\cdot, i)$, and that $\varphi^{-i}(\mle{f}(x)^{2^i}) = \mle{f}(x)$.
-
-The right-hand side is now of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(\cdot, i)$. The verifier samples a single vector $\gamma \gets K^k$ and the parties run a batched $\ell_\text{mul}$-round sumcheck, using the multilinear Lagrange weights $\mle{\eq}_k(\gamma, i)$ as batching coefficients in place of $2^k$ independent ones:
+at a cost of $16$ multiplications. For the product table, the same factorization applies to the high index for each fixed low index $u$, because $v \mapsto g^{\intval{u} \intval{v}} = \prod_i (g^{2^i \intval{u}})^{v_i}$, so
 \[
-  \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \varphi^{-i}(s^{(0)}_i) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i = 0}^{2^k - 1} \mle{\eq}_k(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_x), x \bigr) \cdot \bigl( 1 + \mle{z}(x, i) \cdot (\mle{f}(x) - 1) \bigr).
+  \mle{T}_\times(Y, Y') = \sum_{u \in \BB_8} \mle{\eq}_8(Y, u) \cdot \prod_{i = 0}^{7} \sel\bigl( Y'_i, \varphi^i(g^{\intval{u}}) \bigr), \qquad Y, Y' \in K^8,
 \]
-A single $\gamma$ suffices because the weights $\mle{\eq}_k(\gamma, i)$ are the values at $\gamma$ of the $k$-variate multilinear Lagrange basis, so a false claim survives with probability at most $k / |K|$ by Schwartz--Zippel. At the end, the parties hold a final sumcheck challenge $r'_x \in K^{\ell_\text{mul}}$ and claimed evaluations $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ and $\alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i)$ for $i \in \set{0, \ldots, 2^k - 1}$. The verifier evaluates each $\mle{\eq}_{\ell_\text{mul}}(\varphi^{-i}(r_x), r'_x)$ on its own, costing at most $\lambda$ squarings per $i$ to compute $\varphi^{-i}(r_x)$, and closes out the batched sumcheck. The claim $\alpha_f \stackrel{?}{=} \mle{f}(r'_x)$ is the output base claim, and the $2^k$ per-bit claims $\alpha_{z, i} \stackrel{?}{=} \mle{z}(r'_x, i)$ are the output exponent claims.
+at a cost of about $2^8 \cdot 9$ multiplications given the $2^{11}$ public constants $\varphi^i(g^{\intval{u}})$. Since the table size is fixed, both evaluations are constant-cost and the linear queries against them (\S\ref{sec:intmul-lookups}) are succinct.
+
+\paragraph{Leaves and indices.}
+The reduction runs two product trees. The \emph{product tree} has $64$ columns indexed by $(j, k) \in \BB_3 \times \BB_3 \cong \BB_6$, $j$ in the low variables, and the \emph{product-word tree} has $8$ columns indexed by $l \in \BB_3$:
+\[
+  L_\times[x, (j, k)] \coloneqq \varphi^{8(j + k)}\bigl( T_\times[a_j[x], b_k[x]] \bigr), \qquad L_c[x, l] \coloneqq \varphi^{16 l}\bigl( T_\text{pow}[c_l[x]] \bigr).
+\]
+By \eqref{eq:limb-identity} their roots are
+\[
+  P_\times[x] \coloneqq \prod_{j, k} L_\times[x, (j, k)] = g^{\intval{a}[x] \cdot \intval{b}[x]}, \qquad P_c[x] \coloneqq \prod_l L_c[x, l] = g^{\intval{c_\text{lo}}[x] + 2^{64} \intval{c_\text{hi}}[x]},
+\]
+so identity \eqref{eq:exp-identity} is the pointwise equality $P_\times = P_c$ on $\BB_{\ell_\text{mul}}$.
+
+For a table $T \colon \BB_m \to K$ and an index vector $I \colon \BB_\ell \to \BB_m$, write $I^* T \in K^{\BB_\ell}$ for the \emph{pullback} $(I^* T)[x] \coloneqq T[I[x]]$. The columns are twisted pullbacks,
+\[
+  L_\times[\cdot, (j, k)] = \varphi^{8(j + k)} \circ \bigl( I_{j, k}^* T_\times \bigr), \qquad L_c[\cdot, l] = \varphi^{16 l} \circ \bigl( I_l^* T_\text{pow} \bigr),
+\]
+along the index vectors $I_{j, k}[x] \coloneqq (a_j[x], b_k[x]) \in \BB_{16}$ and $I_l[x] \coloneqq c_l[x] \in \BB_{16}$, whose bits are operand bits.
+
+\paragraph{Frobenius twist.}
+A column claim becomes a lookup claim at a twisted point. If $U \in K^{\BB_\ell}$ and $L = \varphi^t \circ U$ entrywise, then for every $r \in K^\ell$,
+\begin{equation}
+  \varphi^{-t}\bigl( \mle{L}(r) \bigr) = \mle{U}\bigl( \varphi^{-t}(r) \bigr),
+  \label{eq:frobenius-twist}
+\end{equation}
+with $\varphi^{-t}$ applied coordinatewise on the right: $\mle{L}(r) = \sum_x \mle{\eq}_\ell(r, x) \cdot \varphi^t(U[x])$, and $\varphi^{-t}$ (well-defined because $\varphi$ is invertible on $K$, with inverse $\varphi^{\lambda - 1}$) is a ring automorphism of $K$ that fixes the $\FF{2}$-coefficients of $\mle{\eq}_\ell(\cdot, x)$. All twists that occur are multiples of $8$ in $\set{0, 8, \ldots, 112}$: $8(j + k)$ for the product columns and $16 l$ for the product-word columns.
+
+\paragraph{Index embedding.}
+To serve as logarithmic-derivative poles, indices are embedded into $K$ by the $\FF{2}$-linear injection $\iota \colon \BB_{16} \to K$, $\iota(e) \coloneqq \sum_{u = 0}^{15} e_u \beta_u$, for a fixed $\FF{2}$-linearly independent family $(\beta_0, \ldots, \beta_{15})$ in $K$ (for instance an $\FF{2}$-basis of the subfield $\FF{2^{16}} \subset K$). By linearity the embedded index columns are $K$-linear combinations of operand bit columns:
+\begin{equation}
+  \iota(I_{j, k}[x]) = \sum_{u = 0}^{7} \beta_u \, a[x, 8j + u] + \sum_{u = 0}^{7} \beta_{8 + u} \, b[x, 8k + u], \qquad \iota(I_l[x]) = \sum_{u = 0}^{15} \beta_u \, c_l[x]_u,
+  \label{eq:index-embedding}
+\end{equation}
+where $c_l[x]_u$ is bit $16l + u$ of $c_\text{lo}[x]$ for $l < 4$ and bit $16(l - 4) + u$ of $c_\text{hi}[x]$ for $l \geq 4$.
+
+\subsubsection{Indexed Lookups}
+\label{sec:intmul-lookups}
+
+The column claims are discharged by the logUp* indexed-lookup argument of Soukhanov~\cite{cryptoeprint:2025/946}, which proves claims on pullbacks $I^* T$ without ever committing them. We use it as a black box with the following interface, and refer to~\cite{cryptoeprint:2025/946} for the construction.
+
+\paragraph{Interface.}
+Let $T \colon \BB_m \to K$ be a transparent table and $I_1, \ldots, I_N \colon \BB_\ell \to \BB_m$ index vectors (the \emph{lookers}). The input is one claim per looker,
+\[
+  e_n \stackrel{?}{=} \mle{(I_n^* T)}(r_n), \qquad n = 1, \ldots, N,
+\]
+at points $r_n \in K^\ell$ that may differ between lookers. The \emph{pushforward} of $f \in K^{\BB_\ell}$ along $I$ is $(I_* f)[t] \coloneqq \sum_{x \in \BB_\ell \,:\, I[x] = t} f[x]$, adjoint to the pullback: $\langle I^* T, f \rangle = \langle T, I_* f \rangle$. Taking $f = \mle{\eq}_\ell(r_n, \cdot)$, each claim is an inner product with $T$, $\mle{(I_n^* T)}(r_n) = \langle T, (I_n)_* \mle{\eq}_\ell(r_n, \cdot) \rangle$.
+\begin{enumerate}
+\item The verifier samples $\gamma \gets K$. The prover sends the \emph{pushforward oracle}
+\[
+  Y \coloneqq \sum_{n = 1}^{N} \gamma^n \cdot (I_n)_* \mle{\eq}_\ell(r_n, \cdot) \in K^{2^m},
+\]
+which by adjointness satisfies $\langle T, Y \rangle = \sum_n \gamma^n e_n$ when the claims are true.
+\item The verifier samples $\chi \gets K$, and the parties check the logarithmic-derivative identity
+\[
+  \sum_{n = 1}^{N} \gamma^n \sum_{x \in \BB_\ell} \frac{\mle{\eq}_\ell(r_n, x)}{\chi - \iota(I_n[x])} \stackrel{?}{=} \sum_{t \in \BB_m} \frac{Y[t]}{\chi - \iota(t)},
+\]
+reducing each side by a GKR circuit of fractional additions, the left over the $N \cdot 2^\ell$ looker entries stacked along a $\lceil \log_2 N \rceil$-variable looker index, the right over the $2^m$ table rows. The verifier evaluates the left circuit's numerator leaves and the right circuit's denominator leaves on its own. The circuits output an evaluation claim $\mle{Y}(r_Y)$ and, at a common point $r' \in K^\ell$, one embedded-index claim $\nu_n \stackrel{?}{=} \mle{(\iota \circ I_n)}(r')$ per looker.
+\item The pushforward is opened by the single succinct linear query on $Y$ with operand $\mle{\eq}_m(r_Y, \cdot) + \mu \cdot \mle{T}$ and target $\mle{Y}(r_Y) + \mu \sum_n \gamma^n e_n$, for a verifier challenge $\mu \gets K$, combining the evaluation claim with the inner-product check $\langle T, Y \rangle = \sum_n \gamma^n e_n$. (This is the \emph{transparent} variant of logUp*, in which the inner product against the table is a linear query rather than a sumcheck.)
+\end{enumerate}
+The output is the linear query on $Y$ and the $N$ index claims $\nu_n$ at $r'$, the latter to be discharged against the committed indices. The reduction runs on several tables at once: each table has its own $\gamma$, pushforward oracle, $\chi$, and linear query, and the fractional-addition circuits of all tables run batched, padded on their high (looker-index) variables, so that the index claims of every table land at the common point $r'$.
+
+\paragraph{Soundness.}
+Since $\iota$ is injective on $\BB_m$, the poles $\iota(t)$ on the right are distinct, and the left side has poles only at points $\iota(I_n[x]) \in \iota(\BB_m)$. As rational functions in $\chi$, the two sides therefore agree iff $Y[t] = \sum_n \gamma^n \sum_{x \,:\, I_n[x] = t} \mle{\eq}_\ell(r_n, x)$ for every $t$, i.e.\ iff $Y$ is the honest pushforward. No multiplicities enter---the pushforward carries field-valued weights---so the characteristic-$2$ obstruction to classical logUp does not arise. Clearing denominators, a false $Y$ survives with probability at most $(N \cdot 2^\ell + 2^m) / |K|$ over $\chi$; given the honest $Y$, a false claim $e_n$ violates $\langle T, Y \rangle = \sum_n \gamma^n e_n$ except with probability $N / |K|$ over $\gamma$; and the GKR circuits and the query combination add $O\bigl( (\ell + \log N + m)^2 \bigr) / |K|$. The logarithmic-derivative term is linear rather than logarithmic in the number of lookups; with $|K| = 2^{128}$ it remains negligible at any realistic constraint count.
 
 \subsubsection{Combined Protocol}
 \label{sec:intmul-combined}
 
-The IntMul reduction verifies the multiplicative-group identity \eqref{eq:exp-identity} and the wraparound parity \eqref{eq:lsb-parity} for all $x \in \BB_{\ell_\text{mul}}$ simultaneously, producing, for each of $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$, its $64$ per-bit evaluations at a shared constraint point. Write
-\[
-  \mle{A} \coloneqq \mle{\textsf{gen-exp}}(a), \qquad \mle{C}_\text{lo} \coloneqq \mle{\textsf{gen-exp}}(c_\text{lo}),
-\]
-the multilinear extensions of the base-$g$ fixed-base exponentiation vectors $A, C_\text{lo}$, whose entries $A[x] = g^{\intval{a}[x]}$ and $C_\text{lo}[x] = g^{\intval{c_\text{lo}}[x]}$ lie in $K^*$. The high half enters the integer relation weighted by $2^{64}$, so its factor is a fixed-base exponentiation with base $g^{2^{64}}$: write $C_\text{hi}$ for the vector with entries
-\[
-  C_\text{hi}[x] \coloneqq \bigl( g^{2^{64}} \bigr)^{\intval{c_\text{hi}}[x]} = g^{2^{64} \cdot \intval{c_\text{hi}}[x]} \in K^*,
-\]
-and $\mle{C}_\text{hi}$ for its multilinear extension. The fixed-base subprotocol (\S\ref{sec:fixed-base-exp}) applies to $C_\text{hi}$ verbatim, with the public leaf constants $g^{2^i}$ replaced by $\bigl( g^{2^{64}} \bigr)^{2^i} = g^{2^{64 + i}}$; folding the high half straight into a base-$g^{2^{64}}$ exponentiation avoids ever forming the base-$g$ vector $g^{\intval{c_\text{hi}}[x]}$ and its $2^{64}$-th power. In this notation identity \eqref{eq:exp-identity} becomes the pointwise relation
-\[
-  \textsf{var-exp}(A, b)[x] = C_\text{lo}[x] \cdot C_\text{hi}[x], \qquad x \in \BB_{\ell_\text{mul}},
-\]
-since $\textsf{var-exp}(A, b)[x] = A[x]^{\intval{b}[x]} = g^{\intval{a}[x] \cdot \intval{b}[x]}$ while $C_\text{lo}[x] \cdot C_\text{hi}[x] = g^{\intval{c_\text{lo}}[x] + 2^{64} \cdot \intval{c_\text{hi}}[x]}$. The base $A$ of the variable-base exponentiation is itself the output of a fixed-base exponentiation, so verifying the relation chains the two subprotocols of \S\ref{sec:exp-subprotocols}.
-
-We organize the reduction into six phases (0 through 5), writing $r_k$ for the principal verifier challenge of phase $k$ where unambiguous.
+The IntMul reduction verifies \eqref{eq:exp-identity}, in the form $P_\times = P_c$, and the wraparound parity \eqref{eq:lsb-parity} for all $x \in \BB_{\ell_\text{mul}}$ simultaneously, producing, for each of $\mle{a}, \mle{b}, \mle{c}_\text{lo}, \mle{c}_\text{hi}$, its $64$ per-bit evaluations at a shared constraint point. It runs in five phases.
 
 \paragraph{Phase 0 (setup).}
-The verifier samples $r_0 \gets K^{\ell_\text{mul}}$ and sends it to the prover, who returns a single value $y_0 \in K$. This $y_0$ is claimed to equal both readings of the relation at $r_0$:
+The verifier samples $r_0 \gets K^{\ell_\text{mul}}$ and sends it to the prover, who returns a single value $y_0 \in K$, claimed to equal both roots at $r_0$:
 \[
-  y_0 \stackrel{?}{=} \mle{\textsf{var-exp}}(A, b)(r_0), \qquad\qquad y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot C_\text{lo}[x] \cdot C_\text{hi}[x],
+  y_0 \stackrel{?}{=} \mle{P}_\times(r_0), \qquad\qquad y_0 \stackrel{?}{=} \mle{P}_c(r_0).
 \]
-the right-hand sum being the multilinear extension of the relation's right-hand side evaluated at $r_0$. The first reading is discharged by phases~1--4, the second by the \emph{deferred right-hand-side sumcheck} opened in phase~2. A single $y_0$ satisfies both readings iff the two multilinear sides agree at $r_0$, which by Schwartz--Zippel certifies the pointwise relation except with probability $\ell_\text{mul} / |K|$.
+A single $y_0$ satisfies both iff the two multilinear roots agree at $r_0$, which by Schwartz--Zippel certifies $P_\times = P_c$ on the cube except with probability $\ell_\text{mul} / |K|$.
 
-\paragraph{Phase 1 (variable-base tree and Frobenius twist).}
-The parties run the product-tree GKR loop and leaf extrapolation (\S\ref{sec:exp-subprotocols}) of the variable-base subprotocol on the root claim $y_0 \stackrel{?}{=} \mle{\textsf{var-exp}}(A, b)(r_0)$, with base $\mle{A}$ and exponent $b$. This reduces it to $64$ leaf claims
+\paragraph{Phase 1 (product trees).}
+The parties run the batched product check of unequal depths (Appendix~\ref{app:padded-prodcheck}) on two instances with content dimension $\ell_\text{mul}$: the product tree over $L_\times$, of depth $6$, and the product-word tree over $L_c$, of depth $3$, both with input claim $y_0$ at the common content point $r_0$. This is a six-layer loop, and it outputs the two leaf claims
 \[
-  s^{(0)}_i \stackrel{?}{=} \mle{L}(r_1, i), \qquad L[x, i] = 1 + \bigl( A[x]^{2^i} - 1 \bigr) \cdot b[x, i], \qquad i \in \BB_6,
+  \alpha_\times \stackrel{?}{=} \mle{L}_\times(r_1, \rho), \qquad \alpha_c \stackrel{?}{=} \mle{L}_c(r_1, \rho_{\geq 3}),
 \]
-all at the common leaf $x$-point $r_1 \in K^{\ell_\text{mul}}$, identifying the product tree's leaf $x$-point $r_x$ with the phase-$1$ challenge $r_1$. Because the leaves couple the base and the exponent, the parties then apply the Frobenius twist $\varphi^{-i}$ to each leaf claim and batch across $i$ with weights $\mle{\eq}_6(\gamma, i)$ for a verifier challenge $\gamma \gets K^6$ (\S\ref{sec:var-base-exp}). Phase~1 closes with the resulting variable-base sumcheck claim
+at the shared content point $r_1 \in K^{\ell_\text{mul}}$ and the nested node points $\rho \in K^6$ and its suffix $\rho_{\geq 3} \in K^3$.
+
+\paragraph{Phase 2 (column extraction and twist).}
+The prover sends the $64 + 8$ column evaluations $\lambda_{j, k} \stackrel{?}{=} \mle{L}_\times(r_1, (j, k))$ and $\lambda_l \stackrel{?}{=} \mle{L}_c(r_1, l)$, and the verifier checks
 \[
-  \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \varphi^{-i}\bigl( s^{(0)}_i \bigr) \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \sum_{i \in \BB_6} \mle{\eq}_6(\gamma, i) \cdot \mle{\eq}_{\ell_\text{mul}}\bigl( \varphi^{-i}(r_1), x \bigr) \cdot \bigl( 1 + (\mle{A}(x) - 1) \cdot \mle{b}(x, i) \bigr),
+  \sum_{(j, k) \in \BB_6} \mle{\eq}_6\bigl( \rho, (j, k) \bigr) \cdot \lambda_{j, k} \stackrel{?}{=} \alpha_\times, \qquad \sum_{l \in \BB_3} \mle{\eq}_3(\rho_{\geq 3}, l) \cdot \lambda_l \stackrel{?}{=} \alpha_c.
 \]
-a degree-$2$ sumcheck in $\mle{A}$ and $\mle{b}$.
-
-\paragraph{Phase 2 (batched sumcheck).}
-The parties run the variable-base sumcheck claim that phase~1 set up, batching into the same $\ell_\text{mul}$-round sumcheck the \emph{deferred right-hand-side reading} of phase~0,
+By the Frobenius twist \eqref{eq:frobenius-twist}, the column claims are equivalent to the lookup claims
 \[
-  y_0 \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \cdot \mle{C}_\text{lo}(x) \cdot \mle{C}_\text{hi}(x),
+  \mle{(I_{j, k}^* T_\times)}\bigl( \varphi^{-8(j + k)}(r_1) \bigr) \stackrel{?}{=} \varphi^{-8(j + k)}(\lambda_{j, k}), \qquad \mle{(I_l^* T_\text{pow})}\bigl( \varphi^{-16 l}(r_1) \bigr) \stackrel{?}{=} \varphi^{-16 l}(\lambda_l),
 \]
-a degree-$2$ sumcheck in $\mle{C}_\text{lo}$ and $\mle{C}_\text{hi}$. Sharing the common challenge $r_2 \in K^{\ell_\text{mul}}$, the sumchecks output the three root claims $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, and $\mle{C}_\text{hi}(r_2)$, the last a base-$g^{2^{64}}$ exponentiation claim. The variable-base subprotocol also outputs the $64$ per-bit exponent claims $\mle{b}(r_2, i)$ at the constraint point $r_2$; the verifier recombines them into the single claim $\mle{b}(r_2, r_I^b) = \sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(r_2, i)$ by sampling $r_I^b \gets K^6$, carrying one exponent claim rather than $64$ into the later phases. The phase hands the three root claims to phase~3 and the single recombined exponent claim $\mle{b}(r_2, r_I^b)$ to phase~4.
+which the verifier forms at $15$ distinct twisted points $\varphi^{-8m}(r_1)$, $m = 0, \ldots, 14$.
 
-\paragraph{Phase 3 (fixed-base trees).}
-The parties run the three fixed-base product trees on $\mle{A}(r_2)$, $\mle{C}_\text{lo}(r_2)$, $\mle{C}_\text{hi}(r_2)$, all rooted at the common point $r_2$ (the $\mle{A}$ and $\mle{C}_\text{lo}$ trees with base $g$, the $\mle{C}_\text{hi}$ tree with base $g^{2^{64}}$). The binary-tree grand-product loop (\S\ref{sec:exp-subprotocols}) is run down through \emph{all but the last layer}, folding both the bit-index and the constraint variable and batching the three trees to a common point $r_3$. Phase~3 ends holding, for each of $a, c_\text{lo}, c_\text{hi}$, an MLE-check at $r_3$ on the product of the two layer-$0$ child \emph{selectors}: writing $\mle{L}_{c_\text{lo}}$ for the gen-exp leaf with boolean values $\mle{L}_{c_\text{lo}}[x, i] = \sel(c_\text{lo}[x, i], g^{2^i})$, the claim is on $\mle{L}_{c_\text{lo}}(r_3, \rho, 0) \cdot \mle{L}_{c_\text{lo}}(r_3, \rho, 1)$ with $\rho \in K^5$ the folded lower bit-index, and analogously for $a$ and for $c_\text{hi}$ (whose leaf uses the high-half constants, $\mle{L}_{c_\text{hi}}[x, i] = \sel(c_\text{hi}[x, i], g^{2^{64 + i}})$). No local inversion is performed: with the bit-index folded, the selectors are kept symbolic and the conversion to $\mle{c}_\text{lo}$ is deferred to phase~5.
+\paragraph{Phase 3 (lookups).}
+The parties run the indexed-lookup reduction (\S\ref{sec:intmul-lookups}) on two transparent tables at once: $T_\times$ with the $64$ lookers $I_{j, k}$, and $T_\text{pow}$ with the $8$ lookers $I_l$, all with $\ell = \ell_\text{mul}$ and $m = 16$. The prover sends the two pushforward oracles $Y_\times, Y_\text{pow} \in K^{2^{16}}$. The phase outputs one succinct linear query on each pushforward oracle, which joins the LIOP's terminal queries (\S\ref{sec:protocol-overview}), and the $72$ embedded-index claims
+\[
+  \nu_{j, k} \stackrel{?}{=} \mle{(\iota \circ I_{j, k})}(r_2), \qquad \nu_l \stackrel{?}{=} \mle{(\iota \circ I_l)}(r_2),
+\]
+at the common point $r_2 \in K^{\ell_\text{mul}}$.
 
-\paragraph{Phase 4 (last layer, re-randomization, and wraparound).}
-A single batched sumcheck over the constraint variable runs three checks at once:
+\paragraph{Phase 4 (bit unpacking and wraparound).}
+The verifier samples $\sigma \gets K^6$ and $\theta \gets K$ and folds the index claims over the columns. By \eqref{eq:index-embedding}, and since $\sum_k \mle{\eq}_3(\sigma_{\geq 3}, k) = \sum_j \mle{\eq}_3(\sigma_{< 3}, j) = 1$, the folded index columns are fixed $K$-linear combinations of the operand bit columns,
+\begin{align*}
+  V(x) &\coloneqq \sum_{(j, k)} \mle{\eq}_6\bigl( \sigma, (j, k) \bigr) \, \iota(I_{j, k}[x]) + \theta \sum_{l} \mle{\eq}_3(\sigma_{< 3}, l) \, \iota(I_l[x]) \\
+  &= \sum_{i \in \BB_6} \Bigl( \omega^a_i \, a[x, i] + \omega^b_i \, b[x, i] + \theta \, \omega^\text{lo}_i \, c_\text{lo}[x, i] + \theta \, \omega^\text{hi}_i \, c_\text{hi}[x, i] \Bigr),
+\end{align*}
+where, for bit position $i = 8j + u$ with $u < 8$ and $i = 16 l' + u$ with $u < 16$,
+\[
+  \omega^a_i \coloneqq \beta_u \, \mle{\eq}_3(\sigma_{< 3}, j), \quad \omega^b_i \coloneqq \beta_{8 + u} \, \mle{\eq}_3(\sigma_{\geq 3}, j), \quad \omega^\text{lo}_i \coloneqq \beta_u \, \mle{\eq}_3(\sigma_{< 3}, l'), \quad \omega^\text{hi}_i \coloneqq \beta_u \, \mle{\eq}_3(\sigma_{< 3}, l' + 4).
+\]
+A single batched $\ell_\text{mul}$-round sumcheck (batching MLE-checks at different points, \S\ref{sec:batching-mle-checks}) runs two checks at once:
 \begin{itemize}
-\item the last product-tree layer of each of $a, c_\text{lo}, c_\text{hi}$---the MLE-check of the layer-$0$ selector products at $r_3$;
-\item the re-randomization of the exponent: an MLE-check point-switching the single claim $\mle{b}(r_2, r_I^b)$ from the phase-$2$ constraint point $r_2$ to the shared point $r_x$;
-\item the \emph{wraparound parity} zerocheck \eqref{eq:lsb-parity}, $\sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_2, x) \bigl[ \mle{a}(x, 0) \, \mle{b}(x, 0) - \mle{c}_\text{lo}(x, 0) \bigr] \stackrel{?}{=} 0$, reusing the phase-$2$ challenge $r_2$---available for free because the $\mle{b}$ re-randomization already evaluates at constraint $r_2$.
-\end{itemize}
-The batch folds the constraint variable to the shared point $r_x \in K^{\ell_\text{mul}}$ and the tree bit-index to $r_I \in K^6$. Its outputs are the three leaf-selector claims $\mle{L}_a(r_x, r_I)$, $\mle{L}_{c_\text{lo}}(r_x, r_I)$, $\mle{L}_{c_\text{hi}}(r_x, r_I)$, the exponent claim $\mle{b}(r_x, r_I^b)$, and the bit-$0$ wraparound claims $\mle{a}(r_x, 0)$, $\mle{b}(r_x, 0)$, $\mle{c}_\text{lo}(r_x, 0)$.
-
-\paragraph{Phase 5 (leaf reconstruction).}
-The prover sends the $4 \times 64$ per-bit values $\mle{a}(r_x, i), \mle{b}(r_x, i), \mle{c}_\text{lo}(r_x, i), \mle{c}_\text{hi}(r_x, i)$ for $i \in \BB_6$; these are the IntMul output. The verifier binds them to the phase-$4$ claims rather than collapsing them: for each of $a, c_\text{lo}, c_\text{hi}$ it forms the selector recombination
+\item the point switch of the folded index claim, of degree $2$,
 \[
-  \sum_{i \in \BB_6} \mle{\eq}_6(r_I, i) \, \sel\bigl( \mle{a}(r_x, i), g^{2^i} \bigr) \stackrel{?}{=} \mle{L}_a(r_x, r_I),
+  \sum_{(j, k)} \mle{\eq}_6\bigl( \sigma, (j, k) \bigr) \, \nu_{j, k} + \theta \sum_l \mle{\eq}_3(\sigma_{< 3}, l) \, \nu_l \stackrel{?}{=} \sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_2, x) \cdot \mle{V}(x);
 \]
-using the leaf constant $g^{2^i}$ for $a$ and $c_\text{lo}$ and the high-half constant $g^{2^{64 + i}}$ for $c_\text{hi}$; for $b$ it tests $\sum_{i \in \BB_6} \mle{\eq}_6(r_I^b, i) \, \mle{b}(r_x, i)$ against $\mle{b}(r_x, r_I^b)$, and it tests the $i = 0$ values against the wraparound claims. The sent values are thereby bound to the GKR-verified products, and to the committed witness by the shift reduction downstream.
+\item the \emph{wraparound parity} zerocheck \eqref{eq:lsb-parity}, $\sum_{x \in \BB_{\ell_\text{mul}}} \mle{\eq}_{\ell_\text{mul}}(r_0, x) \bigl[ \mle{a}(x, 0) \, \mle{b}(x, 0) - \mle{c}_\text{lo}(x, 0) \bigr] \stackrel{?}{=} 0$, of degree $3$, with coefficient $\theta^2$. It reuses the phase-$0$ challenge $r_0$ as its zerocheck point, which is sound because $r_0$ is uniform and drawn after the witness, and so the parity polynomial, is fixed.
+\end{itemize}
+The sumcheck lands on the constraint point $r_x \in K^{\ell_\text{mul}}$. The prover sends the $4 \times 64$ per-bit values $\mle{a}(r_x, i), \mle{b}(r_x, i), \mle{c}_\text{lo}(r_x, i), \mle{c}_\text{hi}(r_x, i)$ for $i \in \BB_6$, and the verifier checks the sumcheck's final value against
+\begin{align*}
+  &\mle{\eq}_{\ell_\text{mul}}(r_2, r_x) \sum_{i \in \BB_6} \Bigl( \omega^a_i \, \mle{a}(r_x, i) + \omega^b_i \, \mle{b}(r_x, i) + \theta \, \omega^\text{lo}_i \, \mle{c}_\text{lo}(r_x, i) + \theta \, \omega^\text{hi}_i \, \mle{c}_\text{hi}(r_x, i) \Bigr) \\
+  &\qquad + \theta^2 \, \mle{\eq}_{\ell_\text{mul}}(r_0, r_x) \bigl( \mle{a}(r_x, 0) \, \mle{b}(r_x, 0) - \mle{c}_\text{lo}(r_x, 0) \bigr).
+\end{align*}
 
-The $4 \times 64$ output claims, all at the shared constraint point $r_x \in K^{\ell_\text{mul}}$, are the IntMul operand columns' per-bit claims of \S\ref{sec:rz-unification}, which folds them over the bit-index and re-randomizes them onto the unified constraint point before the shift reduction (\S\ref{sec:shift-reduction}) consumes them. Total soundness error is $O(\ell_\text{mul}) / |K|$, dominated by the depth-$6$ GKR trees and the batched sumchecks of phases~1--4, the last also carrying the wraparound parity zerocheck and the leaf-reconstruction binding.
+\paragraph{Output and soundness.}
+The $4 \times 64$ per-bit values, all at the shared constraint point $r_x$, are the IntMul output: the IntMul operand columns' per-bit claims of \S\ref{sec:rz-unification}, which folds them over the bit-index and re-randomizes them onto the unified constraint point before the shift reduction (\S\ref{sec:shift-reduction}) consumes them. The sent values are bound to the lookup reduction by the phase-$4$ check, and to the committed witness by the shift reduction downstream. The pushforward oracles are bound by their terminal linear queries. Total soundness error is $O(\ell_\text{mul}) / |K| + (72 \cdot n_\text{mul} + 2^{17}) / |K|$: the product trees, Schwartz--Zippel steps, and sumchecks contribute the first term, and the logarithmic-derivative identities of the two tables, with $64$ and $8$ lookers over $2^{16}$ rows each, the second (\S\ref{sec:intmul-lookups}).
+
+\paragraph{Design note.}
+An earlier design checked the left side of \eqref{eq:exp-identity} as a \emph{variable-base} exponentiation: it first formed $A[x] = g^{\intval{a}[x]}$ and then raised $A$ to the power $\intval{b}[x]$ bit by bit, through a $64$-leaf product tree whose leaves $\sel(b[x, i], A[x]^{2^i})$ couple base and exponent, followed by a Frobenius-twisted sumcheck with $64$ terms. A table lookup can replace a fixed-base exponentiation but not that one, because the base is a witness value. Decomposing \emph{both} factors into $8$-bit limbs turns every factor into a fixed-base lookup of a $16$-bit index. Every operand then follows the same path, and the protocol no longer needs the intermediate $A$, the variable-base sumcheck, or the dependency from the variable-base tree into a fixed-base tree. The price is a second transparent table and its pushforward oracle, and $72$ rather than $12$ lookups per constraint.
 
 \subsubsection{Prover Algorithm}
 \label{sec:intmul-prover}
 
-The dominant cost is preparing and maintaining tables of values for the various exponentiated multilinears at the relevant cube points; this involves substantial work in $K$. We highlight a few implementation considerations.
+\paragraph{Leaf tables.}
+The leaves are gathers from twisted copies of the two tables: column $(j, k)$ of $L_\times$ reads $\varphi^{8(j + k)}(T_\times)$ at the index $(a_j[x], b_k[x])$, and column $l$ of $L_c$ reads $\varphi^{16 l}(T_\text{pow})$---the power table of the base $g^{2^{16 l}}$---at $c_l[x]$. The $15 + 8$ twisted tables are independent of the witness and are precomputed once, at $2^{16}$ entries ($1$\,MiB at $\lambda = 128$) each. Grouping the column gathers by twist keeps one table hot in cache at a time. No exponentiation or Frobenius application is performed per entry.
 
-\paragraph{Computing the leaf tables.}
-For each of the four exponentiations, the prover initializes the leaf tables $\bigl( L[x, i] \bigr)_{x \in \BB_{\ell_\text{mul}}}$ for $i = 0, \ldots, 63$ from the base values $f[x]$ and the bits $z[x, i]$. Since each $z[x, i] \in \FF{2}$, the entry $L[x, i]$ is either $1$ or $f[x]^{2^i} = \varphi^i(f[x])$. The $A$ and $C_\text{lo}$ exponentiations use base $g$, so the powers $g^{2^i}$ are precomputed once into a table indexed by $i$; the $C_\text{hi}$ exponentiation uses base $g^{2^{64}}$, whose powers $g^{2^{64 + i}}$ form a second such table. In each case the leaves are obtained by a bit-controlled select, so no per-entry exponentiation or Frobenius application is needed. For the variable-base exponentiation (base $\mle{A}$, exponent $b$), the prover applies $\varphi^i$ to each entry of the $\mle{A}$-table, which costs $i$ squarings per entry.
+\paragraph{Product trees and pushforwards.}
+The product trees run as in Appendix~\ref{app:padded-prodcheck-prover}, with composition polynomials of individual degree $2$ (plus the equality indicator) in each layer. To build each pushforward oracle, the prover tabulates the $15$ twisted equality indicators $\mle{\eq}_{\ell_\text{mul}}(\varphi^{-8m}(r_1), \cdot)$ once and scatter-adds $\gamma^n \cdot \mle{\eq}_{\ell_\text{mul}}(\varphi^{-t_n}(r_1), x)$ into row $I_n[x]$ for each of the $72$ lookers $n$: that is $72 \cdot n_\text{mul}$ additions in $K$. The looker-side fractional-addition circuit has $72 \cdot n_\text{mul}$ leaves (padded to $128 \cdot n_\text{mul}$ with zero numerators), and its denominators $\chi - \iota(I_n[x])$ have their index part in the $16$-bit span of the $\beta_u$, which the first layers can exploit. The table-side circuits cost $O(2^{16})$ independently of $n_\text{mul}$.
 
-\paragraph{Sumcheck round computation.}
-Each layer of the GKR loop runs a batched sumcheck with composing polynomials of individual degree $2$ (plus the equality indicator), over $\ell_\text{mul}$ rounds. Standard sumcheck-prover algorithms (e.g.\ Thaler~\cite[\S 4.1]{Thaler:2022aa}) apply directly. The Frobenius step's sumcheck has composing polynomials of degree $\leq 2$ in $\mle{f}$ and $\mle{z}(\cdot, i)$ (plus the equality indicator), so the per-round prover work is also linear in the table size.
+\paragraph{Bit unpacking.}
+The phase-$4$ multilinear $V$ is a subset-sum of the public coefficients $\omega$ over the operand bits, formed by bit-controlled XORs in the manner of the BitAnd fold (\S\ref{sec:rijndael-zerocheck}).
 
-\paragraph{Frobenius application.}
-Computing $\varphi^{-i}(r_x)$ for $i = 0, \ldots, 63$, needed by the verifier in the variable-base Frobenius step, costs at most $\lambda \cdot 64$ field squarings in total. The prover precomputes these quantities once and reuses them across the batched sumcheck.
+\paragraph{Verifier work.}
+The verifier computes the $15$ twisted points $\varphi^{-8m}(r_1)$, at most $\lambda$ squarings per coordinate each; evaluates $\mle{T}_\text{pow}$ and $\mle{T}_\times$ for the two pushforward queries ($16$ and about $2.3$k multiplications); and evaluates the looker circuit's numerator multilinear, a $\gamma$-weighted sum over the $72$ lookers of $\mle{\eq}_{\ell_\text{mul}}(\varphi^{-t_n}(r_1), r')$.
 
 \subsection{The BinMul Reduction}
 \label{sec:binmul}
@@ -876,7 +919,7 @@ The reduction's output is the $6 \times 64$ evaluation claims $\mle{a}_\text{lo}
 \subsubsection{Prover Algorithm}
 \label{sec:binmul-prover}
 
-The prover forms the value tables of $\mle{A}, \mle{B}, \mle{C}$ on $\BB_{\ell_\text{binmul}}$ by packing the bit-columns of the constraint arrays: each entry $\mle{A}(x) = A[x]$ is assembled from the $128$ bits of $(a_\text{lo}[x], a_\text{hi}[x])$ by a bit-controlled XOR of the precomputed basis constants $\gamma^0, \ldots, \gamma^{127}$, exactly as the IntMul leaf tables are formed by bit-controlled selects (\S\ref{sec:intmul-prover}). With the three tables in hand, the zerocheck sumcheck runs by standard algorithms (Thaler~\cite[\S 4.1]{Thaler:2022aa}), with per-round work linear in $2^{\ell_\text{binmul}}$ and a composing polynomial of individual degree $\leq 3$. The constraint arrays are themselves computed from the witness via the shift structure shared with the other reductions.
+The prover forms the value tables of $\mle{A}, \mle{B}, \mle{C}$ on $\BB_{\ell_\text{binmul}}$ by packing the bit-columns of the constraint arrays: each entry $\mle{A}(x) = A[x]$ is assembled from the $128$ bits of $(a_\text{lo}[x], a_\text{hi}[x])$ by a bit-controlled XOR of the precomputed basis constants $\gamma^0, \ldots, \gamma^{127}$, in the manner of the bit-controlled XOR folds of the BitAnd and IntMul provers (\S\ref{sec:intmul-prover}). With the three tables in hand, the zerocheck sumcheck runs by standard algorithms (Thaler~\cite[\S 4.1]{Thaler:2022aa}), with per-round work linear in $2^{\ell_\text{binmul}}$ and a composing polynomial of individual degree $\leq 3$. The constraint arrays are themselves computed from the witness via the shift structure shared with the other reductions.
 
 \subsection{The Shift Reduction}
 \label{sec:shift-reduction}
@@ -892,7 +935,7 @@ An array $z$ shorter than $\ell_\text{cons}$ keeps its own $\ell_z$ constraint v
 \subsubsection{Unifying the Output Claims}
 \label{sec:rz-unification}
 
-The BitAnd and Zero constraints are the fundamental ones: every constraint system has them, and their reductions are built around the BitAnd sumcheck, which produces the point at which the shift reduction will work. The IntMul and BinMul constraints are auxiliary. Their reductions leave behind evaluation claims on \emph{operand columns}---the four arrays $a, b, c_\text{lo}, c_\text{hi}$ of IntMul (\S\ref{sec:intmul}, phase~5) and the six arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi}$ of BinMul (\S\ref{sec:binmul-zerocheck})---and those claims are at the wrong points on both axes: the bit-index is left free rather than folded to the oblong point $r_{\widehat{i}}$, and the constraint index sits at the reduction's own final challenge rather than at the BitAnd point. This subsection moves them. Write $\textsf{Ops}$ for the set of ten operand columns; a column $z \in \textsf{Ops}$ has constraint dimension $\ell_z \in \set{\ell_\text{mul}, \ell_\text{binmul}}$ and comes with a constraint point $\rho_z \in K^{\ell_z}$, the final challenge of the reduction that produced it (so all columns of one reduction share a point). Fix an enumeration $m \colon \textsf{Ops} \to \set{1, \ldots, 10}$.
+The BitAnd and Zero constraints are the fundamental ones: every constraint system has them, and their reductions are built around the BitAnd sumcheck, which produces the point at which the shift reduction will work. The IntMul and BinMul constraints are auxiliary. Their reductions leave behind evaluation claims on \emph{operand columns}---the four arrays $a, b, c_\text{lo}, c_\text{hi}$ of IntMul (\S\ref{sec:intmul}, phase~4) and the six arrays $a_\text{lo}, a_\text{hi}, b_\text{lo}, b_\text{hi}, c_\text{lo}, c_\text{hi}$ of BinMul (\S\ref{sec:binmul-zerocheck})---and those claims are at the wrong points on both axes: the bit-index is left free rather than folded to the oblong point $r_{\widehat{i}}$, and the constraint index sits at the reduction's own final challenge rather than at the BitAnd point. This subsection moves them. Write $\textsf{Ops}$ for the set of ten operand columns; a column $z \in \textsf{Ops}$ has constraint dimension $\ell_z \in \set{\ell_\text{mul}, \ell_\text{binmul}}$ and comes with a constraint point $\rho_z \in K^{\ell_z}$, the final challenge of the reduction that produced it (so all columns of one reduction share a point). Fix an enumeration $m \colon \textsf{Ops} \to \set{1, \ldots, 10}$.
 
 \paragraph{Folding the bit-index.}
 For each $z \in \textsf{Ops}$ the prover has sent the $64$ per-bit evaluations $\mle{z}(\rho_z, i)$, $i \in \BB_6$. Once the BitAnd univariate skip has drawn $r_{\widehat{i}}$ (\S\ref{sec:univariate-skip}, step~3), the verifier folds them on its own into the oblong evaluation
@@ -1268,7 +1311,7 @@ Using this lift, every LIOP oracle is virtually placed at a common level $\bolds
 \subsection{Batched BaseFold}
 \label{sec:batched-basefold}
 
-The compiler of \S\ref{sec:liop-to-snark} runs one BaseFold instance per LIOP linear query. When the LIOP commits multiple oracles with exactly one opening claim per oracle, the openings can be discharged with a single BaseFold instance via two preliminary reductions. We present this batched variant, which is the setting needed for the IronSpartan LIOP of \S\ref{sec:ironspartan}. (The Binius64 LIOP itself uses only one oracle and one opening, so it does not need this machinery.)
+The compiler of \S\ref{sec:liop-to-snark} runs one BaseFold instance per LIOP linear query. When the LIOP commits multiple oracles with exactly one opening claim per oracle, the openings can be discharged with a single BaseFold instance via two preliminary reductions. We present this batched variant, which is the setting needed for the IronSpartan LIOP of \S\ref{sec:ironspartan}. The Binius64 LIOP also needs it: besides the packed witness it commits the two pushforward oracles of the IntMul reduction (\S\ref{sec:intmul-lookups}), each with one opening.
 
 Suppose the LIOP holds opening claims
 \[
@@ -1302,19 +1345,19 @@ The parties then run a single BaseFold instance on $\boldsymbol{\pi}$ at the poi
 \subsection{The Binius64 SNARK}
 \label{sec:binius64-snark}
 
-The Binius64 SNARK is the result of applying the compiler of \S\ref{sec:liop-to-snark} to the Binius64 LIOP of \S\ref{sec:binius-liop}. The LIOP has a single oracle $\pi = \textsf{pack}_\lambda(w) \in K^{n_\text{pack}}$ and ends with a single succinct linear query $(t, s)$, namely the random combination of the ring-switching and public-input-check queries (\S\ref{sec:public-input-check}). The compiler zero-extends $\pi$ to length $2^{\ell_\text{pack}}$, instantiates this LIOP query with a single BaseFold IOPP instance on the constrained Reed--Solomon code (RS code over $K$ with the constraint $\sum_{y} t(y) \cdot \pi(y) = s$), and applies BCS and Fiat--Shamir on top.
+The Binius64 SNARK is the result of applying the compiler of \S\ref{sec:liop-to-snark} to the Binius64 LIOP of \S\ref{sec:binius-liop}. The LIOP has three oracles: the packed witness $\pi = \textsf{pack}_\lambda(w) \in K^{n_\text{pack}}$, sent at the start, and the two pushforward oracles $Y_\times, Y_\text{pow} \in K^{2^{16}}$ of the IntMul reduction (\S\ref{sec:intmul-lookups}), sent mid-protocol. It ends with exactly one succinct linear query per oracle: on $\pi$, the random combination $(t, s)$ of the ring-switching and public-input-check queries (\S\ref{sec:public-input-check}); on each pushforward oracle, the combined evaluation and table query of the lookup reduction. The compiler zero-extends $\pi$ to length $2^{\ell_\text{pack}}$, discharges the three queries with a single Batched BaseFold instance (\S\ref{sec:batched-basefold}), lifting the pushforward codewords to the witness's variable count as in \S\ref{sec:lifted-basefold}, and applies BCS and Fiat--Shamir on top.
 
 Concretely, the non-interactive proof consists of:
 \begin{itemize}
-\item the Merkle root of $\textsf{Enc}_{\ell_\text{pack}}(\pi)$, sent at the start (commitment to the oracle);
-\item the LIOP's non-oracle messages (the univariate polynomial $g(\widehat{I})$ of the BitAnd reduction, GKR-step claimed evaluations and Frobenius-step values of the IntMul reduction, the per-bit column values of the BinMul reduction, the round polynomials of the various sumchecks, the vector $\hat{s}$ of the ring-switching step), with verifier challenges Fiat--Shamir-derived from the running transcript;
-\item the BaseFold transcript verifying the LIOP's final linear query: Merkle roots of the folded codewords, the sumcheck round polynomials of BaseFold's folding phase, and the Merkle openings answering the $\mu$ query positions.
+\item the Merkle root of $\textsf{Enc}_{\ell_\text{pack}}(\pi)$, sent at the start (commitment to the witness oracle), and the Merkle roots of the encoded pushforward oracles $Y_\times$ and $Y_\text{pow}$, sent at their place in the IntMul reduction;
+\item the LIOP's non-oracle messages (the univariate polynomial $g(\widehat{I})$ of the BitAnd reduction, the GKR-step claimed evaluations, column evaluations, lookup-circuit claims, and per-bit values of the IntMul reduction, the per-bit column values of the BinMul reduction, the round polynomials of the various sumchecks, the vector $\hat{s}$ of the ring-switching step), with verifier challenges Fiat--Shamir-derived from the running transcript;
+\item the Batched BaseFold transcript verifying the LIOP's three terminal linear queries: Merkle roots of the folded codewords, the sumcheck round polynomials of BaseFold's folding phase, and the Merkle openings answering the $\mu$ query positions.
 \end{itemize}
 
 The verifier reconstructs each LIOP and BaseFold challenge by hashing the transcript prefix in the canonical Fiat--Shamir order, runs each LIOP verifier-side check, and runs the BaseFold verifier on the IOPP transcript.
 
 \paragraph{Soundness.}
-Combining the soundness errors of the LIOP, BaseFold, and BCS gives an overall soundness error of $O\!\left( \ell_\text{words} + \ell_\text{cons} \right) / |K| + 2^{-\lambda}$ in the random oracle model, where the first term collects the various sumcheck and Schwartz--Zippel errors of \S\ref{sec:binand}--\S\ref{sec:public-input-check} and the second term is the BaseFold soundness floor. Knowledge soundness follows from the same compilation chain with knowledge extraction at each stage.
+Combining the soundness errors of the LIOP, BaseFold, and BCS gives an overall soundness error of $O\!\left( \ell_\text{words} + \ell_\text{cons} + n_\text{mul} \right) / |K| + 2^{-\lambda}$ in the random oracle model, where the first term collects the various sumcheck, Schwartz--Zippel, and logarithmic-derivative errors of \S\ref{sec:intmul}--\S\ref{sec:public-input-check} (the $n_\text{mul}$ term from the IntMul lookups, \S\ref{sec:intmul-lookups}) and the second term is the BaseFold soundness floor. Knowledge soundness follows from the same compilation chain with knowledge extraction at each stage.
 
 \section{The IronSpartan LIOP}
 \label{sec:ironspartan}
@@ -1636,14 +1679,14 @@ These are the codeword functionals that the analysis of Diamond~\cite{Diamond:20
 
 We assemble the zero-knowledge SNARK for the Binius64 constraint system from three components: the Binius64 LIOP of \S\ref{sec:binius-liop}, the IronSpartan LIOP of \S\ref{sec:ironspartan}, and the Batched ZK BaseFold compiler of \S\ref{sec:batched-zk-basefold}. The Binius64 LIOP is complete and knowledge-sound but not zero-knowledge: its sumcheck round polynomials and its terminal evaluation claim are witness-dependent. We take it as the \emph{inner} LIOP of the proof composition of \S\ref{sec:proof-composition} and discharge its verifier's predicate with IronSpartan as the outer zero-knowledge proof.
 
-Recall (\S\ref{sec:protocol-overview}) that the Binius64 LIOP commits the packed witness $\pi = \textsf{pack}_\lambda(w)$, runs the IntMul, BinMul, BitAnd, shift, ring-switching, and public-input reductions, and terminates in a single linear query on $\pi$. Apart from this committed oracle, the prover transmits a predetermined number $N$ of non-oracle field elements: the sumcheck round-polynomial coefficients, the claimed evaluations passed between reductions, and the GKR layer claims, all fixed in count by the padded constraint-system parameters. The number of terminal queries is likewise predetermined. (An implementation may let a reduction commit auxiliary oracles of its own, with further queries on them; the composition treats such an oracle exactly like $\pi$.) This is the predetermined-count condition the composition of \S\ref{sec:proof-composition} requires.
+Recall (\S\ref{sec:protocol-overview}) that the Binius64 LIOP commits the packed witness $\pi = \textsf{pack}_\lambda(w)$, runs the IntMul, BinMul, BitAnd, shift, ring-switching, and public-input reductions, and terminates in a single linear query on $\pi$ together with one linear query on each of the two pushforward oracles $Y_\times, Y_\text{pow}$ that the IntMul reduction commits (\S\ref{sec:intmul-lookups}). Apart from these committed oracles, the prover transmits a predetermined number $N$ of non-oracle field elements: the sumcheck round-polynomial coefficients, the claimed evaluations passed between reductions, and the GKR layer claims, all fixed in count by the padded constraint-system parameters. The number of terminal queries is likewise predetermined. The composition treats the pushforward oracles exactly like $\pi$. This is the predetermined-count condition the composition of \S\ref{sec:proof-composition} requires.
 
 Following that composition, the composed prover first precommits, in IronSpartan's precommit segment $z_{\textsf{pre}}$, one uniform OTP key per non-oracle element and one per terminal query. It then runs the Binius64 prover, sending each of the $N$ elements masked by its key, so the transcript reveals only uniform ciphertexts. The Binius64 verifier's acceptance is a conjunction of low-degree checks -- the per-round sumcheck consistency relations $R^{(i)}(0) + R^{(i)}(1) = s^{(i)}$, the products checked between the reductions, and the derivation of the final query target -- each a low-degree function of the transmitted elements and the public Fiat--Shamir challenges. The composed prover encodes this conjunction as an R1CS instance whose public segment $z_{\textsf{pub}}$ holds the ciphertexts, the challenges, and the Binius64 public statement $u$; whose precommit segment holds the OTP keys; and whose witness segment $z_{\textsf{wit}}$ holds the plaintext elements and the intermediate values of the checks. Since the Binius64 verifier is succinct, this R1CS is small -- its size is that of the verifier's computation, polylogarithmic in the witness -- so IronSpartan proves it cheaply, in zero knowledge.
 
-The one place the inner oracle survives into the compiled argument is the terminal linear query $\langle \pi, t \rangle = s$ -- the combined ring-switching and public-input query of \S\ref{sec:protocol-overview}. Following \S\ref{sec:proof-composition}, the prover sends the ciphertext $c = s + k$ of the target under its precommitted key, the R1CS asserts $s = c - k$, and the compiler receives the query \eqref{eq:target-relation}.
+The inner oracles survive into the compiled argument only through the three terminal linear queries: $\langle \pi, t \rangle = s$, the combined ring-switching and public-input query of \S\ref{sec:protocol-overview}, and the two pushforward queries of the IntMul lookups. Following \S\ref{sec:proof-composition}, for each query the prover sends the ciphertext $c = s + k$ of the target under its precommitted key, the R1CS asserts $s = c - k$, and the compiler receives the query \eqref{eq:target-relation}, with $\pi$ replaced by the queried oracle.
 
 \paragraph{Oracles and rounds.}
-The composed LIOP commits, in order: $z_{\textsf{pre}}$, before the statement is fixed; the packed witness $\pi$, which the inner prover sends before any challenge, so that $z_{\textsf{pre}}$ and $\pi$ fall in the same round and are merged into one committed oracle; then, once the inner LIOP has run and the R1CS instance is formed, IronSpartan's $z_{\textsf{wit}}$ and Libra oracle $\pi_g$, which share a round. All of these are witness-dependent, so every merged oracle carries a ZK pad of $q$ coordinates and a mask. The first merged oracle is dominated by $\pi$, and $z_{\textsf{pre}}$ and the pad nest in the slack $2^{\ell_\text{pack}} - n_\text{pack}$ above it (\S\ref{sec:batched-zk-basefold}) whenever that slack holds an aligned block for $z_{\textsf{pre}}$ plus $q$ further coordinates; an application that sizes $n_\text{words}$ with this in mind pays nothing for the merge, and one that does not sees $\ell_r$ grow by one. The queries are \eqref{eq:target-relation}, whose two operands land on the one merged oracle and add; IronSpartan's queries $(t_{\textsf{pre}}, s_{\textsf{pre}})$ on $z_{\textsf{pre}}$, $(t_{\textsf{wit}}, s_{\textsf{wit}})$ on $z_{\textsf{wit}}$, and its Libra query on $\pi_g$ (\S\ref{sec:ip-reduction}). IronSpartan's segments carry no randomness of their own (\S\ref{sec:ironspartan-liop}); only its dummy constraints (\S\ref{sec:dummy-masking}) remain, since the products $(a, b, c)$ it reveals are its own messages. Compiling Stage~1 with Batched ZK BaseFold and leaving the BCS and Fiat--Shamir stages of \S\ref{sec:liop-to-snark} untouched yields a non-interactive zero-knowledge argument for the Binius64 relation in the random oracle model.
+The composed LIOP commits, in order: $z_{\textsf{pre}}$, before the statement is fixed; the packed witness $\pi$, which the inner prover sends before any challenge, so that $z_{\textsf{pre}}$ and $\pi$ fall in the same round and are merged into one committed oracle; the two pushforward oracles $Y_\times$ and $Y_\text{pow}$, which the inner prover sends together during the IntMul reduction, after the challenges they depend on, and which form a round of their own; then, once the inner LIOP has run and the R1CS instance is formed, IronSpartan's $z_{\textsf{wit}}$ and Libra oracle $\pi_g$, which share a round. All of these are witness-dependent, so every merged oracle carries a ZK pad of $q$ coordinates and a mask. The first merged oracle is dominated by $\pi$, and $z_{\textsf{pre}}$ and the pad nest in the slack $2^{\ell_\text{pack}} - n_\text{pack}$ above it (\S\ref{sec:batched-zk-basefold}) whenever that slack holds an aligned block for $z_{\textsf{pre}}$ plus $q$ further coordinates; an application that sizes $n_\text{words}$ with this in mind pays nothing for the merge, and one that does not sees $\ell_r$ grow by one. The queries are the three instances of \eqref{eq:target-relation}: for $\pi$, whose two operands land on the one merged oracle and add, and for $Y_\times$ and $Y_\text{pow}$, each with one operand on the pushforward round's merged oracle and one on the first merged oracle; IronSpartan's queries $(t_{\textsf{pre}}, s_{\textsf{pre}})$ on $z_{\textsf{pre}}$, $(t_{\textsf{wit}}, s_{\textsf{wit}})$ on $z_{\textsf{wit}}$, and its Libra query on $\pi_g$ (\S\ref{sec:ip-reduction}). IronSpartan's segments carry no randomness of their own (\S\ref{sec:ironspartan-liop}); only its dummy constraints (\S\ref{sec:dummy-masking}) remain, since the products $(a, b, c)$ it reveals are its own messages. Compiling Stage~1 with Batched ZK BaseFold and leaving the BCS and Fiat--Shamir stages of \S\ref{sec:liop-to-snark} untouched yields a non-interactive zero-knowledge argument for the Binius64 relation in the random oracle model.
 
 \paragraph{Security.}
 The argument is honest-verifier zero-knowledge: a simulator with no access to the witness produces the transcript in three layers. The $N$ non-oracle messages and the target ciphertext $c$ are reproduced as uniform values, matching the honest distribution because each OTP key is uniform and used once. IronSpartan's portion is produced by its HVZK simulator (\S\ref{sec:zk-sumcheck-machinery}, Appendix~\ref{app:zk-sumcheck}), which simulates the masked constraint check, the dummy-masked products (\S\ref{sec:dummy-masking}), and the segment-query targets. Finally, the Batched ZK BaseFold simulator (\S\ref{sec:batched-zk-basefold}) reproduces the commit phase, the opening, and the query phase of all merged oracles from the query targets alone, using the masks $\omega_r$ for the mask claim and the folding phase and the pads for the opened symbols (under Lemma~\ref{lem:pad-independence}). After Fiat--Shamir this is a non-interactive zero-knowledge argument in the random oracle model. Knowledge soundness and the soundness error are inherited from the inner LIOP, IronSpartan, and the compiler, increased only by the $O(J) / |K|$ terms of the batching and masking steps and the error terms of the composition.
@@ -1831,7 +1874,7 @@ The verifier samples $\sigma \gets K^\kappa$, and both parties form the combined
 \[
   y^{(n)} \coloneqq \sum_{u = 0}^{N - 1} \mle{\eq}_\kappa(\sigma, u) \cdot s_u \stackrel{?}{=} \mle{\mathbf{L}}^{(n)}(\sigma, \tau),
 \]
-the identification of the right-hand side being \eqref{eq:combined-layers} at $j = n$ together with $L'^{(n)}_u = p_u$ (Lemma~\ref{lem:padded-layers}). Since the weights $\mle{\eq}_\kappa(\sigma, u)$ are the values at $\sigma$ of the $\kappa$-variate multilinear Lagrange basis, a family containing a false input claim yields a true combined claim with probability at most $\kappa / |K|$ over $\sigma$ (Schwartz--Zippel, as for the batching of \S\ref{sec:var-base-exp}).
+the identification of the right-hand side being \eqref{eq:combined-layers} at $j = n$ together with $L'^{(n)}_u = p_u$ (Lemma~\ref{lem:padded-layers}). Since the weights $\mle{\eq}_\kappa(\sigma, u)$ are the values at $\sigma$ of the $\kappa$-variate multilinear Lagrange basis, a family containing a false input claim yields a true combined claim with probability at most $\kappa / |K|$ over $\sigma$ (Schwartz--Zippel).
 
 \paragraph{Layer loop.}
 For $j = n, n - 1, \ldots, 1$, the parties hold a claim $y^{(j)} \stackrel{?}{=} \mle{\mathbf{L}}^{(j)}(\sigma^{(j)}, \tau^{(j)}, \rho^{(j)})$, initialized with $\sigma^{(n)} \coloneqq \sigma$, $\tau^{(n)} \coloneqq \tau$, and $\rho^{(n)}$ empty. Expanding the layer relation,
